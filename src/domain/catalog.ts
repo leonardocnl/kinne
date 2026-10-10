@@ -8,6 +8,12 @@ export function meetsQualityFloor(rating: number, votes: number): boolean {
     return rating >= MIN_RATING && votes >= MIN_VOTES;
 }
 
+// Tira espaços e caracteres invisíveis de formatação (BOM, zero-width, marcas de direção como o
+// U+200E que o TMDB deixa em algumas taglines) do começo e do fim. Texto vazio vira null.
+export function cleanText(text: string | null | undefined): string | null {
+    return text?.replace(/^[\s\p{Cf}]+|[\s\p{Cf}]+$/gu, "") || null;
+}
+
 // "Corra!" de 2017 → "corra-2017".
 export function baseSlug(title: string, year: number | null): string {
     const words = title

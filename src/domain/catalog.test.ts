@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
     baseSlug,
+    cleanText,
     formatRuntime,
     meetsQualityFloor,
     pickTrailer,
@@ -16,6 +17,19 @@ describe("meetsQualityFloor", () => {
     it("recusa nota ou votos abaixo do piso", () => {
         expect(meetsQualityFloor(6.39, 10_000)).toBe(false);
         expect(meetsQualityFloor(9, 499)).toBe(false);
+    });
+});
+
+describe("cleanText", () => {
+    it("tira espaços e caracteres invisíveis só das pontas", () => {
+        expect(cleanText("\u200eFuja.\u200e")).toBe("Fuja.");
+        expect(cleanText("\ufeff\u200b Fuja. \u200d\u2060")).toBe("Fuja.");
+        expect(cleanText("a\u200eb")).toBe("a\u200eb");
+    });
+
+    it("devolve null para texto vazio ou só invisível", () => {
+        expect(cleanText(null)).toBeNull();
+        expect(cleanText(" \u200e ")).toBeNull();
     });
 });
 

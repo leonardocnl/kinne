@@ -1,5 +1,5 @@
 import type { CatalogSource, Tag, TitleDetails } from "@/application/sync-catalog";
-import { MIN_RATING, MIN_VOTES, type TitleType } from "@/domain/catalog";
+import { cleanText, MIN_RATING, MIN_VOTES, type TitleType } from "@/domain/catalog";
 import type { TmdbClient } from "./client";
 
 type DiscoverPage = { page: number; total_pages: number; results: { id: number }[] };
@@ -34,7 +34,6 @@ type RawDetails = {
 };
 
 const tmdbPath = (type: TitleType) => (type === "movie" ? "movie" : "tv");
-const orNull = (s: string | null | undefined) => s?.trim() || null;
 const toTag = (t: { id: number; name: string }): Tag => ({ tmdbId: t.id, name: t.name });
 
 export class TmdbCatalogSource implements CatalogSource {
@@ -85,8 +84,8 @@ export class TmdbCatalogSource implements CatalogSource {
             displayTitle: (type === "movie" ? d.title : d.name) ?? "",
             originalTitle: (type === "movie" ? d.original_title : d.original_name) ?? "",
             originalLanguage: d.original_language,
-            tagline: orNull(d.tagline),
-            synopsis: orNull(d.overview),
+            tagline: cleanText(d.tagline),
+            synopsis: cleanText(d.overview),
             posterImagePath: d.poster_path,
             backdropImagePath: d.backdrop_path,
             releaseYear: date ? Number(date.slice(0, 4)) : null,
