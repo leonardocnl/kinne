@@ -121,13 +121,13 @@ describe("chooseDailyPicks", () => {
         expect(warnings[0]).toContain("drama");
     });
 
-    it("só sorteia títulos no piso e em algum streaming", () => {
+    it("só sorteia títulos no piso da vitrine (7,0 e 2.000 votos) e em algum streaming", () => {
         const others = catalog.filter((c) => !c.genres.includes("suspense"));
         const pool = [
-            title(1, ["suspense"], { rating: 6.3 }),
-            title(2, ["suspense"], { votes: 499 }),
+            title(1, ["suspense"], { rating: 6.9 }),
+            title(2, ["suspense"], { votes: 1999 }),
             title(3, ["suspense"], { onStreaming: false }),
-            title(4, ["suspense"]),
+            title(4, ["suspense"], { rating: 7, votes: 2000 }),
             ...others,
         ];
         for (const day of nextDays(20)) {
@@ -135,9 +135,11 @@ describe("chooseDailyPicks", () => {
         }
     });
 
-    it("falha quando um gênero não tem nenhum título no piso", () => {
+    it("deixa de fora o gênero sem nenhum título no piso e registra um aviso", () => {
         const others = catalog.filter((c) => !c.genres.includes("action"));
-        expect(() => chooseDailyPicks(today, others, [])).toThrow("action");
+        const { picks, warnings } = chooseDailyPicks(today, others, []);
+        expect(picks.map((p) => p.genre)).toEqual(["comedy", "drama", "romance", "suspense"]);
+        expect(warnings).toEqual([expect.stringContaining("action")]);
     });
 });
 

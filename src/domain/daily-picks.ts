@@ -1,4 +1,4 @@
-import { meetsQualityFloor, type TitleType } from "./catalog";
+import type { TitleType } from "./catalog";
 import { addDays, type Day } from "./day";
 import type { KinneGenre } from "./genre";
 
@@ -13,6 +13,10 @@ export const DAILY_PICK_GENRES = [
 
 // Um título indicado não volta antes disso (US001 RNE001; valor de partida, ver 04-mudancas).
 export const REPEAT_WINDOW_DAYS = 60;
+
+// Piso próprio da vitrine, mais alto que o do catálogo (RNG001): só títulos bem conhecidos.
+export const DAILY_MIN_RATING = 7;
+export const DAILY_MIN_VOTES = 2000;
 
 export type PickCandidate = {
     id: number;
@@ -32,7 +36,7 @@ export type DailyPicksChoice = { picks: DailyPick[]; warnings: string[] };
 /**
  * Sorteia um título por gênero, com o dia como semente: mesmo dia e mesmos dados, mesmo
  * resultado, em qualquer ordem de entrada. Sem candidato fora da janela de repetição, o gênero
- * ignora a janela e o sorteio registra um aviso.
+ * ignora a janela; sem candidato nenhum, o gênero fica de fora. Os dois casos geram um aviso.
  */
 export function chooseDailyPicks(
     day: Day,
@@ -44,7 +48,7 @@ export function chooseDailyPicks(
         history.filter((p) => p.day >= windowStart && p.day < day).map((p) => p.titleId),
     );
     const pool = candidates
-        .filter((c) => c.onStreaming && meetsQualityFloor(c.rating, c.votes))
+        .filter((c) => c.onStreaming && c.rating >= DAILY_MIN_RATING && c.votes >= DAILY_MIN_VOTES)
         .toSorted((a, b) => a.id - b.id);
     const random = seededRandom(day);
     const usedToday = new Set<number>();
@@ -58,6 +62,12 @@ export function chooseDailyPicks(
                 (genre !== "romance" || c.type === "movie") &&
                 !usedToday.has(c.id),
         );
+        if (fits.length === 0) {
+            warnings.push(
+                `${day}: nenhum título de ${genre} no piso da vitrine; gênero fora do dia`,
+            );
+            continue;
+        }
         let options = fits.filter((c) => !recent.has(c.id));
         if (options.length === 0) {
             warnings.push(
@@ -65,7 +75,6 @@ export function chooseDailyPicks(
             );
             options = fits;
         }
-        if (options.length === 0) throw new Error(`${day}: nenhum título de ${genre} no piso`);
         const chosen = options[Math.floor(random() * options.length)];
         usedToday.add(chosen.id);
         picks.push({ genre, titleId: chosen.id });

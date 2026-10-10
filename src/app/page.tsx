@@ -32,10 +32,13 @@ async function Today() {
     await connection();
     const day = brasiliaDay(new Date());
     const date = longDate(day);
+    const picks = await homePicks(day);
+    // um gênero sem candidato só some do dia; nenhum gênero com candidato é erro (CM002)
+    if (picks.length === 0) throw new Error(`${day}: nenhuma indicação do dia`);
     return (
         <>
             <TopBar date={date} />
-            <DailyPicks date={date} picks={await homePicks(day)} />
+            <DailyPicks date={date} picks={picks} />
         </>
     );
 }

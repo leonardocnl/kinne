@@ -8,7 +8,16 @@ type TodayReelProps = {
     onSelect: (index: number) => void;
 };
 
-/** Faixa "Hoje" com as cinco indicações (US001 C5). No celular, rola na horizontal. */
+// um gênero sem candidato some do dia, então a faixa pode ter menos de cinco
+const COUNT = [
+    "uma indicação",
+    "duas indicações",
+    "três indicações",
+    "quatro indicações",
+    "cinco indicações",
+];
+
+/** Faixa "Hoje" com as indicações do dia (US001 C5). No celular, rola na horizontal. */
 export function TodayReel({ picks, current, onSelect }: TodayReelProps) {
     const reelHeading = useId();
     return (
@@ -20,7 +29,7 @@ export function TodayReel({ picks, current, onSelect }: TodayReelProps) {
                 <h2 id={reelHeading} className="font-display text-reel font-medium">
                     Hoje
                 </h2>
-                <span className="text-caption text-faint">cinco indicações</span>
+                <span className="text-caption text-faint">{COUNT[picks.length - 1]}</span>
             </header>
             <ul className="grid grid-cols-5 gap-4 max-desktop:scrollbar-none max-desktop:flex max-desktop:gap-3 max-desktop:overflow-x-auto max-desktop:pb-2">
                 {picks.map((p, i) => (

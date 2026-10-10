@@ -17,7 +17,7 @@ const candidates: PickCandidate[] = DAILY_PICK_GENRES.flatMap((genre, g) =>
         type: "movie" as const,
         genres: [genre],
         rating: 7,
-        votes: 1000,
+        votes: 2000,
         onStreaming: true,
     })),
 );
@@ -77,6 +77,15 @@ describe("generateDailyPicks", () => {
         });
         expect(days.get(today)).toBe(first);
         expect(saves()).toBe(1);
+    });
+
+    it("não grava nada quando nenhum gênero tem candidato", async () => {
+        const { repository, saves } = memoryRepository();
+        repository.candidates = async () => [];
+        const result = await generateDailyPicks(today, repository);
+        expect(result.created).toBe(false);
+        expect(result.warnings).toHaveLength(5);
+        expect(saves()).toBe(0);
     });
 });
 

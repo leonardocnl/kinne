@@ -30,7 +30,7 @@ export interface DailyPicksRepository {
     candidates(): Promise<PickCandidate[]>;
     // Indicações de `from` em diante.
     history(from: Day): Promise<PastPick[]>;
-    // Grava as cinco de uma vez; se o dia já existe, não muda nada.
+    // Grava as do dia (até cinco) de uma vez; se o dia já existe, não muda nada.
     saveDay(day: Day, picks: DailyPick[]): Promise<void>;
 }
 
@@ -48,6 +48,7 @@ export async function generateDailyPicks(
         repository.history(addDays(day, -REPEAT_WINDOW_DAYS)),
     ]);
     const { picks, warnings } = chooseDailyPicks(day, candidates, history);
+    if (picks.length === 0) return { created: false, warnings };
     await repository.saveDay(day, picks);
     return { created: true, warnings };
 }
