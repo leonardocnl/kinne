@@ -1,0 +1,20 @@
+{
+    "extraKnownMarketplaces": {
+        "ponytail": {
+            "source": {
+                "source": "github",
+                "repo": "DietrichGebert/ponytail"
+            }
+        },
+        "pstack-claude": {
+            "source": {
+                "source": "github",
+                "repo": "michael-denyer/pstack-claude"
+            }
+        }
+    },
+    "enabledPlugins": {
+        "ponytail@ponytail": true,
+        "pstack@pstack-claude": true
+    }
+}
