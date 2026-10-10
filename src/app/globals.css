@@ -1,20 +1,221 @@
 @import "tailwindcss";
 
-:root {
-    --background: #020202;
-    --foreground: #f2f2ee;
-    --accent: #fff340; /* só no controle principal de cada tela */
+/*
+ * Tokens do Kinne, traduzidos de docs/design/maquete-kinnemix.html.
+ * Única fonte de valores visuais: componentes e telas só usam as classes geradas daqui.
+ * Os padrões do Tailwind que concorrem com os tokens são apagados (initial).
+ */
+@theme {
+    /* cores */
+    --color-*: initial;
+    --color-ink: #020202; /* fundo */
+    --color-paper: #f2f2ee; /* texto */
+    --color-signal: #fff340; /* só no controle principal de cada tela e na wordmark */
+    --color-soft: rgb(242 242 238 / 0.74); /* texto secundário */
+    --color-faint: rgb(242 242 238 / 0.64); /* texto apagado */
+    --color-line: rgb(255 255 255 / 0.14); /* bordas e divisórias */
+    --color-line-strong: rgb(255 255 255 / 0.28); /* borda no hover */
+    --color-chip: rgb(255 255 255 / 0.04); /* fundo do chip */
+    --color-ghost: rgb(255 255 255 / 0.05); /* fundo do botão ghost e brilho do skeleton */
+    --color-quiet: rgb(255 255 255 / 0.08); /* vidro escuro dos botões quiet e round */
+    --color-glass: rgb(255 255 255 / 0.09); /* painel de vidro */
+    --color-hover: rgb(255 255 255 / 0.14); /* fundo no hover */
+    --color-halo: rgb(255 255 255 / 0.12); /* anel do botão do slider */
+    --color-rail: rgb(255 255 255 / 0.16); /* barra de progresso e marca da faixa "Hoje" */
+    --color-track: rgb(255 255 255 / 0.22); /* trilho do slider */
+    --color-scrim: rgb(2 2 2 / 0.42); /* tinta do painel no computador */
+    --color-scrim-strong: rgb(2 2 2 / 0.72); /* tinta do painel no celular */
+    --color-frame: #0a0a0a; /* quadro sem imagem */
+    --color-toast: #161616; /* aviso */
+
+    /* fontes (as variáveis vêm do next/font, em layout.tsx) */
+    --font-*: initial;
+
+    /* escala de texto */
+    --text-*: initial;
+    --text-title: clamp(2.75rem, 5vw, 4.5rem); /* título da tela inicial e da tela do título */
+    --text-title--line-height: 0.86;
+    --text-title--letter-spacing: -0.03em;
+    --text-heading: 2.2rem; /* "O que você quer ver hoje?" */
+    --text-heading--line-height: 0.88;
+    --text-heading--letter-spacing: -0.015em;
+    --text-confirm: 1.6rem; /* "Combinado. Está na Netflix." */
+    --text-confirm--line-height: 1;
+    --text-confirm--letter-spacing: -0.015em;
+    --text-score: 2.5rem; /* nota grande sobre a imagem */
+    --text-score--line-height: 1;
+    --text-count: 2.125rem; /* números do slider e da contagem */
+    --text-count--line-height: 0.8;
+    --text-reel: 1.625rem; /* "Hoje" */
+    --text-reel--line-height: 1;
+    --text-shot: 1.4375rem; /* títulos na faixa "Hoje" */
+    --text-shot--line-height: 1.02;
+    --text-tagline: clamp(0.9375rem, 1.4vw, 1.125rem); /* chamada */
+    --text-tagline--line-height: 1.5;
+    --text-synopsis: 1rem;
+    --text-synopsis--line-height: 1.6;
+    --text-body: 0.9375rem; /* texto base e botões */
+    --text-body--line-height: 1.5;
+    --text-small: 0.875rem; /* chips, links, botão ghost */
+    --text-small--line-height: 1.5;
+    --text-data: 0.8125rem; /* dados (gênero, ano, duração) e rótulos dos filtros */
+    --text-data--line-height: 1.5;
+    --text-caption: 0.75rem; /* legendas: "TMDB" da nota, contador, rodapé */
+    --text-caption--line-height: 1.5;
+
+    --tracking-*: initial;
+    --tracking-score: 0.06em; /* "TMDB" ao lado da nota */
+    --tracking-code: 0.04em; /* códigos de estado, em caixa alta */
+
+    /* espaçamento: a escala do Tailwind (múltiplos de 0.25rem) mais os tamanhos com nome */
+    --spacing: 0.25rem;
+    --spacing-control: 3.125rem; /* altura dos botões */
+    --spacing-target: 2.75rem; /* alvo mínimo de toque; altura dos chips e links */
+    --spacing-gutter: clamp(1rem, 3vw, 2.5rem); /* margem lateral da página */
+    --spacing-digit: 0.58em; /* célula de um algarismo na Darker Grotesque */
+    --spacing-digit-sep: 0.26em; /* célula da vírgula */
+    --spacing-skeleton-title: clamp(2.4rem, 4.2vw, 3.8rem);
+
+    --container-*: initial;
+    --container-page: 80rem; /* largura máxima da página */
+    --container-measure: 80ch; /* texto corrido */
+    --container-panel: 33.125rem; /* painel de filtros */
+
+    /* raios */
+    --radius-*: initial;
+    --radius-pill: 999px; /* todo controle tocável */
+    --radius-panel: 1.125rem; /* painel de vidro */
+    --radius-card: 0.75rem; /* aviso e bloco de título do skeleton */
+
+    /* vidro e sombras */
+    --blur-*: initial;
+    --blur-glass: 24px;
+    --backdrop-saturate-glass: 165%;
+    --shadow-*: initial;
+    --shadow-glass: inset 0 1px 0 rgb(255 255 255 / 0.2), 0 24px 60px -28px rgb(0 0 0 / 0.8);
+    --shadow-toast: 0 12px 30px -10px rgb(0 0 0 / 0.9);
+    --inset-shadow-*: initial;
+    --drop-shadow-*: initial;
+    --text-shadow-*: initial;
+    --text-shadow-score: 0 1px 12px rgb(0 0 0 / 0.6);
+    --opacity-disabled: 0.38;
+
+    /* quadro da imagem */
+    --aspect-*: initial;
+    --aspect-scope: 2.39 / 1; /* computador */
+    --aspect-video: 16 / 9; /* celular */
+    --object-position-focus: 50% 25%; /* não corta cabeças */
+    --background-image-shade-top: linear-gradient(to bottom, rgb(2 2 2 / 0.34), rgb(2 2 2 / 0) 30%);
+    --background-image-shade-full: linear-gradient(
+        to bottom,
+        rgb(2 2 2 / 0.34),
+        rgb(2 2 2 / 0) 30%,
+        rgb(2 2 2 / 0) 62%,
+        rgb(2 2 2 / 0.55)
+    );
+    --background-image-skeleton: radial-gradient(120% 90% at 30% 20%, #1a1a1a, #0a0a0a 70%);
+    --background-image-panel-foot: linear-gradient(rgb(14 14 14 / 0), rgb(14 14 14 / 0.94) 18px);
+    --background-image-grain: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --opacity-grain: 0.42;
+
+    /* telas: "celular" é até 860px; desktop: vale de 861px para cima */
+    --breakpoint-*: initial;
+    --breakpoint-desktop: 861px;
+
+    /* movimento */
+    --ease-*: initial;
+    --ease-settle: cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-duration-hover: 180ms;
+    --transition-duration-fade: 300ms;
+    --transition-duration-panel: 420ms;
+    --transition-duration-dissolve: 900ms;
+    --animate-*: initial;
+    --animate-breathe: breathe 2.4s ease-in-out infinite; /* pulsa em claridade, devagar */
+
+    @keyframes breathe {
+        0%,
+        100% {
+            opacity: 0.35;
+        }
+        50% {
+            opacity: 1;
+        }
+    }
 }
 
 @theme inline {
-    --color-background: var(--background);
-    --color-foreground: var(--foreground);
-    --color-accent: var(--accent);
-    --font-sans: var(--font-manrope);
-    --font-display: var(--font-darker-grotesque);
+    --font-display: var(--font-darker-grotesque), var(--font-manrope), system-ui, sans-serif;
+    --font-ui: var(--font-manrope), system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
-body {
-    background: var(--background);
-    color: var(--foreground);
+/* valores que mudam no celular */
+:root {
+    @variant max-desktop {
+        --text-heading: 2.3rem;
+        --text-confirm: clamp(1.1rem, 5.2vw, 1.45rem);
+        --text-confirm--line-height: 1.1;
+        --text-shot: 1.25rem;
+        --text-synopsis: 0.875rem;
+        --spacing-gutter: 1rem;
+    }
+}
+
+@layer base {
+    :root {
+        color-scheme: dark;
+    }
+
+    body {
+        @apply bg-ink font-ui text-body text-paper tabular-nums antialiased;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--color-paper);
+        outline-offset: 3px;
+    }
+
+    /* slider: trilho de 2px, preenchido até --p, e botão com anel */
+    input[type="range"] {
+        appearance: none;
+        width: 100%;
+        height: var(--spacing-target);
+        margin: 0;
+        background: transparent;
+        cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+        height: 2px;
+        border-radius: 2px;
+        background: linear-gradient(
+            to right,
+            var(--color-paper) var(--p, 0%),
+            var(--color-track) var(--p, 0%)
+        );
+    }
+    input[type="range"]::-webkit-slider-thumb {
+        appearance: none;
+        width: 22px;
+        height: 22px;
+        margin-top: -10px;
+        border-radius: 50%;
+        background: var(--color-paper);
+        box-shadow: 0 0 0 7px var(--color-halo);
+    }
+    input[type="range"]::-moz-range-track {
+        height: 2px;
+        border-radius: 2px;
+        background: var(--color-track);
+    }
+    input[type="range"]::-moz-range-progress {
+        height: 2px;
+        background: var(--color-paper);
+    }
+    input[type="range"]::-moz-range-thumb {
+        width: 22px;
+        height: 22px;
+        border: 0;
+        border-radius: 50%;
+        background: var(--color-paper);
+        box-shadow: 0 0 0 7px var(--color-halo);
+    }
 }
