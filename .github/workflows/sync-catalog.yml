@@ -1,0 +1,30 @@
+name: Sync catalog
+
+on:
+  schedule:
+    - cron: "17 6 * * *" # 03:17 em Brasília
+  workflow_dispatch:
+
+concurrency:
+  group: sync-catalog
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # Só a carga; migrations continuam manuais.
+      - run: npm run catalog:sync
+        env:
+          TMDB_TOKEN: ${{ secrets.TMDB_TOKEN }}
+          DATABASE_URL_POOLED: ${{ secrets.DATABASE_URL_POOLED }}
