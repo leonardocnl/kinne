@@ -4,7 +4,6 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { brasiliaDay } from "@/domain/day";
 import { parseOrigin } from "../../_components/title/origin";
-import { TitleErrorBoundary } from "../../_components/title/TitleError";
 import { TitleSkeleton } from "../../_components/title/TitleSkeleton";
 import { TitleView } from "../../_components/title/TitleView";
 import { homePicks } from "../../_data/home";
@@ -18,11 +17,9 @@ export async function generateMetadata({ params }: PageProps<"/titulo/[slug]">):
 
 export default function TitlePage(props: PageProps<"/titulo/[slug]">) {
     return (
-        <TitleErrorBoundary>
-            <Suspense fallback={<TitleSkeleton />}>
-                <Title {...props} />
-            </Suspense>
-        </TitleErrorBoundary>
+        <Suspense fallback={<TitleSkeleton />}>
+            <Title {...props} />
+        </Suspense>
     );
 }
 
