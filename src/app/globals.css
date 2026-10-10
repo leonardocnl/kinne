@@ -112,7 +112,12 @@
     --aspect-scope: 2.39 / 1; /* computador */
     --aspect-video: 16 / 9; /* celular */
     --object-position-focus: 50% 25%; /* não corta cabeças */
-    --background-image-shade-top: linear-gradient(to bottom, rgb(2 2 2 / 0.34), rgb(2 2 2 / 0) 30%);
+    /* o topo fica escuro até a altura do contador "1 de 5": 7:1 mesmo sobre uma capa branca */
+    --background-image-shade-top: linear-gradient(
+        to bottom,
+        rgb(2 2 2 / 0.72) 2.75rem,
+        rgb(2 2 2 / 0) calc(2.75rem + 30%)
+    );
     --background-image-shade-full: linear-gradient(
         to bottom,
         rgb(2 2 2 / 0.34),

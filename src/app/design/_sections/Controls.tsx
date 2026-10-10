@@ -59,7 +59,7 @@ export function Controls() {
                 </p>
                 <Row label="overlay sobre a imagem">
                     <Frame className="w-full">
-                        <div className="absolute top-2.5 left-3 flex items-center gap-2 text-caption text-soft">
+                        <div className="absolute top-2.5 left-3 flex items-center gap-2 text-caption text-paper">
                             <Button variant="overlay" aria-label="Pausar a troca de capas">
                                 <PauseIcon />
                             </Button>
