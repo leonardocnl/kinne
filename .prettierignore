@@ -8,3 +8,6 @@ next-env.d.ts
 
 # migrations geradas pelo drizzle-kit
 drizzle/
+
+# maquete aprovada: guardada exatamente como veio
+docs/design/

@@ -1,0 +1,864 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kinne Inicial</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Darker+Grotesque:wght@400;500;600&family=Manrope:wght@400;500;600&display=swap">
+<style>
+/* Tela inicial da semana 0 no estilo KinneMix. Tokens, botões, chips, quadro,
+   tipografia e faixa "Hoje" copiados do kinne-mix.html; acrescentados só a imagem
+   real no quadro, o rodapé e a data do dia. Página só em tema escuro, por decisão do estilo. */
+:root {
+  color-scheme: dark;
+  --ink: #020202;
+  --paper: #F2F2EE;
+  --soft: rgba(242, 242, 238, 0.74);
+  --faint: rgba(242, 242, 238, 0.64);
+  --signal: #FFF340;
+  --line: rgba(255, 255, 255, 0.14);
+  --display: 'Darker Grotesque', 'Manrope', system-ui, sans-serif;
+  --ui: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* ponto de mira do corte das imagens: 25% da altura, para não perder cabeças */
+  --focus: 50% 25%;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--ink); }
+body {
+  color: var(--paper); font-family: var(--ui); font-size: 15px; line-height: 1.5;
+  font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--paper); outline-offset: 3px; }
+
+.app {
+  --g-blur: 24px; --r: 18px; --r-s: 12px; --pill: 999px;
+  max-width: 1280px; margin-inline: auto;
+  padding-inline: clamp(16px, 3vw, 40px); padding-block: 22px 28px;
+  display: flex; flex-direction: column; gap: 14px; min-height: 100vh;
+}
+
+/* botões (do KinneMix) */
+.btn {
+  height: 50px; padding: 0 22px; border-radius: var(--pill); border: 0; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 600; white-space: nowrap;
+}
+.btn.primary { background: var(--signal); color: var(--ink); }
+.btn.quiet {
+  background: rgba(255, 255, 255, 0.08); color: var(--paper); font-weight: 500;
+  border: 1px solid var(--line);
+  -webkit-backdrop-filter: blur(var(--g-blur)); backdrop-filter: blur(var(--g-blur));
+}
+.ghost {
+  height: 50px; padding: 0 20px; border-radius: var(--pill);
+  border: 1px solid var(--line); background: rgba(255, 255, 255, 0.05);
+  font-size: 14px; font-weight: 500; cursor: pointer;
+}
+
+/* barra do topo */
+.bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
+.wordmark { display: block; height: 36px; width: auto; }
+.bar .date { font-size: 13px; color: var(--soft); white-space: nowrap; }
+.bar .ghost { justify-self: end; }
+
+/* quadro da capa: imagem reta, grão por cima */
+.frame { position: relative; isolation: isolate; overflow: hidden; width: 100%; aspect-ratio: 2.39 / 1; border-radius: 0; background: #0A0A0A; }
+.frame img {
+  position: absolute; inset: 0; z-index: -3; width: 100%; height: 100%;
+  object-fit: cover; object-position: var(--focus);
+  opacity: 0; transition: opacity 0.9s ease;
+}
+.frame img.on { opacity: 1; }
+.frame::before { content: ''; position: absolute; inset: 0; z-index: -2; background: linear-gradient(to bottom, rgba(2, 2, 2, 0.34), rgba(2, 2, 2, 0) 30%); }
+.frame::after {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay; opacity: 0.42;
+}
+.corner { position: absolute; top: 14px; left: 18px; font-size: 12px; color: var(--soft); }
+.progress { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: rgba(255, 255, 255, 0.16); }
+.progress i { display: block; height: 100%; background: var(--paper); transform-origin: left; transform: scaleX(0); }
+.app.auto .progress i { animation: fill var(--dur, 7s) linear forwards; }
+.app:not(.auto) .progress i { transform: scaleX(1); }
+@keyframes fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* pausar e retomar a rotação (WCAG 2.2.2): pílula de vidro ao lado do contador */
+.corner { display: flex; align-items: center; gap: 8px; top: 10px; left: 12px; }
+.pause { width: 32px; height: 32px; border-radius: var(--pill); border: 1px solid var(--line); background: rgba(2, 2, 2, 0.35); color: var(--paper); display: grid; place-items: center; cursor: pointer; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); position: relative; }
+.pause::before { content: ''; position: absolute; inset: -6px; } /* alvo de toque de 44px */
+.pause svg { display: block; }
+
+/* peças dos filtros (do KinneMix): vidro, botão redondo, chips, slider, contador */
+.glass {
+  background-color: rgba(255, 255, 255, 0.09);
+  -webkit-backdrop-filter: blur(var(--g-blur)) saturate(165%); backdrop-filter: blur(var(--g-blur)) saturate(165%);
+  border: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 24px 60px -28px rgba(0, 0, 0, 0.8);
+}
+.round { width: 50px; height: 50px; flex: none; border-radius: var(--pill); display: grid; place-items: center; cursor: pointer; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.07); }
+.chip[hidden] { display: none; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { height: 44px; padding: 0 15px; border-radius: var(--pill); cursor: pointer; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.04); font-size: 14px; color: var(--soft); }
+.chip[aria-pressed="true"], .chip[aria-checked="true"] { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 44px; margin: 0; background: transparent; cursor: pointer; --p: 40%; }
+input[type="range"]::-webkit-slider-runnable-track { height: 2px; border-radius: 2px; background: linear-gradient(to right, var(--paper) var(--p), rgba(255, 255, 255, 0.22) var(--p)); }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -10px; border-radius: 50%; background: var(--paper); box-shadow: 0 0 0 7px rgba(255, 255, 255, 0.12); }
+input[type="range"]::-moz-range-track { height: 2px; border-radius: 2px; background: rgba(255, 255, 255, 0.22); }
+input[type="range"]::-moz-range-progress { height: 2px; background: var(--paper); }
+input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border: 0; border-radius: 50%; background: var(--paper); box-shadow: 0 0 0 7px rgba(255, 255, 255, 0.12); }
+.cells { display: inline-flex; }
+.cells span { display: inline-block; width: 0.58em; text-align: center; }
+.cells span.sep { width: 0.26em; }
+
+.stage { position: relative; display: flex; flex-direction: column; gap: 14px; }
+.sidefilters {
+  position: absolute; z-index: 2; top: 16px; right: 16px; width: min(530px, calc(100% - 32px)); max-height: calc(100% - 32px);
+  border-radius: var(--r); padding: 20px 20px 20px; overflow: auto;
+  display: flex; flex-direction: column; gap: 14px;
+  background-image: linear-gradient(rgba(2, 2, 2, 0.42), rgba(2, 2, 2, 0.42));
+  opacity: 0; visibility: hidden; transform: translateX(14px);
+  transition: opacity 0.3s ease, transform 0.42s cubic-bezier(.16, 1, .3, 1), visibility 0s linear 0.42s;
+}
+.app.filtering .sidefilters { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+.app.filtering .lead { opacity: 0.35; }
+.app.filtering .actions { opacity: 0; } /* esconde o amarelo de trás: um só amarelo por tela (CM003) */
+.lead, .actions { transition: opacity 0.3s ease; }
+.sf-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 0 4px; }
+.sf-head h2 { margin: 0; font-family: var(--display); font-weight: 500; font-size: 2.2rem; line-height: 0.88; letter-spacing: -0.015em; }
+.card { padding: 12px 4px 0; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--line); }
+.card[hidden] { display: none; }
+.card > span, .card label { font-size: 13px; color: var(--soft); }
+.rating { display: flex; justify-content: space-between; align-items: baseline; }
+.rating output { font-family: var(--display); font-weight: 500; font-size: 34px; line-height: 0.8; color: var(--paper); }
+.result { display: flex; align-items: center; gap: 14px; padding: 16px 4px 0; border-top: 1px solid var(--line); }
+.result p { margin: 0; display: flex; flex-direction: column; align-items: center; text-align: center; font-size: 12px; color: var(--faint); min-width: 92px; }
+.result p b { font-family: var(--display); font-weight: 500; font-size: 34px; line-height: 0.8; color: var(--paper); padding-bottom: 5px; }
+.result .btn { flex: 1; padding: 0 10px; }
+.btn:disabled { opacity: 0.38; cursor: not-allowed; }
+.hint { margin: -4px 4px 0; font-size: 13px; color: var(--soft); }
+.hint[hidden] { display: none; }
+/* contador e botão sempre visíveis: rodapé fixo dentro do painel */
+.sf-foot { position: sticky; bottom: -20px; margin: auto -20px -20px; padding: 0 20px 20px; display: flex; flex-direction: column; gap: 12px; background: linear-gradient(rgba(14, 14, 14, 0), rgba(14, 14, 14, 0.94) 18px); }
+
+/* ---------- tela do título (US004, US005) ---------- */
+.titleview { display: none; flex-direction: column; gap: 14px; }
+.app.viewing .titleview { display: flex; }
+.app.viewing .stage, .app.viewing .reel, .app.viewing #entrar { display: none; }
+.back-ghost { display: none; }
+.app.viewing .back-ghost { display: inline-flex; align-items: center; gap: 6px; justify-self: end; }
+.trailer {
+  position: absolute; left: 16px; bottom: 16px; height: 50px; padding: 0 20px 0 16px; border-radius: var(--pill);
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer; color: var(--paper); font-size: 14px; font-weight: 500;
+}
+.trailer[hidden] { display: none; }
+.back-round { display: none; position: absolute; top: 10px; left: 12px; }
+.where { font-size: 13px; color: var(--faint); }
+.where b { font-weight: 500; color: var(--paper); }
+.tkeys { display: flex; flex-direction: column; gap: 6px; padding-bottom: 2px; }
+.tkeys .row { display: flex; gap: 10px; }
+.tkeys .row .btn.primary { min-width: 280px; }
+.tkeys .next { width: 50px; min-width: 50px; padding: 0; flex: none; }
+.tkeys .next svg { transition: transform 0.18s ease; }
+.tkeys .next:hover svg { transform: rotate(-14deg); }
+.minor { display: flex; justify-content: center; gap: 26px; }
+.minor button { height: 44px; border: 0; background: none; font-size: 13px; color: var(--faint); cursor: pointer; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--line); }
+.minor button:hover { color: var(--paper); }
+.done { display: flex; flex-direction: column; gap: 14px; align-items: stretch; width: 346px; padding-bottom: 8px; }
+.done p { margin: 0; font-family: var(--display); font-weight: 500; font-size: 2.2rem; line-height: 0.95; text-wrap: balance; letter-spacing: -0.015em; }
+.done[hidden], .tkeys[hidden] { display: none; }
+.toast { min-height: 20px; font-size: 13px; color: var(--soft); opacity: 0; transition: opacity 0.3s ease; }
+.toast.show { opacity: 1; }
+
+/* ---------- estados: carregando, erro, acabaram as opções ---------- */
+.stateview { display: none; flex-direction: column; gap: 14px; }
+.app.stating .stateview { display: flex; }
+.app.stating .stage, .app.stating .reel, .app.stating .titleview { display: none; }
+.app.stating.from-title #entrar { display: none; }
+.app.stating.from-title .back-ghost { display: inline-flex; align-items: center; gap: 6px; justify-self: end; }
+.sframe { background: radial-gradient(120% 90% at 30% 20%, #1A1A1A, #0A0A0A 70%); }
+.sframe .sheen { position: absolute; inset: 0; z-index: -2; background: rgba(255,255,255,0.05); animation: pulse 2.4s ease-in-out infinite; }
+.sframe .sheen[hidden] { display: none; }
+@keyframes pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } } /* CM001: pulsa em claridade, devagar */
+.sk { display: block; border-radius: var(--pill); background: rgba(255, 255, 255, 0.08); position: relative; overflow: hidden; }
+.sk { animation: pulse 2.4s ease-in-out infinite; }
+.sk-title { height: clamp(2.4rem, 4.2vw, 3.8rem); width: min(520px, 80%); border-radius: 14px; }
+.sk-title.short { width: min(320px, 55%); }
+.sk-line { height: 14px; width: min(560px, 92%); }
+.sk-line.short { width: min(300px, 60%); }
+.sk-facts { display: flex; gap: 10px; }
+.sk-facts .sk { height: 12px; width: 64px; }
+.sk-btn { height: 50px; width: 100%; }
+.sk-group { display: flex; flex-direction: column; gap: 12px; }
+.slead[hidden], .sk-group[hidden], .skeys[hidden], .sk-keys[hidden], .skeys .btn[hidden] { display: none; }
+.app:not(.from-title) #back3 { display: none; }
+.skeys { display: flex; gap: 10px; padding-bottom: 2px; }
+.skeys .btn.primary { min-width: 220px; }
+.sk-keys { display: flex; gap: 10px; width: 360px; }
+.sk-keys .sk-btn:first-child { flex: 1.6; }
+.sk-keys .sk-btn { flex: 1; }
+.state-code { font-size: 12px; color: var(--faint); letter-spacing: 0.04em; text-transform: uppercase; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+/* só da maquete: trocar de estado sem mexer no endereço */
+#s-title:focus { outline: none; } /* foco levado por script só para leitores de tela */
+.demo { position: fixed; right: 12px; bottom: 12px; z-index: 50; display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 16px; border-radius: 999px; font-size: 12px; color: var(--soft); background: #141414; border: 1px solid var(--line); box-shadow: 0 12px 40px -12px rgba(0,0,0,0.9); }
+.app { padding-bottom: 72px; }
+.demo select { -webkit-appearance: none; appearance: none; padding-right: 28px !important; background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23F2F0EA' stroke-width='1.4'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-position: right 12px center !important; height: 36px; border-radius: 999px; border: 1px solid var(--line); background: #141414; color: var(--paper); padding: 0 10px; font: inherit; font-size: 13px; }
+
+/* tela do título: sinopse completa e nota em destaque (sem cor de destaque, CM003) */
+.synopsis { margin: 0; max-width: 70ch; font-size: 15px; line-height: 1.6; color: var(--soft); transition: opacity 0.3s ease 0.12s; }
+#tlead .tagline { color: var(--paper); }
+.metarow { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+/* nota: texto sobre a imagem, no canto oposto ao trailer; não é pílula porque não se toca (CM003) */
+#tframe::before { background: linear-gradient(to bottom, rgba(2,2,2,0.34), rgba(2,2,2,0) 30%, rgba(2,2,2,0) 62%, rgba(2,2,2,0.55)); }
+.score { position: absolute; right: 18px; bottom: 16px; margin: 0; height: 50px; display: flex; align-items: center; gap: 7px; text-shadow: 0 1px 12px rgba(0,0,0,0.6); }
+.score b { font-family: var(--display); font-weight: 500; font-size: 40px; line-height: 1; color: var(--paper); }
+.score span { font-size: 12px; font-weight: 600; color: var(--paper); opacity: 0.8; letter-spacing: 0.06em; }
+.swap .synopsis { opacity: 0; transition-delay: 0s; }
+/* tela do título no computador: texto usa a largura toda; botões ficam no canto inferior direito, na altura dos dados */
+@media (min-width: 861px) {
+  #titleview .billing { grid-template-columns: minmax(0, 1fr) auto; }
+  #tlead { grid-column: 1 / -1; grid-row: 1; }
+  #titleview .billing > div:last-child { grid-column: 2; grid-row: 1; align-self: end; }
+  #tlead .title { text-wrap: wrap; max-width: none; }
+  #tlead .tagline { max-width: none; }
+  #tlead .synopsis { max-width: 80ch; font-size: 16px; } /* 80 caracteres: limite do critério AAA 1.4.8 */
+  /* "Combinado" ocupa o lugar exato da fileira de botões: mesma altura (50px), sem empurrar nada */
+  #titleview .done { flex-direction: row; align-items: center; gap: 18px; width: auto; padding-bottom: 2px; animation: doneIn 0.4s cubic-bezier(.16,1,.3,1); }
+  #titleview .done p { font-size: 1.6rem; line-height: 1; white-space: nowrap; display: flex; align-items: center; gap: 10px; }
+  #titleview .done p br { display: none; }
+  #titleview .done p::before { content: ''; width: 22px; height: 22px; flex: none; background: currentColor; -webkit-mask: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 12.5l5 5L19.5 7'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 12.5l5 5L19.5 7'/%3E%3C/svg%3E") center / contain no-repeat; }
+  #titleview .done .btn { flex: none; }
+}
+/* "Já vi": pílula secundária só com contorno, entre a ação principal e o dado */
+.tkeys .seen { flex: none; gap: 8px; padding: 0 20px 0 16px; transition: background-color 0.18s ease, border-color 0.18s ease; }
+.tkeys .seen svg { opacity: 0.85; }
+.tkeys .quiet:hover { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.28); }
+.tkeys .btn:active { transform: scale(0.98); }
+
+/* texto no preto (do KinneMix) */
+.billing { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 20px 48px; align-items: end; padding-top: 14px; }
+.lead { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.link { align-self: flex-start; height: 44px; margin: -6px 0 -10px; padding: 0; border: 0; background: none; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--paper); text-decoration: underline; text-underline-offset: 5px; text-decoration-color: var(--line); }
+.link:hover { text-decoration-color: var(--paper); }
+.eyebrow { display: none; font-size: 13px; color: var(--soft); }
+.title { margin: 0; font-family: var(--display); font-weight: 500; font-size: clamp(2.75rem, 5vw, 4.5rem); line-height: 0.86; letter-spacing: -0.03em; padding-bottom: 0.08em; text-wrap: balance; }
+.title.clipping { clip-path: inset(-0.16em -0.08em -0.12em -0.08em); }
+.rise { display: block; will-change: transform; }
+.tagline[hidden] { display: none; }
+.tagline { margin: 0; max-width: 80ch; font-size: clamp(15px, 1.4vw, 18px); line-height: 1.5; color: var(--soft); transition: opacity 0.3s ease 0.12s; }
+.facts { display: flex; flex-wrap: wrap; align-items: center; row-gap: 4px; margin: 0; padding: 0; list-style: none; font-size: 13px; color: var(--soft); transition: opacity 0.3s ease; }
+.facts li { padding: 0 14px; border-left: 1px solid var(--line); }
+.facts li:first-child { padding-left: 0; border-left: 0; font-weight: 600; }
+.facts b { font-weight: 500; color: var(--paper); }
+.swap .facts, .swap .tagline { opacity: 0; transition-delay: 0s; }
+.actions { display: flex; gap: 10px; padding-bottom: 46px; }
+.actions .btn { min-width: 168px; }
+
+/* faixa "Hoje" (do KinneMix), com a imagem real em miniatura */
+.reel { margin-top: 14px; padding-top: 16px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 14px; }
+.reel header { display: flex; align-items: baseline; gap: 14px; }
+.reel header h3 { margin: 0; font-family: var(--display); font-weight: 500; font-size: 26px; line-height: 1; }
+.reel header span { font-size: 12px; color: var(--faint); }
+.shots { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
+.shot { width: 100%; min-width: 0; padding: 0; border: 0; background: none; cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 9px; }
+.shot .mark { height: 2px; background: rgba(255, 255, 255, 0.16); }
+.shot .thumb { aspect-ratio: 2.39 / 1; border-radius: 0; opacity: 0.5; transition: opacity 0.3s ease; background: #0A0A0A center / cover no-repeat; background-position: var(--focus); }
+.shot .txt { display: flex; flex-direction: column; min-width: 0; }
+.shot .txt small { font-size: 12px; color: var(--faint); }
+.shot .txt strong { font-family: var(--display); font-weight: 500; font-size: 23px; line-height: 1; padding-bottom: 3px; color: var(--soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.shot .txt strong { white-space: normal; line-height: 1.02; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.shot:hover .thumb { opacity: 0.8; }
+.shot[aria-pressed="true"] .mark { background: var(--paper); }
+.shot[aria-pressed="true"] .thumb { opacity: 1; }
+.shot[aria-pressed="true"] .txt strong { color: var(--paper); }
+
+/* rodapé: só peças existentes (linha fina, texto pequeno e apagado) */
+.foot { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 24px; font-size: 12px; color: var(--faint); }
+.foot p { margin: 0; }
+.foot b { font-weight: 500; color: var(--soft); }
+
+@media (max-width: 860px) {
+  .app { padding-inline: 16px; gap: 12px; }
+  .frame { aspect-ratio: 16 / 9; width: calc(100% + 32px); margin-inline: -16px; }
+  .bar { grid-template-columns: 1fr auto; }
+  .bar .date { display: none; }
+  .wordmark { height: 30px; }
+  .eyebrow { display: block; margin-bottom: -4px; }
+  .billing { padding-top: 8px; gap: 22px; }
+  .lead { gap: 12px; }
+  .billing { grid-template-columns: minmax(0, 1fr); }
+  .actions { flex-direction: row; min-width: 0; }
+  .actions { padding-bottom: 0; }
+  .actions .btn { flex: 1 1 0; min-width: 0; padding: 0 10px; }
+  .reel { margin-top: 18px; }
+  .shot .txt strong { font-size: 20px; }
+  .shots { display: flex; overflow-x: auto; gap: 12px; padding-bottom: 8px; scrollbar-width: none; }
+  .shots::-webkit-scrollbar { display: none; }
+  .shots li { flex: 0 0 150px; min-width: 0; }
+  #lead .facts li:last-child { flex-basis: 100%; padding-left: 0; border-left: 0; }
+  .foot { flex-direction: column; margin-top: 28px; font-size: 11px; }
+  .sidefilters { position: fixed; z-index: 20; inset: 0; width: 100%; max-height: none; border-radius: 0; border: 0; padding: 22px 16px 20px; transform: translateY(14px); background-image: linear-gradient(rgba(2, 2, 2, 0.72), rgba(2, 2, 2, 0.72)); }
+  .sf-foot { margin: auto -16px -20px; padding: 0 16px 20px; }
+  .app.viewing .back-ghost { display: none; }
+  .app.viewing .bar { grid-template-columns: 1fr; }
+  .back-round { display: grid; }
+  .tkeys .row .btn.primary { flex: 1 1 auto; min-width: 0; }
+  .done { width: auto; }
+  .skeys .btn { flex: 1 1 0; min-width: 0; padding: 0 10px; }
+  .skeys .btn.primary { min-width: 0; }
+  .sk-keys { width: 100%; }
+  .app.stating.from-title .back-ghost { display: none; }
+  .app.stating.from-title .bar { grid-template-columns: 1fr; }
+  .demo { left: 12px; justify-content: space-between; }
+  .done .btn { width: 100%; }
+  .sf-head h2 { font-size: 2.3rem; }
+}
+/* "Ler mais": só existe no celular */
+.more { display: none; }
+@media (max-width: 860px) {
+  #tlead { gap: 0; }
+  #tlead .title { margin-bottom: 8px; }
+  #tlead .tagline { margin-bottom: 16px; }
+  #tlead .synopsis { font-size: 14px; line-height: 1.6; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; }
+  #tlead .synopsis.open { display: block; -webkit-line-clamp: unset; }
+  #tlead .more { display: inline-flex; align-self: flex-start; margin-top: 4px; min-height: 44px; align-items: center; }
+  #tlead .more[hidden] { display: none; }
+  #tlead .metarow { margin-top: 12px; }
+  #tlead .where { margin-top: 8px; }
+  #titleview .billing { gap: 28px; }
+  #titleview .done { gap: 14px; }
+  /* botões presos à base da tela (WCAG 2.4.11: scroll-padding evita que cubram o foco) */
+  #titleview .billing > div:last-child { position: fixed; left: 0; right: 0; bottom: 0; z-index: 15; padding: 28px 16px calc(14px + env(safe-area-inset-bottom)); background: linear-gradient(rgba(2,2,2,0), #020202 26px); }
+  .app.viewing { padding-bottom: 104px; }
+  html:has(.app.viewing) { scroll-padding-bottom: 110px; }
+  .app.viewing ~ .demo { display: none; }
+  .app.viewing:has(.done:not([hidden])) { padding-bottom: 180px; }
+  #titleview .toast { position: fixed; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); bottom: calc(92px + env(safe-area-inset-bottom)); z-index: 16; margin: 0; padding: 10px 14px; border-radius: 12px; background: #161616; border: 1px solid var(--line); color: var(--paper); pointer-events: none; box-shadow: 0 12px 30px -10px rgba(0,0,0,0.9); }
+  #titleview .toast:not(.show) { visibility: hidden; }
+  #titleview .billing { gap: 0; }
+  #tlead .title { margin-bottom: 12px; }
+  #tlead .tagline { margin-bottom: 20px; }
+  #tlead .metarow { margin-top: 16px; }
+  #titleview .done p { font-size: clamp(1.1rem, 5.2vw, 1.45rem); line-height: 1.1; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+  #titleview .done p br { display: none; }
+  #titleview .done p::before { content: ''; width: 20px; height: 20px; flex: none; background: currentColor; -webkit-mask: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 12.5l5 5L19.5 7'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 12.5l5 5L19.5 7'/%3E%3C/svg%3E") center / contain no-repeat; }
+}
+@keyframes doneIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  #titleview .done { animation: none; }
+  .frame img, .tagline, .facts, .sidefilters, .lead, .actions, .toast { transition: none; }
+  .app.auto .progress i { animation: none; transform: scaleX(1); }
+  .sframe .sheen, .sk { animation: none; }
+}
+</style>
+</head>
+<body>
+<main class="app auto" id="app">
+  <div class="bar">
+    <img class="wordmark" src="img/wordmark.svg" alt="kinne" width="96" height="36">
+    <span class="date" id="date">Sexta, 9 de outubro</span>
+    <button type="button" class="ghost" id="entrar">Entrar</button>
+    <button type="button" class="ghost back-ghost" id="back"><span aria-hidden="true">←</span> Voltar</button>
+  </div>
+
+  <div class="stage">
+  <div class="frame" id="frame">
+    <div class="corner"><button type="button" class="pause" id="pause" aria-label="Pausar a troca de capas"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><rect x="2" y="1.5" width="2.6" height="9" rx="0.6"/><rect x="7.4" y="1.5" width="2.6" height="9" rx="0.6"/></svg></button><span id="counter">1 de 5</span></div>
+    <div class="progress" aria-hidden="true"><i id="bar"></i></div>
+  </div>
+
+  <div class="billing">
+    <div class="lead" id="lead">
+      <span class="eyebrow" id="date2"></span>
+      <h1 class="title"><span class="rise" data-b="t"></span></h1>
+      <p class="tagline" data-b="l"></p>
+      <ul class="facts">
+        <li data-b="g"></li>
+        <li data-b="y"></li>
+        <li data-b="d"></li>
+        <li>Disponível no <b data-b="s"></b></li>
+      </ul>
+      <button type="button" class="link" id="see-today">Ver este título <span aria-hidden="true">→</span></button>
+    </div>
+    <div class="actions" id="actions">
+      <button type="button" class="btn primary" id="open-filters">Escolher agora</button>
+      <button type="button" class="btn quiet" id="surprise">Me surpreenda</button>
+    </div>
+  </div>
+
+  <div class="sidefilters glass" id="sidefilters" role="dialog" aria-modal="true" aria-labelledby="sf-title" inert>
+    <div class="sf-head">
+      <h2 id="sf-title">O que você quer ver hoje?</h2>
+      <button type="button" class="round" id="close-filters" aria-label="Fechar filtros"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg></button>
+    </div>
+    <div class="card" role="group" aria-labelledby="l-stream">
+      <span id="l-stream">Streamings</span>
+      <div class="chips" data-multi>
+        <button type="button" class="chip" aria-pressed="true">Netflix</button>
+        <button type="button" class="chip" aria-pressed="true">Max</button>
+        <button type="button" class="chip" aria-pressed="false">Prime Video</button>
+        <button type="button" class="chip" aria-pressed="false">Disney+</button>
+        <button type="button" class="chip" aria-pressed="false">Globoplay</button>
+      </div>
+    </div>
+    <div class="card">
+      <span id="l-type">Tipo</span>
+      <div class="chips" role="radiogroup" aria-labelledby="l-type" id="type">
+        <button type="button" class="chip" role="radio" aria-checked="false" data-v="movie">Filmes</button>
+        <button type="button" class="chip" role="radio" aria-checked="false" data-v="series">Séries</button>
+        <button type="button" class="chip" role="radio" aria-checked="true" data-v="both">Os dois</button>
+      </div>
+    </div>
+    <div class="card" role="group" aria-labelledby="l-genre">
+      <span id="l-genre">Gênero</span>
+      <div class="chips" data-multi>
+        <button type="button" class="chip" aria-pressed="false">Ação</button>
+        <button type="button" class="chip" aria-pressed="false">Comédia</button>
+        <button type="button" class="chip" aria-pressed="false">Drama</button>
+        <button type="button" class="chip" aria-pressed="false" id="g-romance">Romance</button>
+        <button type="button" class="chip" aria-pressed="false">Suspense</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="rating"><label for="rating">Nota TMDB mínima</label><output id="rating-out" for="rating">6,4</output></div>
+      <input id="rating" type="range" min="6" max="9" step="0.1" value="6.4">
+    </div>
+    <div class="card" id="duration-card" hidden>
+      <div class="rating"><label for="duration">Duração do filme</label><output id="duration-out" for="duration">Qualquer</output></div>
+      <input id="duration" type="range" min="0" max="3" step="1" value="3">
+    </div>
+    <div class="sf-foot">
+      <div class="result">
+        <p><b id="count">0</b><span id="count-label">títulos combinam</span></p>
+        <button type="button" class="btn primary" id="see">Ver recomendação</button>
+      </div>
+      <p class="hint" id="hint" hidden>Tente baixar a nota ou marcar mais um streaming.</p>
+    </div>
+  </div>
+  </div>
+
+  <section class="titleview" id="titleview" aria-label="Título recomendado">
+    <div class="frame" id="tframe">
+      <button type="button" class="round glass back-round" id="back2" aria-label="Voltar ao início"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M17 10H3M8 5l-5 5 5 5"/></svg></button>
+      <p class="score" aria-label="Nota no TMDB"><b data-t="n"></b><span>TMDB</span></p>
+      <button type="button" class="trailer glass" id="trailer"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M3 1.6v8.8L10.4 6z"/></svg>Trailer</button>
+    </div>
+    <div class="billing">
+      <div class="lead" id="tlead">
+        <h1 class="title"><span class="rise" data-t="t"></span></h1>
+        <p class="tagline" data-t="l"></p>
+        <p class="synopsis" data-t="sy" id="synopsis"></p>
+        <button type="button" class="link more" id="more" aria-controls="synopsis" aria-expanded="false">Ler mais</button>
+        <div class="metarow">
+          <ul class="facts">
+            <li data-t="g"></li>
+            <li data-t="y"></li>
+            <li data-t="d"></li>
+          </ul>
+        </div>
+        <span class="where" id="where"></span>
+      </div>
+      <div>
+        <div class="tkeys" id="tkeys">
+          <div class="row">
+            <button type="button" class="btn primary" id="watch">Vou assistir</button>
+            <button type="button" class="btn quiet seen" id="seen"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Já vi</button>
+            <button type="button" class="btn quiet next" id="another" aria-label="Outra opção" title="Outra opção"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="8.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/></svg></button>
+          </div>
+        </div>
+        <div class="done" id="done" hidden>
+          <p id="done-text">Combinado. Está na Netflix.</p>
+          <button type="button" class="btn primary" id="home-again">Voltar ao início</button>
+        </div>
+      </div>
+    </div>
+    <p class="toast" id="toast" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="stateview" id="stateview" aria-labelledby="s-title">
+    <div class="frame sframe" id="sframe">
+      <span class="sheen" id="sheen"></span>
+      <button type="button" class="round glass back-round" id="back3" aria-label="Voltar ao início"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M17 10H3M8 5l-5 5 5 5"/></svg></button>
+    </div>
+    <div class="billing">
+      <div class="lead">
+        <div class="sk-group" id="sk" aria-hidden="true">
+          <span class="sk sk-title"></span>
+          <span class="sk sk-title short"></span>
+          <span class="sk sk-line"></span>
+          <span class="sk sk-line short"></span>
+          <span class="sk-facts"><span class="sk"></span><span class="sk"></span><span class="sk"></span></span>
+        </div>
+        <div class="slead" id="slead">
+          <h1 class="title" id="s-title" tabindex="-1"></h1>
+          <p class="tagline" id="s-text"></p>
+        </div>
+      </div>
+      <div>
+        <div class="sk-keys" id="sk-keys" aria-hidden="true"><span class="sk sk-btn"></span><span class="sk sk-btn"></span></div>
+        <div class="skeys" id="skeys">
+          <button type="button" class="btn primary" id="s-main"></button>
+          <button type="button" class="btn quiet" id="s-alt"></button>
+        </div>
+      </div>
+    </div>
+    <p class="sr-only" id="s-live" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="reel" aria-label="Indicações de hoje">
+    <header><h3>Hoje</h3><span>cinco indicações</span></header>
+    <ul class="shots" id="shots"></ul>
+  </section>
+
+  <footer class="foot">
+    <p>Dados de filmes e séries: <b>TMDB</b> · Onde assistir: <b>JustWatch</b>. Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.</p>
+    <p>O Kinne conta visitas sem identificar quem você é.</p>
+  </footer>
+</main>
+
+<div class="demo" aria-label="Controle só da maquete">
+  <label for="demo-state">Maquete · estado</label>
+  <select id="demo-state">
+    <option value="">Normal</option>
+    <option value="carregando">Carregando</option>
+    <option value="erro">Erro</option>
+    <option value="acabou-filtros">Acabaram as opções (filtros)</option>
+  </select>
+</div>
+
+<script>
+(function () {
+  // Dados de exemplo. Ano, duração e streaming não conferidos; frases provisórias.
+  var picks = [
+    { g: 'Comédia', t: 'O Grande Hotel Budapeste', y: '2014', d: '1h 40min', s: 'Disney+', img: 'comedia', sy: 'Nos anos 1930, Gustave H., o concierge impecável de um hotel famoso nos Alpes, é acusado de matar uma hóspede rica que deixou para ele um quadro valioso. Com a ajuda de Zero, o jovem mensageiro que acabou de contratar, ele foge da polícia, escapa de uma prisão e enfrenta a família da falecida, enquanto a Europa entra em guerra.', n: '8,0', tr: true, l: 'Um concierge lendário e seu jovem mensageiro viram suspeitos do roubo de um quadro.' },
+    { g: 'Drama', t: 'Chernobyl', y: '2019', d: '1h 05min por episódio', s: 'Max', img: 'drama', sy: 'Em abril de 1986, um reator da usina nuclear de Chernobyl explode no norte da Ucrânia soviética. A minissérie acompanha os cientistas, bombeiros, mineiros e soldados que tentam conter o desastre, e a luta de quem quer contar a verdade a um governo que prefere escondê-la.', n: '8,7', tr: true, l: 'Uma explosão numa usina soviética e as pessoas que pagaram o preço para contê-la.' },
+    { g: 'Ação', t: 'Snowfall', y: '2017', d: '55min por episódio', s: 'Disney+', img: 'acao', sy: 'Los Angeles, 1983. Franklin Saint, um jovem de 19 anos de South Central, decide entrar no tráfico no momento em que o crack começa a chegar à cidade. A série cruza a história dele com a de um agente da CIA e a de um lutador mexicano, mostrando como a epidemia se espalhou e quem lucrou com ela.', n: '7,9', tr: true, l: 'Los Angeles, 1983: um jovem entra no comércio que vai mudar a cidade inteira.' },
+    { g: 'Romance', t: 'La La Land', y: '2016', d: '2h 08min', s: 'Prime Video', img: 'romance', sy: 'Em Los Angeles, Mia é uma aspirante a atriz que serve café entre testes de elenco, e Sebastian é um pianista de jazz que sonha em abrir o próprio clube. Os dois se apaixonam, mas o sucesso de cada um começa a puxar a relação para lados diferentes.', n: '7,9', tr: true, l: 'Um pianista e uma atriz se apaixonam enquanto perseguem os próprios sonhos.' },
+    { g: 'Suspense', t: 'Corra!', y: '2017', d: '1h 44min', s: 'Prime Video', img: 'suspense', sy: 'Chris, um fotógrafo negro, vai passar o fim de semana na casa dos pais da namorada branca, Rose, no interior. A recepção é calorosa demais, os empregados agem de forma estranha e os convidados de uma festa parecem interessados nele por motivos que ele ainda não entende.', n: '7,6', tr: true, l: 'Um fim de semana na casa da família da namorada esconde algo muito errado.' }
+  ];
+  var app = document.getElementById('app'), frame = document.getElementById('frame');
+  var lead = document.getElementById('lead'), counter = document.getElementById('counter'), bar = document.getElementById('bar');
+  var shots = document.getElementById('shots');
+  var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var current = 0, timer = null, clipTimer = null;
+
+  // Data do dia em português: "Sexta, 9 de outubro".
+  var dateText = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
+  dateText = dateText.replace('-feira', '');
+  dateText = dateText.charAt(0).toUpperCase() + dateText.slice(1);
+  document.getElementById('date').textContent = dateText;
+  document.getElementById('date2').textContent = dateText;
+
+  // Uma imagem por indicação no quadro; a troca é por opacidade (dissolve).
+  var layers = picks.map(function (p, i) {
+    var img = document.createElement('img');
+    img.src = 'img/' + p.img + '.webp'; img.alt = ''; img.decoding = 'async';
+    if (i > 0) img.loading = 'lazy';
+    frame.insertBefore(img, frame.firstChild);
+    return img;
+  });
+  var rows = picks.map(function (p, i) {
+    var li = document.createElement('li');
+    li.innerHTML = '<button type="button" class="shot" aria-pressed="false"><span class="mark"></span><span class="thumb"></span><span class="txt"><small></small><strong></strong></span></button>';
+    var b = li.firstChild;
+    b.querySelector('.thumb').style.backgroundImage = 'url(img/' + p.img + '-mini.webp)';
+    b.querySelector('small').textContent = p.g;
+    b.querySelector('strong').textContent = p.t;
+    b.addEventListener('click', function () { show(i); });
+    shots.appendChild(li);
+    return b;
+  });
+  var rise = document.querySelector('.rise'), title = rise.parentNode;
+
+  // Tempo na tela: 3s mais 1s a cada 3 palavras, entre 5s e 10s.
+  function seconds(p) { return Math.max(5, Math.min(10, 3 + p.l.split(/\s+/).length / 3)); }
+  function fillText(p) {
+    [].forEach.call(document.querySelectorAll('[data-b]'), function (el) { el.textContent = p[el.getAttribute('data-b')]; });
+    counter.textContent = (current + 1) + ' de ' + picks.length;
+    document.querySelector('.facts li:last-child').firstChild.textContent = p.s === 'Netflix' ? 'Disponível na ' : 'Disponível no ';
+  }
+  function restartBar() { bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = ''; }
+  function show(i, instant) {
+    var p = picks[i]; current = i;
+    app.style.setProperty('--dur', seconds(p) + 's');
+    layers.forEach(function (l, n) { l.classList.toggle('on', n === i); if (n === i) l.loading = 'eager'; });
+    rows.forEach(function (r, n) { r.setAttribute('aria-pressed', n === i ? 'true' : 'false'); });
+    restartBar();
+    if (instant || still) { fillText(p); return; }
+    // Troca aprovada: o título antigo sobe e sai, a imagem dissolve, o título novo sobe e entra.
+    lead.classList.add('swap'); title.classList.add('clipping');
+    clearTimeout(clipTimer);
+    clipTimer = setTimeout(function () { title.classList.remove('clipping'); }, 1000);
+    rise.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-135%)' }], { duration: 260, easing: 'cubic-bezier(.5,0,.9,.4)', fill: 'forwards' });
+    setTimeout(function () {
+      fillText(p); lead.classList.remove('swap');
+      rise.animate([{ transform: 'translateY(135%)' }, { transform: 'translateY(0)' }], { duration: 640, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'forwards' });
+    }, 270);
+  }
+  function schedule() {
+    clearTimeout(timer);
+    if (still || !app.classList.contains('auto')) return;
+    timer = setTimeout(function () { show((current + 1) % picks.length); schedule(); }, seconds(picks[current]) * 1000);
+  }
+  // A rotação para no primeiro toque, clique ou tecla da pessoa, em qualquer lugar.
+  function stopRotation(e) {
+    if (e && e.target && e.target.closest && e.target.closest('#pause')) return;
+    app.classList.remove('auto'); clearTimeout(timer); if (typeof paintPause === 'function') paintPause();
+    ['pointerdown', 'keydown'].forEach(function (e) { window.removeEventListener(e, stopRotation, true); });
+  }
+  ['pointerdown', 'keydown'].forEach(function (e) { window.addEventListener(e, stopRotation, { capture: true, passive: true }); });
+
+  // Pausar e retomar (CM: WCAG 2.2.2). Este botão não conta como "primeiro toque".
+  var pauseBtn = document.getElementById('pause');
+  var PAUSE = '<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><rect x="2" y="1.5" width="2.6" height="9" rx="0.6"/><rect x="7.4" y="1.5" width="2.6" height="9" rx="0.6"/></svg>';
+  var PLAY = '<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M3 1.6v8.8L10.4 6z"/></svg>';
+  function paintPause() {
+    var on = app.classList.contains('auto');
+    pauseBtn.innerHTML = on ? PAUSE : PLAY;
+    pauseBtn.setAttribute('aria-label', on ? 'Pausar a troca de capas' : 'Retomar a troca de capas');
+  }
+  pauseBtn.addEventListener('click', function () {
+    if (app.classList.contains('auto')) { app.classList.remove('auto'); clearTimeout(timer); }
+    else if (!still) { app.classList.add('auto'); restartBar(); schedule(); }
+    paintPause();
+  });
+
+  if (still) app.classList.remove('auto');
+  show(0, true);
+  schedule();
+  paintPause();
+
+  // ---------- filtros (US002) ----------
+  var panel = document.getElementById('sidefilters'), actions = document.getElementById('actions');
+  var openBtn = document.getElementById('open-filters'), closeBtn = document.getElementById('close-filters');
+  var typeGroup = document.getElementById('type'), durationCard = document.getElementById('duration-card');
+  var rating = document.getElementById('rating'), ratingOut = document.getElementById('rating-out');
+  var duration = document.getElementById('duration'), durationOut = document.getElementById('duration-out');
+  var countEl = document.getElementById('count'), countLabel = document.getElementById('count-label');
+  var see = document.getElementById('see'), hint = document.getElementById('hint');
+  var DURATIONS = ['até 1h30', 'até 1h45', 'até 2h', 'Qualquer'];
+  var mobile = window.matchMedia('(max-width: 860px)');
+
+  // Números em células de largura fixa (a Darker Grotesque não tem algarismos tabulares).
+  function cells(el, text) {
+    el.textContent = ''; el.classList.add('cells'); el.setAttribute('aria-label', text);
+    text.split('').forEach(function (ch) {
+      var c = document.createElement('span'); c.textContent = ch; c.setAttribute('aria-hidden', 'true');
+      if (!/\d/.test(ch)) c.className = 'sep';
+      el.appendChild(c);
+    });
+  }
+  function fill(input) { input.style.setProperty('--p', ((input.value - input.min) / (input.max - input.min) * 100) + '%'); }
+
+  // Contagem inventada para a maquete: muda com os filtros, chega a zero em combinações estreitas.
+  function fakeCount() {
+    var pressed = function (sel) { return [].filter.call(document.querySelectorAll(sel + ' .chip[aria-pressed="true"]'), Boolean).length; };
+    var streams = pressed('.card[aria-labelledby="l-stream"]'), genres = pressed('.card[aria-labelledby="l-genre"]');
+    var type = typeGroup.querySelector('[aria-checked="true"]').getAttribute('data-v');
+    var s = streams === 0 ? 1 : streams / 5;
+    var t = type === 'both' ? 1 : type === 'movie' ? 0.62 : 0.38;
+    var g = genres === 0 ? 1 : genres * 0.21;
+    var r = Math.pow(Math.max(0, (9 - Number(rating.value)) / 2.6), 2.4);
+    var d = type === 'movie' ? [0.3, 0.55, 0.8, 1][Number(duration.value)] : 1;
+    return Math.floor(1450 * s * t * g * r * d);
+  }
+  function update() {
+    var isMovie = typeGroup.querySelector('[aria-checked="true"]').getAttribute('data-v') === 'movie';
+    durationCard.hidden = !isMovie;
+    fill(rating); cells(ratingOut, Number(rating.value).toFixed(1).replace('.', ','));
+    fill(duration); durationOut.textContent = DURATIONS[duration.value];
+    duration.setAttribute('aria-valuetext', DURATIONS[duration.value]);
+    var n = fakeCount();
+    cells(countEl, String(n));
+    countLabel.textContent = n === 1 ? 'título combina' : 'títulos combinam';
+    see.disabled = n === 0; hint.hidden = n !== 0;
+  }
+  [].forEach.call(panel.querySelectorAll('[data-multi] .chip'), function (c) {
+    c.addEventListener('click', function () { c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); update(); });
+  });
+  [].forEach.call(typeGroup.querySelectorAll('.chip'), function (c) {
+    c.addEventListener('click', function () {
+      [].forEach.call(typeGroup.children, function (x) { x.setAttribute('aria-checked', x === c ? 'true' : 'false'); });
+      // RNG007: o TMDB não tem Romance para séries; com "Séries", o chip some e é desmarcado.
+      var rom = document.getElementById('g-romance'), soSeries = c.getAttribute('data-v') === 'series';
+      rom.hidden = soSeries; if (soSeries) rom.setAttribute('aria-pressed', 'false');
+      update();
+    });
+  });
+  rating.addEventListener('input', update);
+  duration.addEventListener('input', update);
+  update();
+
+  function openFilters() {
+    app.classList.add('filtering'); clearTimeout(timer); app.classList.remove('auto'); paintPause();
+    panel.removeAttribute('inert'); actions.setAttribute('inert', '');
+    if (mobile.matches) { history.pushState({ filters: true }, ''); document.body.style.overflow = 'hidden'; }
+    closeBtn.focus();
+  }
+  function closeFilters(fromHistory) {
+    if (!app.classList.contains('filtering')) return;
+    app.classList.remove('filtering');
+    panel.setAttribute('inert', ''); actions.removeAttribute('inert');
+    document.body.style.overflow = '';
+    if (!fromHistory && history.state && history.state.filters) history.back();
+    openBtn.focus();
+  }
+  openBtn.addEventListener('click', openFilters);
+  closeBtn.addEventListener('click', function () { closeFilters(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeFilters(false); });
+  window.addEventListener('popstate', function () { closeFilters(true); });
+
+  // ---------- tela do título ----------
+  var tframe = document.getElementById('tframe'), tlead = document.getElementById('tlead');
+  var trise = tlead.querySelector('.rise'), ttitle = trise.parentNode;
+  var tkeys = document.getElementById('tkeys'), done = document.getElementById('done'), doneText = document.getElementById('done-text');
+  var another = document.getElementById('another'), trailer = document.getElementById('trailer');
+  var toast = document.getElementById('toast'), where = document.getElementById('where');
+  var tlayers = picks.map(function (p) {
+    var img = document.createElement('img'); img.src = 'img/' + p.img + '.webp'; img.alt = ''; img.loading = 'lazy';
+    tframe.insertBefore(img, tframe.firstChild); return img;
+  });
+  var origin = 'daily', tIndex = 0, seenInSession = [], marked = [], toastTimer = null;
+  function article(s) { return s === 'Netflix' ? 'na' : 'no'; }
+  function tFill(p) {
+    [].forEach.call(document.getElementById('titleview').querySelectorAll('[data-t]'), function (el) {
+      var k = el.getAttribute('data-t'); el.textContent = p[k];
+    });
+    tlead.querySelector('.tagline').hidden = !p.l; // sem tagline, só a sinopse (US004)
+    var syn = document.getElementById('synopsis'), more = document.getElementById('more');
+    syn.classList.remove('open'); more.textContent = 'Ler mais'; more.setAttribute('aria-expanded', 'false');
+    requestAnimationFrame(function () { more.hidden = syn.scrollHeight <= syn.clientHeight + 2; });
+    where.innerHTML = 'Disponível ' + article(p.s) + ' <b>' + p.s + '</b>';
+    trailer.hidden = !p.tr;
+    trailer.setAttribute('aria-label', 'Ver o trailer de ' + p.t + ' no YouTube');
+  }
+  function tShow(i, animate) {
+    var p = picks[i]; tIndex = i;
+    tlayers.forEach(function (l, n) { l.classList.toggle('on', n === i); if (n === i) l.loading = 'eager'; });
+    if (seenInSession.indexOf(i) < 0) seenInSession.push(i);
+    if (!animate || still) { tFill(p); return; }
+    tlead.classList.add('swap'); ttitle.classList.add('clipping');
+    setTimeout(function () { ttitle.classList.remove('clipping'); }, 1000);
+    trise.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-135%)' }], { duration: 260, easing: 'cubic-bezier(.5,0,.9,.4)', fill: 'forwards' });
+    setTimeout(function () {
+      tFill(p); tlead.classList.remove('swap');
+      trise.animate([{ transform: 'translateY(135%)' }, { transform: 'translateY(0)' }], { duration: 640, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'forwards' });
+    }, 270);
+  }
+  // Próxima opção conforme a origem (RN07). Na maquete, os 5 títulos fazem o papel dos sorteáveis.
+  // Devolve -1 quando acabaram as opções (US: estados).
+  // US004: dia avança e volta à primeira (C5); surpresa sorteia de novo (C4); filtros acabam (C3).
+  function nextIndex() {
+    if (origin === 'daily') return (tIndex + 1) % picks.length;
+    var all = picks.map(function (_, i) { return i; }).filter(function (i) { return marked.indexOf(i) < 0; });
+    var fresh = all.filter(function (i) { return seenInSession.indexOf(i) < 0; });
+    if (origin === 'filtered') return fresh.length ? fresh[0] : -1;
+    var from = fresh.length ? fresh : all.filter(function (i) { return i !== tIndex; });
+    return from.length ? from[Math.floor(Math.random() * from.length)] : tIndex;
+  }
+  function advance() {
+    var n = nextIndex();
+    if (n < 0) { showState('acabou-filtros'); return; }
+    tShow(n, true);
+  }
+  function seeAgain() { // C3: recomeça pelos mesmos títulos
+    leaveState(); seenInSession = []; app.classList.add('viewing');
+    tkeys.hidden = false; done.hidden = true; tShow(0, false);
+    window.scrollTo(0, 0); document.getElementById('watch').focus({ preventScroll: true });
+  }
+  function openTitle(i, how) {
+    origin = how; seenInSession = [];
+    app.classList.remove('auto'); clearTimeout(timer); paintPause();
+    app.classList.add('viewing');
+    var label = how === 'daily' ? 'Próxima de hoje' : 'Outra opção';
+    another.setAttribute('aria-label', label); another.title = label;
+    tkeys.hidden = false; done.hidden = true; toast.classList.remove('show');
+    tShow(i, false);
+    window.scrollTo(0, 0);
+    document.getElementById('watch').focus({ preventScroll: true });
+  }
+  function closeTitle() {
+    app.classList.remove('viewing');
+    window.scrollTo(0, 0);
+    document.getElementById('see-today').focus({ preventScroll: true });
+  }
+  function say(text) {
+    toast.textContent = text; toast.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 3500);
+  }
+  document.getElementById('see-today').addEventListener('click', function () { openTitle(current, 'daily'); });
+  document.getElementById('surprise').addEventListener('click', function () { openTitle(Math.floor(Math.random() * picks.length), 'surprise'); });
+  see.addEventListener('click', function () { closeFilters(false); openTitle(0, 'filtered'); });
+  document.getElementById('back').addEventListener('click', closeTitle);
+  document.getElementById('back2').addEventListener('click', closeTitle);
+  document.getElementById('home-again').addEventListener('click', closeTitle);
+  another.addEventListener('click', advance);
+  document.getElementById('watch').addEventListener('click', function () {
+    var p = picks[tIndex];
+    doneText.innerHTML = 'Combinado. <br>Está ' + article(p.s) + ' ' + p.s + '.';
+    tkeys.hidden = true; done.hidden = false; toast.classList.remove('show');
+    document.getElementById('home-again').focus();
+  });
+  function mark(kind) {
+    var p = picks[tIndex];
+    if (marked.indexOf(tIndex) < 0) marked.push(tIndex);
+    say(kind === 'seen' ? 'Anotado: você já viu ' + p.t + '.' : 'Anotado: não vamos mais sugerir ' + p.t + '.');
+    advance();
+  }
+  document.getElementById('seen').addEventListener('click', function () { mark('seen'); });
+  trailer.addEventListener('click', function () { say('Na versão real, o trailer abre no YouTube.'); });
+  document.getElementById('more').addEventListener('click', function () {
+    var syn = document.getElementById('synopsis'), open = syn.classList.toggle('open');
+    this.textContent = open ? 'Ler menos' : 'Ler mais'; this.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+
+  // ---------- estados ----------
+  var sk = document.getElementById('sk'), skKeys = document.getElementById('sk-keys'), sheen = document.getElementById('sheen');
+  var slead = document.getElementById('slead'), skeys = document.getElementById('skeys');
+  var sTitle = document.getElementById('s-title'), sText = document.getElementById('s-text');
+  var sMain = document.getElementById('s-main'), sAlt = document.getElementById('s-alt'), sLive = document.getElementById('s-live');
+  var demo = document.getElementById('demo-state'), retryTimer = null;
+  function filtersNow() { leaveState(); app.classList.remove('viewing'); openFilters(); }
+  var STATES = {
+    'carregando': { loading: true, live: 'Carregando indicação' },
+    'erro': { t: 'Não conseguimos carregar agora.', l: 'Pode ser a sua conexão ou o nosso servidor. Tente de novo em alguns segundos.',
+      main: ['Tentar de novo', function () { showState('carregando'); clearTimeout(retryTimer); retryTimer = setTimeout(function () { leaveState(); }, 1400); }] },
+    'acabou-filtros': { title: true, t: 'Você viu as 10 melhores para esses filtros.', l: 'Mude algum filtro para ver outros títulos, ou passe pelos mesmos 10 de novo.',
+      main: ['Mudar filtros', filtersNow], alt: ['Ver de novo', function () { seeAgain(); }] }
+  };
+  function showState(name) {
+    var s = STATES[name]; if (!s) { leaveState(); return; }
+    app.classList.remove('auto', 'filtering'); clearTimeout(timer); paintPause();
+    app.classList.add('stating'); app.classList.toggle('from-title', !!s.title);
+    sk.hidden = skKeys.hidden = sheen.hidden = !s.loading;
+    slead.hidden = skeys.hidden = !!s.loading;
+    app.setAttribute('aria-busy', s.loading ? 'true' : 'false');
+    if (s.loading) { sLive.textContent = s.live; }
+    else {
+      sLive.textContent = '';
+      sTitle.textContent = s.t; sText.textContent = s.l;
+      sMain.textContent = s.main[0]; sMain.onclick = s.main[1];
+      sAlt.hidden = !s.alt; if (s.alt) { sAlt.textContent = s.alt[0]; sAlt.onclick = s.alt[1]; }
+      window.scrollTo(0, 0); sTitle.focus({ preventScroll: true });
+    }
+    if (demo.value !== name) demo.value = name;
+  }
+  function leaveState() {
+    app.classList.remove('stating', 'from-title'); app.removeAttribute('aria-busy');
+    if (demo.value) demo.value = '';
+  }
+  document.getElementById('back3').addEventListener('click', function () { leaveState(); closeTitle(); });
+  document.getElementById('back').addEventListener('click', function () { if (app.classList.contains('stating')) { leaveState(); closeTitle(); } });
+  demo.addEventListener('change', function () {
+    if (!demo.value) { leaveState(); app.classList.remove('viewing'); return; }
+    if (demo.value === 'acabou-filtros') origin = 'filtered';
+    showState(demo.value);
+  });
+  var q = new URLSearchParams(location.search).get('estado');
+  if (q && STATES[q]) showState(q);
+})();
+</script>
+</body>
+</html>
