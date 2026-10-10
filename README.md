@@ -24,16 +24,16 @@ Abra http://localhost:3000.
 
 ## Scripts
 
-| Script | O que faz |
-| --- | --- |
-| `npm run dev` | Servidor de desenvolvimento |
-| `npm run build` | Build de produção |
-| `npm run start` | Sobe o build de produção |
-| `npm run lint` | ESLint |
-| `npm run format` | Formata o código com Prettier |
+| Script                 | O que faz                                 |
+| ---------------------- | ----------------------------------------- |
+| `npm run dev`          | Servidor de desenvolvimento               |
+| `npm run build`        | Build de produção                         |
+| `npm run start`        | Sobe o build de produção                  |
+| `npm run lint`         | ESLint                                    |
+| `npm run format`       | Formata o código com Prettier             |
 | `npm run format:check` | Confere a formatação sem alterar arquivos |
-| `npm run typecheck` | Checagem de tipos (`tsc --noEmit`) |
-| `npm test` | Testes com Vitest |
+| `npm run typecheck`    | Checagem de tipos (`tsc --noEmit`)        |
+| `npm test`             | Testes com Vitest                         |
 
 ## Atribuição
 
