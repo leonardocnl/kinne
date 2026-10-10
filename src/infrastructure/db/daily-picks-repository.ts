@@ -1,0 +1,105 @@
+import type { DailyPickTitle, DailyPicksRepository } from "@/application/daily-picks";
+import type { TitleType } from "@/domain/catalog";
+import type { DailyPick } from "@/domain/daily-picks";
+import type { Day } from "@/domain/day";
+import type { KinneGenre } from "@/domain/genre";
+import { and, eq, gte, isNotNull, sql } from "drizzle-orm";
+import type { Db } from "./client";
+import {
+    catalogTitleGenres,
+    catalogTitles,
+    dailyPicks,
+    genres,
+    streamingAvailability,
+    streamingServices,
+} from "./schema";
+
+const COUNTRY = "BR";
+
+export class DrizzleDailyPicksRepository implements DailyPicksRepository {
+    constructor(private readonly db: Db) {}
+
+    async picksOf(day: Day): Promise<DailyPickTitle[]> {
+        const rows = await this.db
+            .select({
+                genre: dailyPicks.kinneGenre,
+                slug: catalogTitles.slug,
+                type: catalogTitles.titleType,
+                title: catalogTitles.displayTitle,
+                tagline: catalogTitles.tagline,
+                synopsis: catalogTitles.synopsis,
+                releaseYear: catalogTitles.releaseYear,
+                runtimeMinutes: catalogTitles.runtimeMinutes,
+                backdropImagePath: catalogTitles.backdropImagePath,
+                streamingTmdbIds: sql<number[]>`coalesce(array_agg(${streamingServices.tmdbId})
+                    filter (where ${streamingServices.tmdbId} is not null), '{}')`,
+            })
+            .from(dailyPicks)
+            .innerJoin(catalogTitles, eq(catalogTitles.id, dailyPicks.catalogTitleId))
+            .leftJoin(
+                streamingAvailability,
+                and(
+                    eq(streamingAvailability.catalogTitleId, catalogTitles.id),
+                    eq(streamingAvailability.countryCode, COUNTRY),
+                ),
+            )
+            .leftJoin(
+                streamingServices,
+                eq(streamingServices.id, streamingAvailability.streamingServiceId),
+            )
+            .where(eq(dailyPicks.pickDate, day))
+            .groupBy(dailyPicks.kinneGenre, catalogTitles.id);
+        return rows.map((r) => ({
+            ...r,
+            genre: r.genre as KinneGenre,
+            type: r.type as TitleType,
+        }));
+    }
+
+    async candidates() {
+        const rows = await this.db
+            .select({
+                id: catalogTitles.id,
+                type: catalogTitles.titleType,
+                rating: catalogTitles.tmdbAverageRating,
+                votes: catalogTitles.tmdbVoteCount,
+                genres: sql<string[]>`array_agg(distinct ${genres.kinneGenre})`,
+                onStreaming: sql<boolean>`exists (select 1 from ${streamingAvailability}
+                    where ${streamingAvailability.catalogTitleId} = ${catalogTitles.id}
+                    and ${streamingAvailability.countryCode} = ${COUNTRY})`,
+            })
+            .from(catalogTitles)
+            .innerJoin(catalogTitleGenres, eq(catalogTitleGenres.catalogTitleId, catalogTitles.id))
+            .innerJoin(genres, eq(genres.id, catalogTitleGenres.genreId))
+            .where(isNotNull(genres.kinneGenre))
+            .groupBy(catalogTitles.id);
+        return rows.map((r) => ({
+            ...r,
+            type: r.type as TitleType,
+            rating: Number(r.rating),
+            genres: r.genres as KinneGenre[],
+        }));
+    }
+
+    async history(from: Day) {
+        const rows = await this.db
+            .select({ day: dailyPicks.pickDate, titleId: dailyPicks.catalogTitleId })
+            .from(dailyPicks)
+            .where(gte(dailyPicks.pickDate, from));
+        return rows.map((r) => ({ ...r, day: r.day as Day }));
+    }
+
+    async saveDay(day: Day, picks: DailyPick[]) {
+        // Uma instrução só: as cinco entram juntas ou nenhuma, e o dia que já existe fica.
+        await this.db
+            .insert(dailyPicks)
+            .values(
+                picks.map((p) => ({
+                    pickDate: day,
+                    kinneGenre: p.genre,
+                    catalogTitleId: p.titleId,
+                })),
+            )
+            .onConflictDoNothing();
+    }
+}

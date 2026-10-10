@@ -28,3 +28,7 @@ jobs:
         env:
           TMDB_TOKEN: ${{ secrets.TMDB_TOKEN }}
           DATABASE_URL_POOLED: ${{ secrets.DATABASE_URL_POOLED }}
+      # Indicações de hoje e de amanhã, com o catálogo recém-atualizado.
+      - run: npm run daily:pick
+        env:
+          DATABASE_URL_POOLED: ${{ secrets.DATABASE_URL_POOLED }}
