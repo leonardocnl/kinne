@@ -43,3 +43,11 @@ export function pickTrailer(videos: readonly Video[], originalLanguage: string):
         trailers.find((v) => v.languageCode === originalLanguage);
     return chosen ? { youtubeKey: chosen.key, languageCode: chosen.languageCode } : null;
 }
+
+// "1h 44min"; em séries, "55min por episódio".
+export function formatRuntime(minutes: number, type: TitleType): string {
+    const hours = Math.floor(minutes / 60);
+    const rest = minutes % 60;
+    const text = hours ? `${hours}h ${String(rest).padStart(2, "0")}min` : `${rest}min`;
+    return type === "series" ? `${text} por episódio` : text;
+}

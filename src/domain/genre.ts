@@ -2,6 +2,14 @@ export const KINNE_GENRES = ["action", "comedy", "drama", "romance", "suspense"]
 
 export type KinneGenre = (typeof KINNE_GENRES)[number];
 
+export const GENRE_LABELS: Record<KinneGenre, string> = {
+    action: "Ação",
+    comedy: "Comédia",
+    drama: "Drama",
+    romance: "Romance",
+    suspense: "Suspense",
+};
+
 // Gêneros do TMDB (filme e série) que viram um gênero do Kinne; os demais ficam de fora.
 const BY_TMDB_GENRE_ID: Record<number, KinneGenre> = {
     28: "action",

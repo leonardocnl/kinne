@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { baseSlug, meetsQualityFloor, pickTrailer, uniqueSlug, type Video } from "./catalog";
+import {
+    baseSlug,
+    formatRuntime,
+    meetsQualityFloor,
+    pickTrailer,
+    uniqueSlug,
+    type Video,
+} from "./catalog";
 
 describe("meetsQualityFloor", () => {
     it("aceita nota e votos no limite", () => {
@@ -88,5 +95,14 @@ describe("pickTrailer", () => {
 
     it("não escolhe trailer em outro idioma", () => {
         expect(pickTrailer([yt("en1", "en")], "ja")).toBeNull();
+    });
+});
+
+describe("formatRuntime", () => {
+    it("escreve horas e minutos, e por episódio em séries", () => {
+        expect(formatRuntime(104, "movie")).toBe("1h 44min");
+        expect(formatRuntime(128, "movie")).toBe("2h 08min");
+        expect(formatRuntime(65, "series")).toBe("1h 05min por episódio");
+        expect(formatRuntime(55, "series")).toBe("55min por episódio");
     });
 });
