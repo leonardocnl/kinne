@@ -16,7 +16,7 @@ export function Dock({ tall, className, ...rest }: DockProps) {
         <div
             data-dock={tall ? "tall" : ""}
             className={cx(
-                "max-desktop:fixed max-desktop:inset-x-0 max-desktop:bottom-0 max-desktop:z-10 max-desktop:bg-dock max-desktop:px-gutter max-desktop:pt-7 max-desktop:pb-safe",
+                "max-desktop:fixed max-desktop:inset-x-0 max-desktop:bottom-0 max-desktop:z-10 max-desktop:bg-dock max-desktop:px-gutter max-desktop:pt-dock-top max-desktop:pb-safe",
                 className,
             )}
             {...rest}

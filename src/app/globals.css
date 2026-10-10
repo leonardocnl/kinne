@@ -81,8 +81,17 @@
     --spacing-digit: 0.58em; /* célula de um algarismo na Darker Grotesque */
     --spacing-digit-sep: 0.26em; /* célula da vírgula */
     --spacing-skeleton-title: clamp(2.4rem, 4.2vw, 3.8rem);
-    --spacing-dock: 6.5rem; /* espaço da barra presa à base (Dock), sem a área segura */
-    --spacing-dock-tall: 11.25rem; /* espaço da barra com "Combinado" */
+    /* barra presa à base (Dock): a altura sai das mesmas peças que a montam, sem a área segura */
+    --spacing-dock-top: 1.75rem; /* acima dos botões */
+    --spacing-dock-base: 0.875rem; /* abaixo dos botões, antes da área segura */
+    --spacing-dock-gap: 0.875rem; /* entre "Combinado" e o botão */
+    --spacing-dock: calc(
+        var(--spacing-dock-top) + var(--spacing-control) + var(--spacing-dock-base)
+    );
+    --spacing-dock-tall: calc(
+        var(--spacing-dock) + var(--text-confirm) * var(--text-confirm--line-height) +
+            var(--spacing-dock-gap)
+    ); /* com "Combinado", em uma linha */
 
     --container-*: initial;
     --container-page: 80rem; /* largura máxima da página */
@@ -208,7 +217,7 @@
 
 /* base que respeita a área segura do aparelho (barra de gestos do iPhone) */
 @utility pb-safe {
-    padding-bottom: calc(0.875rem + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--spacing-dock-base) + env(safe-area-inset-bottom));
 }
 
 /* aviso no pé da tela; com a barra presa à base, logo acima dela (US004 C11) */
@@ -241,7 +250,7 @@
             --dock: var(--spacing-dock-tall);
         }
         @variant max-desktop {
-            --toast-bottom: calc(5.75rem + env(safe-area-inset-bottom));
+            --toast-bottom: calc(var(--spacing-dock) + env(safe-area-inset-bottom));
             scroll-padding-bottom: calc(var(--dock) + env(safe-area-inset-bottom));
             & body {
                 padding-bottom: calc(var(--dock) + env(safe-area-inset-bottom));

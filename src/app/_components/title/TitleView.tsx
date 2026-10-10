@@ -128,7 +128,7 @@ export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
                 >
                     {done ? (
                         // US005 C1: no lugar e na altura da fileira de botões
-                        <div className="flex items-center gap-4.5 max-desktop:flex-col max-desktop:items-stretch max-desktop:gap-3.5">
+                        <div className="flex items-center gap-4.5 max-desktop:flex-col max-desktop:items-stretch max-desktop:gap-dock-gap">
                             <p className="flex items-center gap-2.5 font-display text-confirm font-medium whitespace-nowrap">
                                 <CheckIcon />
                                 Combinado.{where && ` Está ${where}.`}
