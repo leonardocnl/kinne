@@ -1,13 +1,13 @@
 import { Skeleton } from "../ui/Skeleton";
-import { billingRow, homeMain } from "./layout";
-import { TopBar } from "./TopBar";
+import { billingRow, screenMain } from "../layout";
+import { TopBar } from "../TopBar";
 
 /** Tela inicial carregando (CM001): cada bloco no formato da peça que vai substituir. */
 export function HomeSkeleton() {
     return (
         <>
             <TopBar />
-            <main aria-busy="true" className={homeMain}>
+            <main aria-busy="true" className={screenMain}>
                 <p role="status" className="sr-only">
                     Carregando as indicações de hoje
                 </p>

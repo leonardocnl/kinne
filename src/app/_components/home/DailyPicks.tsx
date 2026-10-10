@@ -5,9 +5,12 @@ import type { HomePick } from "../../_data/home";
 import { Button } from "../ui/Button";
 import { cx } from "../ui/cx";
 import { Frame, FrameImage } from "../ui/Frame";
+import { Fact, Facts } from "../ui/Facts";
 import { PauseIcon, PlayIcon } from "../ui/icons";
 import { TextLink } from "../ui/TextLink";
-import { billingRow, homeMain } from "./layout";
+import { billingRow, screenMain } from "../layout";
+import { titleHref } from "../title/origin";
+import { useSurprise } from "../title/useSurprise";
 import { initialRotation, rotate } from "./rotation";
 import { TodayReel } from "./TodayReel";
 
@@ -27,8 +30,6 @@ function useReducedMotion() {
     );
 }
 
-const fact = "border-l border-line px-3.5 first:border-l-0 first:pl-0 first:font-semibold";
-
 /**
  * Indicações do dia (US001): quadro com rotação automática, texto da indicação em destaque e a
  * faixa "Hoje". A rotação para no primeiro toque ou tecla (fora do botão de pausa) e não existe
@@ -38,6 +39,7 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
     const reducedMotion = useReducedMotion();
     const [rotation, dispatch] = useReducer(rotate, initialRotation);
     const pauseRef = useRef<HTMLButtonElement>(null);
+    const surprise = useSurprise("push");
 
     const { current, playing } = rotation;
     const rotating = playing && !reducedMotion;
@@ -61,7 +63,7 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
     const show = (index: number) => dispatch({ type: "show", index, animate: !reducedMotion });
 
     return (
-        <main className={homeMain}>
+        <main className={screenMain}>
             <Frame>
                 {picks.map(
                     (p, i) =>
@@ -139,30 +141,23 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
                     >
                         {pick.phrase}
                     </p>
-                    <ul
+                    <Facts
                         className={cx(
-                            "flex flex-wrap items-center gap-y-1 text-data text-soft transition-opacity duration-fade motion-reduce:transition-none",
+                            "transition-opacity duration-fade motion-reduce:transition-none",
                             swap === "out" && "opacity-0",
                         )}
                     >
                         {pick.facts.map((text) => (
-                            <li key={text} className={fact}>
-                                {text}
-                            </li>
+                            <Fact key={text}>{text}</Fact>
                         ))}
                         {pick.streaming && (
-                            <li
-                                className={cx(
-                                    fact,
-                                    "max-desktop:basis-full max-desktop:border-l-0 max-desktop:pl-0",
-                                )}
-                            >
+                            <Fact className="max-desktop:basis-full max-desktop:border-l-0 max-desktop:pl-0">
                                 Disponível {pick.streaming.preposition}{" "}
                                 <b className="font-medium text-paper">{pick.streaming.name}</b>
-                            </li>
+                            </Fact>
                         )}
-                    </ul>
-                    <TextLink href={`/titulo/${pick.slug}`} className="-mt-1.5 -mb-2.5">
+                    </Facts>
+                    <TextLink href={titleHref(pick.slug, "dia")} className="-mt-1.5 -mb-2.5">
                         Ver este título<span className="sr-only">: {pick.title}</span>{" "}
                         <span aria-hidden="true">→</span>
                     </TextLink>
@@ -176,6 +171,8 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
                     </Button>
                     <Button
                         variant="quiet"
+                        onClick={() => surprise.draw()}
+                        aria-busy={surprise.pending}
                         className="max-desktop:min-w-0 max-desktop:flex-1 max-desktop:px-2.5 desktop:min-w-42"
                     >
                         Me surpreenda

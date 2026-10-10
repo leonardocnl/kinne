@@ -1,5 +1,5 @@
-// Esqueleto comum aos três estados da tela inicial: com dados, carregando e erro.
-export const homeMain = "flex flex-col gap-3.5 max-desktop:gap-3";
+// Esqueleto comum às telas com o quadro da imagem em cima e o texto embaixo.
+export const screenMain = "flex flex-col gap-3.5 max-desktop:gap-3";
 
 // Texto à esquerda e botões à direita no computador; um embaixo do outro no celular.
 export const billingRow =
