@@ -70,6 +70,17 @@ describe("pickTrailer", () => {
         });
     });
 
+    it("usa o idioma original mesmo quando não é inglês", () => {
+        expect(pickTrailer([yt("en1", "en"), yt("ko1", "ko")], "ko")).toEqual({
+            youtubeKey: "ko1",
+            languageCode: "ko",
+        });
+    });
+
+    it("ignora trailer sem idioma", () => {
+        expect(pickTrailer([yt("x", null)], "ko")).toBeNull();
+    });
+
     it("ignora o que não é trailer do YouTube", () => {
         const vimeo = { ...yt("v", "pt"), site: "Vimeo" };
         expect(pickTrailer([vimeo, yt("teaser", "pt", "Teaser")], "pt")).toBeNull();

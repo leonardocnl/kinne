@@ -4,6 +4,10 @@ import type { TmdbClient } from "./client";
 
 type DiscoverPage = { page: number; total_pages: number; results: { id: number }[] };
 
+type RawVideos = {
+    results: { site: string; type: string; key: string; iso_639_1: string | null }[];
+};
+
 type RawDetails = {
     id: number;
     title?: string;
@@ -26,9 +30,7 @@ type RawDetails = {
         keywords?: { id: number; name: string }[];
         results?: { id: number; name: string }[];
     };
-    videos: {
-        results: { site: string; type: string; key: string; iso_639_1: string | null }[];
-    };
+    videos: RawVideos;
 };
 
 const tmdbPath = (type: TitleType) => (type === "movie" ? "movie" : "tv");
@@ -69,6 +71,13 @@ export class TmdbCatalogSource implements CatalogSource {
             append_to_response: "videos,keywords",
             include_video_language: "pt,en,null",
         });
+        // O pedido acima só traz vídeos em pt e en; outro idioma original exige uma busca à parte.
+        const videos = ["pt", "en"].includes(d.original_language)
+            ? d.videos
+            : await this.client.get<RawVideos>(`/${tmdbPath(type)}/${tmdbId}/videos`, {
+                  language: "pt-BR",
+                  include_video_language: `pt,${d.original_language}`,
+              });
         const date = type === "movie" ? d.release_date : d.first_air_date;
         return {
             tmdbId: d.id,
@@ -86,7 +95,7 @@ export class TmdbCatalogSource implements CatalogSource {
             voteCount: d.vote_count,
             genres: d.genres.map(toTag),
             keywords: (d.keywords.keywords ?? d.keywords.results ?? []).map(toTag),
-            videos: d.videos.results.map((v) => ({
+            videos: videos.results.map((v) => ({
                 site: v.site,
                 type: v.type,
                 key: v.key,
