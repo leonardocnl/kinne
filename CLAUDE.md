@@ -26,6 +26,12 @@ App web que recomenda um filme ou série por vez, só entre os streamings por as
 - **Dependências:** não adicionar nenhuma sem perguntar.
 - **README:** manter a frase de atribuição do TMDB. Sem licença (todos os direitos reservados); não criar LICENSE.
 
+## Requisitos
+
+- Antes de qualquer tarefa de produto, leia [docs/requisitos/README.md](docs/requisitos/README.md) e as histórias citadas no pedido. A fonte da verdade é o Google Drive; `docs/requisitos/` é uma cópia.
+- Cite os critérios nos commits quando fizer sentido, ex.: `feat(home): rotate daily picks (US001 C2)`.
+- Se o código precisar contrariar um requisito, pare e pergunte em vez de decidir sozinho.
+
 ## Antes de commitar
 
 `npm run format:check && npm run lint && npm run typecheck && npm test && npm run build` precisam passar.
