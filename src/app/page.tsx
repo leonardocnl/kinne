@@ -1,7 +1,11 @@
+import { Wordmark } from "./_components/ui/Wordmark";
+
 export default function Home() {
     return (
         <main className="flex flex-1 items-center justify-center">
-            <h1 className="font-display text-7xl font-medium">kinne</h1>
+            <h1>
+                <Wordmark />
+            </h1>
         </main>
     );
 }
