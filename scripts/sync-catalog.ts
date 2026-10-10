@@ -4,8 +4,14 @@ import { createDb } from "@/infrastructure/db/client";
 import { DrizzleCatalogRepository } from "@/infrastructure/db/catalog-repository";
 import { TmdbCatalogSource } from "@/infrastructure/tmdb/catalog-source";
 import { TmdbClient } from "@/infrastructure/tmdb/client";
+import { syncEnvErrors } from "@/infrastructure/sync-env";
 
 async function main() {
+    const envErrors = syncEnvErrors(process.env);
+    if (envErrors.length) {
+        for (const e of envErrors) console.error(`Variável de ambiente errada: ${e}`);
+        process.exit(1);
+    }
     const s = await syncCatalog(
         new TmdbCatalogSource(new TmdbClient()),
         new DrizzleCatalogRepository(createDb()),
