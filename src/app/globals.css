@@ -4,8 +4,10 @@
  * Tokens do Kinne, traduzidos de docs/design/maquete-kinnemix.html.
  * Única fonte de valores visuais: componentes e telas só usam as classes geradas daqui.
  * Os padrões do Tailwind que concorrem com os tokens são apagados (initial).
+ * "static" emite todas as variáveis, mesmo as sem classe em uso: a página /design lê os valores
+ * delas em tempo de execução.
  */
-@theme {
+@theme static {
     /* cores */
     --color-*: initial;
     --color-ink: #020202; /* fundo */
