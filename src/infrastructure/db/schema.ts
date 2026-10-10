@@ -137,6 +137,10 @@ export const dailyPicks = pgTable(
             .references(() => catalogTitles.id),
     },
     (t) => [
+        check(
+            "daily_picks_kinne_genre_check",
+            sql`${t.kinneGenre} in ('action', 'comedy', 'drama', 'romance', 'suspense')`,
+        ),
         primaryKey({ columns: [t.pickDate, t.kinneGenre] }),
         index("daily_picks_title_date_idx").on(t.catalogTitleId, t.pickDate),
     ],

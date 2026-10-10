@@ -1,0 +1,1 @@
+ALTER TABLE "daily_picks" ADD CONSTRAINT "daily_picks_kinne_genre_check" CHECK ("daily_picks"."kinne_genre" in ('action', 'comedy', 'drama', 'romance', 'suspense'));
