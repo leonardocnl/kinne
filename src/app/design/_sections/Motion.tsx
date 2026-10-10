@@ -43,6 +43,27 @@ export function Motion() {
                         <TokenValue name="--animate-breathe" />
                     </p>
                 </div>
+                <div className="flex flex-col gap-4">
+                    <Subhead>Troca de capa</Subhead>
+                    <p className="text-caption text-soft">
+                        O título antigo sobe e sai com <code>ease-lift</code> (
+                        <TokenValue name="--ease-lift" />
+                        ), a imagem dissolve e o título novo sobe e entra. A barra de progresso
+                        enche no tempo da capa, que vem de quem usa.
+                    </p>
+                    <ul className="flex flex-col gap-1 text-caption">
+                        {["--animate-rise-out", "--animate-rise-in", "--animate-fill"].map(
+                            (name) => (
+                                <li key={name} className="flex flex-wrap gap-x-3">
+                                    <code className="font-semibold text-paper">
+                                        {name.slice(2)}
+                                    </code>
+                                    <TokenValue name={name} />
+                                </li>
+                            ),
+                        )}
+                    </ul>
+                </div>
             </Split>
         </Section>
     );

@@ -13,6 +13,11 @@ const variants = {
     quiet: cx("h-control px-5.5 text-body font-medium", glass, hover),
     ghost: cx("h-control border border-line bg-ghost px-5 text-small font-medium", hover),
     round: cx("size-control", glass, hover),
+    // pequeno sobre a imagem; o ::before estende o alvo de toque até h-target
+    overlay: cx(
+        "relative size-overlay border border-line bg-veil backdrop-blur-veil before:absolute before:-inset-1.5",
+        hover,
+    ),
 };
 
 // o dado de "Outra opção" gira um pouco no hover
@@ -29,7 +34,7 @@ type ButtonProps = ComponentProps<"button"> &
           }
         | {
               /** círculo só com o ícone (children); o nome vai em aria-label */
-              variant: "round";
+              variant: "round" | "overlay";
               "aria-label": string;
               /** o ícone gira um pouco no hover */
               spinIcon?: boolean;

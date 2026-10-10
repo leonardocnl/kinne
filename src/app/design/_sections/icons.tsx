@@ -29,14 +29,6 @@ export function BackIcon() {
     );
 }
 
-export function PlayIcon() {
-    return (
-        <svg viewBox="0 0 12 12" className="size-3" fill="currentColor" aria-hidden="true">
-            <path d="M3 1.6v8.8L10.4 6z" />
-        </svg>
-    );
-}
-
 export function CheckIcon() {
     return (
         <svg

@@ -34,6 +34,11 @@ const uiStyles = [
         className: "text-caption text-faint",
         sample: "Dados de filmes e séries: TMDB",
     },
+    {
+        name: "footnote",
+        className: "text-footnote text-faint",
+        sample: "O Kinne conta visitas sem identificar quem você é.",
+    },
 ];
 
 export function Typography() {

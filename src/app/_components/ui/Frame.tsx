@@ -1,13 +1,11 @@
-import Image from "next/image";
 import type { ReactNode } from "react";
 import { cx } from "./cx";
+import { TmdbImage } from "./TmdbImage";
 
 type FrameProps = {
-    /** imagem do filme ou série; decorativa, porque o título está no texto ao lado */
-    src?: string;
     /** escurece também a base, para a nota e o trailer ficarem legíveis */
     bottomShade?: boolean;
-    /** conteúdo sobreposto (nota, trailer, voltar) */
+    /** imagens (FrameImage) e conteúdo sobreposto (nota, trailer, voltar) */
     children?: ReactNode;
     className?: string;
 };
@@ -16,7 +14,7 @@ type FrameProps = {
  * Quadro da imagem: cantos retos, 2.39:1 no computador e 16:9 no celular (de ponta a ponta da
  * tela), com gradiente e grão por cima da imagem.
  */
-export function Frame({ src, bottomShade, children, className }: FrameProps) {
+export function Frame({ bottomShade, children, className }: FrameProps) {
     return (
         <div
             className={cx(
@@ -24,15 +22,6 @@ export function Frame({ src, bottomShade, children, className }: FrameProps) {
                 className,
             )}
         >
-            {src && (
-                <Image
-                    src={src}
-                    alt=""
-                    fill
-                    sizes="100vw"
-                    className="-z-3 object-cover object-focus"
-                />
-            )}
             <div
                 aria-hidden="true"
                 className={cx(
@@ -46,5 +35,27 @@ export function Frame({ src, bottomShade, children, className }: FrameProps) {
             />
             {children}
         </div>
+    );
+}
+
+type FrameImageProps = {
+    path: string;
+    /** com várias imagens no quadro, só a visível aparece; a troca dissolve */
+    visible?: boolean;
+    priority?: boolean;
+};
+
+/** Imagem do TMDB que preenche o quadro, por baixo do gradiente e do grão. */
+export function FrameImage({ path, visible = true, priority }: FrameImageProps) {
+    return (
+        <TmdbImage
+            path={path}
+            widths={["w780", "w1280"]}
+            priority={priority}
+            className={cx(
+                "absolute inset-0 -z-3 size-full transition-opacity duration-dissolve motion-reduce:transition-none",
+                !visible && "opacity-0",
+            )}
+        />
     );
 }

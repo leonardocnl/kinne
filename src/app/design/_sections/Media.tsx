@@ -4,7 +4,8 @@ import { Score } from "../../_components/ui/Score";
 import { Skeleton } from "../../_components/ui/Skeleton";
 import { Toast } from "../../_components/ui/Toast";
 import { Wordmark } from "../../_components/ui/Wordmark";
-import { BackIcon, PlayIcon } from "./icons";
+import { PlayIcon } from "../../_components/ui/icons";
+import { BackIcon } from "./icons";
 import { TokenValue } from "./live";
 import { DoDont, Row, Spec } from "./Spec";
 
@@ -12,9 +13,14 @@ export function Media() {
     return (
         <>
             <Spec
-                name="Frame · Score"
-                props={["Frame: src?, bottomShade?, children", "Score: value"]}
-                does="O quadro mostra a imagem do título com gradiente e grão; a nota do TMDB fica por cima, como texto."
+                name="Frame · FrameImage · TmdbImage · Score"
+                props={[
+                    "Frame: bottomShade?, children",
+                    "FrameImage: path, visible?, priority?",
+                    "TmdbImage: path, widths, priority?",
+                    "Score: value",
+                ]}
+                does="O quadro mostra a imagem do título com gradiente e grão; a nota do TMDB fica por cima, como texto. As imagens vêm direto do TMDB, com os tamanhos dele no srcset, sem a otimização da hospedagem (RNF08)."
             >
                 <p className="text-caption text-soft">
                     Proporção <TokenValue name="--aspect-scope" /> no computador e{" "}

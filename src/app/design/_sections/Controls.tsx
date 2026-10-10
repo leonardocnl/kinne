@@ -1,4 +1,6 @@
 import { Button } from "../../_components/ui/Button";
+import { Frame } from "../../_components/ui/Frame";
+import { PauseIcon } from "../../_components/ui/icons";
 import { Chip } from "../../_components/ui/Chip";
 import { GlassPanel } from "../../_components/ui/GlassPanel";
 import { Slider } from "../../_components/ui/Slider";
@@ -13,8 +15,12 @@ export function Controls() {
         <>
             <Spec
                 name="Button"
-                props={['variant: "primary" | "quiet" | "ghost" | "round"', "icon?", "spinIcon?"]}
-                does="Faz uma ação. primary é a ação principal da tela, quiet as outras, ghost fica na barra do topo e round é só ícone."
+                props={[
+                    'variant: "primary" | "quiet" | "ghost" | "round" | "overlay"',
+                    "icon?",
+                    "spinIcon?",
+                ]}
+                does="Faz uma ação. primary é a ação principal da tela, quiet as outras, ghost fica na barra do topo, round é só ícone e overlay é um ícone pequeno sobre a imagem."
             >
                 <Row label="variantes">
                     <Button variant="primary">Escolher agora</Button>
@@ -50,6 +56,21 @@ export function Controls() {
                 <p className="text-caption text-soft">
                     Desativado: opacidade <TokenValue name="--opacity-disabled" />. No hover, todos
                     seguem o quiet; o primary não muda de cor, só encolhe ao ser pressionado.
+                </p>
+                <Row label="overlay sobre a imagem">
+                    <Frame className="w-full">
+                        <div className="absolute top-2.5 left-3 flex items-center gap-2 text-caption text-soft">
+                            <Button variant="overlay" aria-label="Pausar a troca de capas">
+                                <PauseIcon />
+                            </Button>
+                            <span>1 de 5</span>
+                        </div>
+                    </Frame>
+                </Row>
+                <p className="text-caption text-soft">
+                    O overlay mede <TokenValue name="--spacing-overlay" /> para não cobrir a imagem,
+                    mas o alvo de toque continua com <TokenValue name="--spacing-target" />. Fundo{" "}
+                    <code>veil</code> com desfoque <TokenValue name="--blur-veil" />.
                 </p>
                 <Row label="ghost na barra do topo">
                     <div className="flex w-full items-center justify-between gap-4 border-b border-line pb-3">
