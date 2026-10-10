@@ -4,8 +4,7 @@ import { Score } from "../../_components/ui/Score";
 import { Skeleton } from "../../_components/ui/Skeleton";
 import { Toast } from "../../_components/ui/Toast";
 import { Wordmark } from "../../_components/ui/Wordmark";
-import { PlayIcon } from "../../_components/ui/icons";
-import { BackIcon } from "./icons";
+import { BackIcon, PlayIcon } from "../../_components/ui/icons";
 import { TokenValue } from "./live";
 import { DoDont, Row, Spec } from "./Spec";
 

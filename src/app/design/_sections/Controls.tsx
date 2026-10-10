@@ -1,12 +1,14 @@
-import { Button } from "../../_components/ui/Button";
+import { Button, ButtonLink } from "../../_components/ui/Button";
+import { Dock } from "../../_components/ui/Dock";
+import { Fact, Facts } from "../../_components/ui/Facts";
 import { Frame } from "../../_components/ui/Frame";
-import { PauseIcon } from "../../_components/ui/icons";
+import { BackIcon, CheckIcon, DiceIcon, PauseIcon } from "../../_components/ui/icons";
 import { Chip } from "../../_components/ui/Chip";
 import { GlassPanel } from "../../_components/ui/GlassPanel";
 import { Slider } from "../../_components/ui/Slider";
 import { TextLink } from "../../_components/ui/TextLink";
 import { Wordmark } from "../../_components/ui/Wordmark";
-import { CheckIcon, CloseIcon, DiceIcon } from "./icons";
+import { CloseIcon } from "./icons";
 import { FiltersDemo, TokenValue } from "./live";
 import { DoDont, focusRing, Row, Spec, States } from "./Spec";
 
@@ -14,13 +16,14 @@ export function Controls() {
     return (
         <>
             <Spec
-                name="Button"
+                name="Button · ButtonLink"
                 props={[
                     'variant: "primary" | "quiet" | "ghost" | "round" | "overlay"',
                     "icon?",
                     "spinIcon?",
+                    "ButtonLink: href",
                 ]}
-                does="Faz uma ação. primary é a ação principal da tela, quiet as outras, ghost fica na barra do topo, round é só ícone e overlay é um ícone pequeno sobre a imagem."
+                does="Faz uma ação. primary é a ação principal da tela, quiet as outras, ghost fica na barra do topo, round é só ícone e overlay é um ícone pequeno sobre a imagem. ButtonLink tem a mesma cara, mas leva a outra página."
             >
                 <Row label="variantes">
                     <Button variant="primary">Escolher agora</Button>
@@ -35,6 +38,17 @@ export function Controls() {
                     <Button variant="round" aria-label="Outra opção" spinIcon>
                         <DiceIcon />
                     </Button>
+                </Row>
+                <Row label="ButtonLink: leva a outra página">
+                    <ButtonLink variant="primary" href="/">
+                        Voltar ao início
+                    </ButtonLink>
+                    <ButtonLink variant="ghost" href="/" icon={<span aria-hidden="true">←</span>}>
+                        Voltar
+                    </ButtonLink>
+                    <ButtonLink variant="round" href="/" aria-label="Voltar ao início">
+                        <BackIcon />
+                    </ButtonLink>
                 </Row>
                 <States
                     states={["normal", "foco", "desativado"]}
@@ -98,6 +112,68 @@ export function Controls() {
                                 <Button variant="primary">Escolher agora</Button>
                                 <Button variant="primary">Me surpreenda</Button>
                             </>
+                        ),
+                    }}
+                />
+            </Spec>
+
+            <Spec
+                name="Dock"
+                props={["tall?", "(div)"]}
+                does="Prende as ações à base da tela no celular, acima da área segura do aparelho, com um degradê por cima do texto que passa embaixo. No computador fica no lugar. Enquanto existe, a página ganha espaço embaixo e scroll-padding, para a barra não esconder o foco (WCAG 2.4.11)."
+            >
+                <Row label="no celular, presa à base (aqui solta para caber na página)">
+                    <Dock className="w-full max-desktop:static">
+                        <div className="flex gap-2.5">
+                            <Button variant="primary" className="min-w-0 flex-1">
+                                Vou assistir
+                            </Button>
+                            <Button variant="quiet" icon={<CheckIcon />}>
+                                Já vi
+                            </Button>
+                            <Button variant="round" aria-label="Outra opção" spinIcon>
+                                <DiceIcon />
+                            </Button>
+                        </div>
+                    </Dock>
+                </Row>
+                <p className="text-caption text-soft">
+                    Espaço embaixo da página: <TokenValue name="--spacing-dock" />; com{" "}
+                    <code>tall</code>, para “Combinado” e o botão,{" "}
+                    <TokenValue name="--spacing-dock-tall" />.
+                </p>
+            </Spec>
+
+            <Spec
+                name="Facts · Fact"
+                props={["Facts: <ul>", "Fact: <li>"]}
+                does="Os dados do título numa linha, separados por um fio: gênero (em negrito), ano e duração."
+            >
+                <Row label="normal">
+                    <Facts>
+                        <Fact>Suspense</Fact>
+                        <Fact>2017</Fact>
+                        <Fact>1h 44min</Fact>
+                    </Facts>
+                </Row>
+                <DoDont
+                    use={{
+                        note: "só os dados que existem.",
+                        example: (
+                            <Facts>
+                                <Fact>Drama</Fact>
+                                <Fact>2019</Fact>
+                            </Facts>
+                        ),
+                    }}
+                    avoid={{
+                        note: "fio sobrando ou dado vazio.",
+                        example: (
+                            <Facts>
+                                <Fact>Drama</Fact>
+                                <Fact>2019</Fact>
+                                <Fact>—</Fact>
+                            </Facts>
                         ),
                     }}
                 />

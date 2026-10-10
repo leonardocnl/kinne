@@ -81,6 +81,8 @@
     --spacing-digit: 0.58em; /* célula de um algarismo na Darker Grotesque */
     --spacing-digit-sep: 0.26em; /* célula da vírgula */
     --spacing-skeleton-title: clamp(2.4rem, 4.2vw, 3.8rem);
+    --spacing-dock: 6.5rem; /* espaço da barra presa à base (Dock), sem a área segura */
+    --spacing-dock-tall: 11.25rem; /* espaço da barra com "Combinado" */
 
     --container-*: initial;
     --container-page: 80rem; /* largura máxima da página */
@@ -125,6 +127,8 @@
         rgb(2 2 2 / 0) 62%,
         rgb(2 2 2 / 0.55)
     );
+    /* barra presa à base: o texto some por baixo dela */
+    --background-image-dock: linear-gradient(rgb(2 2 2 / 0), var(--color-ink) 1.625rem);
     --background-image-skeleton: radial-gradient(120% 90% at 30% 20%, #1a1a1a, #0a0a0a 70%);
     --background-image-panel-foot: linear-gradient(rgb(14 14 14 / 0), rgb(14 14 14 / 0.94) 18px);
     --background-image-grain: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -202,6 +206,16 @@
     clip-path: inset(-0.16em -0.08em -0.12em -0.08em);
 }
 
+/* base que respeita a área segura do aparelho (barra de gestos do iPhone) */
+@utility pb-safe {
+    padding-bottom: calc(0.875rem + env(safe-area-inset-bottom));
+}
+
+/* aviso no pé da tela; com a barra presa à base, logo acima dela (US004 C11) */
+@utility bottom-toast {
+    bottom: var(--toast-bottom, 1.5rem);
+}
+
 /* lista que rola na horizontal no celular sem mostrar a barra (faixa "Hoje") */
 @utility scrollbar-none {
     scrollbar-width: none;
@@ -217,6 +231,22 @@
 
     body {
         @apply bg-ink font-ui text-body text-paper tabular-nums antialiased;
+    }
+
+    /* Dock no celular: espaço embaixo da página, scroll-padding do tamanho da barra e o aviso
+       logo acima dela */
+    html:has([data-dock]) {
+        --dock: var(--spacing-dock);
+        &:has([data-dock="tall"]) {
+            --dock: var(--spacing-dock-tall);
+        }
+        @variant max-desktop {
+            --toast-bottom: calc(5.75rem + env(safe-area-inset-bottom));
+            scroll-padding-bottom: calc(var(--dock) + env(safe-area-inset-bottom));
+            & body {
+                padding-bottom: calc(var(--dock) + env(safe-area-inset-bottom));
+            }
+        }
     }
 
     :focus-visible {
