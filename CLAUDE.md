@@ -20,9 +20,10 @@ App web que recomenda um filme ou série por vez, só entre os streamings por as
 - **Fontes** (via `next/font/google`): Darker Grotesque peso 500 nos títulos (`font-display`) e Manrope na interface (`font-sans`).
 - **Cores** (tokens do Tailwind em `src/app/globals.css`): fundo `#020202` (`background`), texto `#F2F2EE` (`foreground`), destaque `#FFF340` (`accent`), este usado só no controle principal de cada tela.
 - **Idioma:** interface em pt-BR. Código, nomes de arquivos e commits em inglês; comentários podem ser em português.
+- **Formatação:** o Prettier é a fonte da verdade (`.prettierrc.json`). Indentação de 4 espaços, linhas de até 100 caracteres. O ESLint não cuida de formatação (`eslint-config-prettier`).
 - **Dependências:** não adicionar nenhuma sem perguntar.
 - **README:** manter a frase de atribuição do TMDB. Sem licença (todos os direitos reservados); não criar LICENSE.
 
 ## Antes de commitar
 
-`npm run lint && npm run typecheck && npm test && npm run build` precisam passar.
+`npm run format:check && npm run lint && npm run typecheck && npm test && npm run build` precisam passar.
