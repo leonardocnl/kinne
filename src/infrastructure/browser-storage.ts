@@ -1,5 +1,6 @@
 import { DEFAULT_FILTERS, parseFilters, type Filters } from "@/domain/filters";
 import { isStreaming, type Streaming } from "@/domain/streaming";
+import { isBrowserId } from "@/domain/usage-events";
 
 // Memória do navegador (RNG005). Navegação privada, cota cheia ou armazenamento bloqueado fazem
 // o acesso falhar ou lançar exceção; aí a leitura vale vazio e a escrita é perdida, sem quebrar a
@@ -93,4 +94,22 @@ export const filteredRun = {
     restart() {
         write("sessionStorage", "kinne:filtered-run", { ...filteredRun.read(), seen: [] });
     },
+};
+
+// Sem onde guardar, o código vale até a página recarregar, em vez de mudar a cada evento.
+let currentBrowserId: string | null = null;
+
+/** Código aleatório do navegador para a medição (RNG005, RNF09); criado no primeiro evento. */
+export function browserId(): string {
+    const stored = read("localStorage", "kinne:browser-id");
+    if (isBrowserId(stored)) return stored;
+    currentBrowserId ??= crypto.randomUUID();
+    write("localStorage", "kinne:browser-id", currentBrowserId);
+    return currentBrowserId;
+}
+
+/** Navegador da equipe (US006): a marca fica até limparem os dados do navegador (C3). */
+export const teamBrowser = {
+    is: () => read("localStorage", "kinne:team") === true,
+    mark: () => write("localStorage", "kinne:team", true),
 };

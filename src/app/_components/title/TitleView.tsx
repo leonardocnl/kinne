@@ -6,6 +6,7 @@ import { endOfOptionsHeading } from "@/domain/filters";
 import { filteredRun, shownTitles, watchedTitles } from "@/infrastructure/browser-storage";
 import type { TitleScreen } from "../../_data/title";
 import { screenMain } from "../layout";
+import { track } from "../measure";
 import { StateScreen } from "../StateScreen";
 import { showToast } from "../toast";
 import { Button, ButtonLink } from "../ui/Button";
@@ -16,7 +17,7 @@ import { Frame, FrameImage } from "../ui/Frame";
 import { BackIcon, CheckIcon, DiceIcon, PlayIcon } from "../ui/icons";
 import { Score } from "../ui/Score";
 import { TextLink } from "../ui/TextLink";
-import { titleHref, type Origin } from "./origin";
+import { RECOMMENDATION_SOURCE, titleHref, type Origin } from "./origin";
 import { useFilteredDraw } from "./useFilteredDraw";
 import { useSurprise } from "./useSurprise";
 
@@ -49,6 +50,7 @@ export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
         if (ended) return changeRef.current?.focus();
         shownTitles.add(title.id);
         if (origin === "filtros") filteredRun.see(title.id);
+        track("recommendation_shown", { source: RECOMMENDATION_SOURCE[origin], titleId: title.id });
         if (focusOnArrival) (focusOnArrival === "seen" ? seenRef : anotherRef).current?.focus();
         focusOnArrival = null;
     }, [title.id, origin, ended]);
@@ -73,11 +75,13 @@ export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
         watchedTitles.add(title.id);
         showToast(`Anotado: você já viu ${title.title}.`);
         next("seen");
+        track("already_watched_clicked", { titleId: title.id });
     }
 
     function watch() {
         showToast("");
         setDone(true);
+        track("will_watch_clicked", { titleId: title.id });
     }
 
     const anotherLabel = origin === "dia" ? "Próxima de hoje" : "Outra opção";
@@ -121,6 +125,7 @@ export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
                         href={title.trailerUrl}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => track("trailer_opened", { titleId: title.id })}
                         aria-label={`Ver o trailer de ${title.title} no YouTube (abre em nova aba)`}
                         className="absolute bottom-4 left-4"
                     >
@@ -191,7 +196,11 @@ export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
                                 spinIcon
                                 aria-label={anotherLabel}
                                 title={anotherLabel}
-                                onClick={() => next("another")}
+                                onClick={() => {
+                                    next("another");
+                                    // depois do sorteio: as server actions saem uma por vez
+                                    track("another_option_clicked", { titleId: title.id });
+                                }}
                             >
                                 <DiceIcon />
                             </Button>

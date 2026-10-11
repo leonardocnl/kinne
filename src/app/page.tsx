@@ -1,6 +1,7 @@
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { brasiliaDay, longDate } from "@/domain/day";
+import { AppOpened } from "./_components/AppOpened";
 import { DailyPicks } from "./_components/home/DailyPicks";
 import { HomeErrorBoundary } from "./_components/home/HomeError";
 import { HomeSkeleton } from "./_components/home/HomeSkeleton";
@@ -11,6 +12,7 @@ import { homePicks } from "./_data/home";
 export default function Home() {
     return (
         <Shell>
+            <AppOpened />
             <HomeErrorBoundary>
                 <Suspense fallback={<HomeSkeleton />}>
                     <Today />

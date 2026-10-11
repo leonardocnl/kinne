@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_FILTERS } from "@/domain/filters";
 import {
+    browserId,
     filteredRun,
     saveFilters,
     savedFilters,
     savedStreamings,
     shownTitles,
+    teamBrowser,
     watchedTitles,
 } from "./browser-storage";
 
@@ -93,5 +95,23 @@ describe("browser storage", () => {
         localStorage.setItem("kinne:watched", "[4]");
         vi.stubGlobal("window", { localStorage, sessionStorage: memoryStorage() });
         expect(filteredRun.read()).toEqual({ filters: DEFAULT_FILTERS, watched: [4], seen: [] });
+    });
+
+    it("o código do navegador é criado uma vez e fica entre visitas (RNG005)", () => {
+        const localStorage = memoryStorage();
+        vi.stubGlobal("window", { localStorage });
+        const id = browserId();
+        expect(id).toMatch(/^[0-9a-f-]{36}$/);
+        expect(browserId()).toBe(id);
+        expect(localStorage.getItem("kinne:browser-id")).toBe(JSON.stringify(id));
+    });
+
+    it("a marca da equipe fica no navegador até limparem os dados (US006 C1 e C3)", () => {
+        vi.stubGlobal("window", { localStorage: memoryStorage() });
+        expect(teamBrowser.is()).toBe(false);
+        teamBrowser.mark();
+        expect(teamBrowser.is()).toBe(true);
+        vi.stubGlobal("window", { localStorage: memoryStorage() });
+        expect(teamBrowser.is()).toBe(false);
     });
 });
