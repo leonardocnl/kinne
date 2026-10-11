@@ -99,13 +99,17 @@ export function Media() {
 
             <Spec
                 name="Skeleton"
-                props={['shape: "frame" | "title" | "line" | "data" | "button"', "className?"]}
+                props={[
+                    'shape: "frame" | "title" | "line" | "data" | "button" | "count"',
+                    "className?",
+                ]}
                 does="Ocupa o lugar do conteúdo enquanto ele carrega. Pulsa devagar; parado com movimento reduzido."
             >
                 <Skeleton shape="frame" />
                 <div className="flex flex-col gap-3">
                     <Skeleton shape="title" className="w-4/5 max-w-130" />
                     <Skeleton shape="line" className="w-11/12 max-w-140" />
+                    <Skeleton shape="count" className="font-display" />
                     <span className="flex gap-2.5">
                         <Skeleton shape="data" />
                         <Skeleton shape="data" />

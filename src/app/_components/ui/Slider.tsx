@@ -40,23 +40,25 @@ export function Slider({ label, value, min, max, valueText, className, ...rest }
 }
 
 /**
- * A Darker Grotesque não tem algarismos de largura fixa: cada caractere de um número vai numa
- * célula, para o valor não tremer ao arrastar. Texto que não é número fica como está.
+ * A Darker Grotesque não tem algarismos de largura fixa: cada algarismo vai numa célula, para o
+ * valor não tremer ao arrastar; vírgula e ponto ficam com a largura natural. Texto que não é número
+ * fica como está.
  */
-function Digits({ text }: { text: string }) {
+export function Digits({ text }: { text: string }) {
     if (!/^[\d.,]+$/.test(text)) return text;
     return (
         <>
             <span className="sr-only">{text}</span>
             <span className="inline-flex" aria-hidden="true">
-                {[...text].map((char, i) => (
-                    <span
-                        key={i}
-                        className={cx("text-center", /\d/.test(char) ? "w-digit" : "w-digit-sep")}
-                    >
-                        {char}
-                    </span>
-                ))}
+                {[...text].map((char, i) =>
+                    /\d/.test(char) ? (
+                        <span key={i} className="w-digit text-center">
+                            {char}
+                        </span>
+                    ) : (
+                        <span key={i}>{char}</span>
+                    ),
+                )}
             </span>
         </>
     );

@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { savedStreamings, shownTitles, watchedTitles } from "./browser-storage";
+import { DEFAULT_FILTERS } from "@/domain/filters";
+import {
+    saveFilters,
+    savedFilters,
+    savedStreamings,
+    shownTitles,
+    watchedTitles,
+} from "./browser-storage";
 
 function memoryStorage(): Storage {
     const data = new Map<string, string>();
@@ -45,5 +52,26 @@ describe("browser storage", () => {
         });
         expect(shownTitles.read()).toEqual([]);
         expect(() => shownTitles.add(1)).not.toThrow();
+    });
+
+    it("streamings ficam entre visitas; o resto dos filtros, só na aba (US002 C7, RNG005)", () => {
+        const localStorage = memoryStorage();
+        vi.stubGlobal("window", { localStorage, sessionStorage: memoryStorage() });
+        expect(savedFilters()).toEqual(DEFAULT_FILTERS);
+        const chosen = { ...DEFAULT_FILTERS, streamings: ["max" as const], minRating: 7.5 };
+        saveFilters(chosen);
+        expect(savedFilters()).toEqual(chosen);
+        // outra visita: aba nova, mesmo navegador
+        vi.stubGlobal("window", { localStorage, sessionStorage: memoryStorage() });
+        expect(savedFilters()).toEqual({ ...DEFAULT_FILTERS, streamings: ["max"] });
+    });
+
+    it("filtros mexidos à mão voltam ao padrão, mantendo os streamings", () => {
+        const localStorage = memoryStorage();
+        const sessionStorage = memoryStorage();
+        localStorage.setItem("kinne:streamings", '["netflix"]');
+        sessionStorage.setItem("kinne:filters", '{"type":"anime"}');
+        vi.stubGlobal("window", { localStorage, sessionStorage });
+        expect(savedFilters()).toEqual({ ...DEFAULT_FILTERS, streamings: ["netflix"] });
     });
 });

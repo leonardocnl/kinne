@@ -2,13 +2,12 @@ import { Button, ButtonLink } from "../../_components/ui/Button";
 import { Dock } from "../../_components/ui/Dock";
 import { Fact, Facts } from "../../_components/ui/Facts";
 import { Frame } from "../../_components/ui/Frame";
-import { BackIcon, CheckIcon, DiceIcon, PauseIcon } from "../../_components/ui/icons";
+import { BackIcon, CheckIcon, CloseIcon, DiceIcon, PauseIcon } from "../../_components/ui/icons";
 import { Chip } from "../../_components/ui/Chip";
 import { GlassPanel } from "../../_components/ui/GlassPanel";
 import { Slider } from "../../_components/ui/Slider";
 import { TextLink } from "../../_components/ui/TextLink";
 import { Wordmark } from "../../_components/ui/Wordmark";
-import { CloseIcon } from "./icons";
 import { FiltersDemo, TokenValue } from "./live";
 import { DoDont, focusRing, Row, Spec, States } from "./Spec";
 
@@ -256,8 +255,12 @@ export function Controls() {
 
             <Spec
                 name="GlassPanel · Slider"
-                props={["GlassPanel: <div>", "Slider: label, value, min, max, valueText"]}
-                does="O painel de vidro reúne os filtros sobre a imagem; o slider escolhe um número com o valor escrito ao lado. No celular o painel ocupa a tela."
+                props={[
+                    "GlassPanel: <div>",
+                    "Slider: label, value, min, max, valueText",
+                    "Digits: text",
+                ]}
+                does="O painel de vidro reúne os filtros sobre a imagem; o slider escolhe um número com o valor escrito ao lado; Digits põe cada algarismo numa célula fixa, no slider e no contador. No celular o painel ocupa a tela."
             >
                 <div className="relative bg-frame p-4 max-desktop:-mx-gutter max-desktop:p-0">
                     <FiltersDemo />

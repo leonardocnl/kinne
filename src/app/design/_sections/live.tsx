@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "../../_components/ui/Button";
 import { Chip, RadioChip } from "../../_components/ui/Chip";
 import { GlassPanel } from "../../_components/ui/GlassPanel";
-import { Slider } from "../../_components/ui/Slider";
+import { Digits, Slider } from "../../_components/ui/Slider";
 import { cx } from "../../_components/ui/cx";
 import { contrast, wcagLevel } from "./contrast";
 
@@ -257,7 +257,7 @@ export function FiltersDemo() {
             <Slider
                 className="border-t border-line px-1 pt-3"
                 label="Nota TMDB mínima"
-                min={6}
+                min={6.4}
                 max={9}
                 step={0.1}
                 value={rating}
@@ -276,7 +276,13 @@ export function FiltersDemo() {
             />
             <div className="-mx-5 -mb-5 flex flex-col gap-3 bg-panel-foot px-5 pb-5 max-desktop:-mx-4 max-desktop:px-4">
                 <div className="flex items-center gap-3.5 border-t border-line px-1 pt-4">
-                    <Button variant="primary" className="flex-1" disabled={none}>
+                    <p className="flex min-w-23 flex-col items-center text-center text-caption text-faint">
+                        <b className="pb-1.25 font-display text-count font-medium text-paper">
+                            <Digits text={none ? "0" : "2.901"} />
+                        </b>
+                        <span>títulos combinam</span>
+                    </p>
+                    <Button variant="primary" className="flex-1 px-2.5" disabled={none}>
                         Ver recomendação
                     </Button>
                 </div>

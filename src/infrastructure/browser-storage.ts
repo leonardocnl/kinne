@@ -1,3 +1,4 @@
+import { DEFAULT_FILTERS, parseFilters, type Filters } from "@/domain/filters";
 import { isStreaming, type Streaming } from "@/domain/streaming";
 
 // Memória do navegador (RNG005). Navegação privada, cota cheia ou armazenamento bloqueado fazem
@@ -46,4 +47,20 @@ export function savedStreamings(): Streaming[] {
     return Array.isArray(value)
         ? value.filter((s): s is Streaming => typeof s === "string" && isStreaming(s))
         : [];
+}
+
+/**
+ * Os filtros da última escolha (US002): os streamings voltam em outra visita (C7); o resto vale
+ * só enquanto a aba está aberta (RNG005). O que não tem o formato esperado volta ao padrão.
+ */
+export function savedFilters(): Filters {
+    const streamings = savedStreamings();
+    const rest = read("sessionStorage", "kinne:filters");
+    const saved = typeof rest === "object" && rest !== null ? rest : {};
+    return parseFilters({ ...saved, streamings }) ?? { ...DEFAULT_FILTERS, streamings };
+}
+
+export function saveFilters({ streamings, ...rest }: Filters) {
+    write("localStorage", "kinne:streamings", streamings);
+    write("sessionStorage", "kinne:filters", rest);
 }

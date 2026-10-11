@@ -79,7 +79,8 @@
     --spacing-overlay: 2rem; /* botão pequeno sobre a imagem; o alvo de toque continua 44px */
     --spacing-gutter: clamp(1rem, 3vw, 2.5rem); /* margem lateral da página */
     --spacing-digit: 0.58em; /* célula de um algarismo na Darker Grotesque */
-    --spacing-digit-sep: 0.26em; /* célula da vírgula */
+    /* painel de filtros no computador: cabe na capa e na janela, com folga de 1rem */
+    --spacing-panel-height: min(100%, 100dvh - 2rem);
     --spacing-skeleton-title: clamp(2.4rem, 4.2vw, 3.8rem);
     /* barra presa à base (Dock): a altura sai das mesmas peças que a montam, sem a área segura */
     --spacing-dock-top: 1.75rem; /* acima dos botões */
@@ -139,6 +140,8 @@
     /* barra presa à base: o texto some por baixo dela */
     --background-image-dock: linear-gradient(rgb(2 2 2 / 0), var(--color-ink) 1.625rem);
     --background-image-skeleton: radial-gradient(120% 90% at 30% 20%, #1a1a1a, #0a0a0a 70%);
+    /* base da área que rola nos filtros, quando há mais campos abaixo */
+    --background-image-scroll-hint: linear-gradient(rgb(2 2 2 / 0), var(--color-scrim-strong));
     --background-image-panel-foot: linear-gradient(rgb(14 14 14 / 0), rgb(14 14 14 / 0.94) 18px);
     --background-image-grain: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     --opacity-grain: 0.42;
@@ -162,6 +165,12 @@
     --animate-rise-in: rise-in 640ms var(--ease-settle);
     /* barra de progresso da capa; a duração vem de quem usa (US001 RNE002) */
     --animate-fill: fill linear forwards;
+    /* painel de filtros entrando: da direita no computador, de baixo no celular */
+    --animate-panel-in: panel-in var(--transition-duration-panel) var(--ease-settle);
+    --animate-panel-up: panel-up var(--transition-duration-panel) var(--ease-settle);
+    /* e saindo pelo mesmo caminho */
+    --animate-panel-out: panel-out var(--transition-duration-fade) ease forwards;
+    --animate-panel-down: panel-down var(--transition-duration-fade) ease forwards;
 
     @keyframes rise-out {
         to {
@@ -172,6 +181,34 @@
     @keyframes rise-in {
         from {
             transform: translateY(135%);
+        }
+    }
+
+    @keyframes panel-in {
+        from {
+            opacity: 0;
+            transform: translateX(0.875rem);
+        }
+    }
+
+    @keyframes panel-up {
+        from {
+            opacity: 0;
+            transform: translateY(0.875rem);
+        }
+    }
+
+    @keyframes panel-out {
+        to {
+            opacity: 0;
+            transform: translateX(0.875rem);
+        }
+    }
+
+    @keyframes panel-down {
+        to {
+            opacity: 0;
+            transform: translateY(0.875rem);
         }
     }
 
