@@ -41,3 +41,15 @@ App web que recomenda um filme ou série por vez, só entre os streamings por as
 - `main` = production. Never push to it directly.
 - `develop` = integration. Never push to it directly; it only changes through merged PRs.
 - `feat/…`, `fix/…`, `docs/…` = short-lived task branches, one per task, in kebab-case (e.g. `feat/analytics-events`). Branch off `develop` and open the PR into `develop`.
+
+## Security
+
+Leia [docs/security.md](docs/security.md) antes de qualquer tarefa que mexa em entrada de dados, rotas, segredos, dependências ou CI. Regras inegociáveis (exceção só registrada em "Accepted risks"):
+
+- Nenhum query param em URLs; a URL leva só o caminho. Estado transitório vai em `sessionStorage` ou `history.state`.
+- Nenhum segredo em código de cliente: módulos com segredo ou banco importam `server-only`, e nenhum segredo usa o prefixo `NEXT_PUBLIC_`.
+- Schemas zod estritos (chaves desconhecidas rejeitadas) em toda server action.
+- Nenhuma saída de console em produção.
+- Nada de `dangerouslySetInnerHTML`.
+- Erros para o usuário sempre genéricos; detalhe só no log do servidor.
+- Todo PR preenche o checklist de segurança do template.
