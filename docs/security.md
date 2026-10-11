@@ -100,7 +100,7 @@ Target: grade A+ on securityheaders.com and Mozilla Observatory.
 ## 11. Supply chain and CI/CD
 
 - `package-lock.json` committed; installs use `npm ci`.
-- CI runs `npm audit --audit-level=high` and fails on findings.
+- CI runs `npm audit --omit=dev --audit-level=high` and fails on findings: the blocking audit covers production dependencies. Dev dependencies are audited by a second, non-blocking job (`npm audit --audit-level=high`) so their findings stay visible in every run.
 - Dependabot enabled for npm and GitHub Actions.
 - GitHub Actions pinned to commit SHAs; each workflow declares `permissions:` with the minimum (default `contents: read`).
 - CodeQL analysis on PRs.
@@ -164,8 +164,9 @@ AI-assisted code follows these rules because the process checks them, not becaus
 
 ## 17. Accepted risks
 
-| Risk                                                            | Why accepted                                                                      | Mitigation                                                                                 |
-| --------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| Anonymous events can be forged by a script that mimics the site | Guest mode has no identity to verify                                              | Strict schemas, rate limits, dedupe, analysis ignores outliers                             |
-| Team capability path (US006) works for anyone who learns it     | Simplest exclusion without accounts                                               | Long random path, rotated if leaked; impact limited to excluding that browser from metrics |
-| Missing titles return 200 with `noindex` (soft 404)             | Next.js cacheComponents behaviour; real 404 would need a database query per visit | Documented in requirements doc 04                                                          |
+| Risk                                                            | Why accepted                                                                      | Mitigation                                                                                                          |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Anonymous events can be forged by a script that mimics the site | Guest mode has no identity to verify                                              | Strict schemas, rate limits, dedupe, analysis ignores outliers                                                      |
+| Team capability path (US006) works for anyone who learns it     | Simplest exclusion without accounts                                               | Long random path, rotated if leaked; impact limited to excluding that browser from metrics                          |
+| Missing titles return 200 with `noindex` (soft 404)             | Next.js cacheComponents behaviour; real 404 would need a database query per visit | Documented in requirements doc 04                                                                                   |
+| `braces` <=3.0.3 (GHSA-vfj7-8cjw-p6xm) via `eslint-config-next` | Dev-only lint tooling; no patched release exists                                  | Never reaches the production bundle; lint only processes repo-controlled paths; revisit when Dependabot opens a fix |
