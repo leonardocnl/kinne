@@ -6,6 +6,17 @@ updates:
       default-days: 7
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/node"
+        versions: [">=25"]
+        update-types:
+          [
+            "version-update:semver-major",
+            "version-update:semver-minor",
+            "version-update:semver-patch",
+          ]
   - package-ecosystem: github-actions
     directory: /
     cooldown:
