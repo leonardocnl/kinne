@@ -39,6 +39,9 @@ async function main() {
 }
 
 main().catch((e) => {
-    console.error(e);
+    // servidor fora do ar: uma linha basta; o resto é erro de verdade e merece o rastro
+    if (e instanceof TypeError && e.message === "fetch failed") {
+        console.error(`não consegui conectar em ${base}`);
+    } else console.error(e);
     process.exit(1);
 });
