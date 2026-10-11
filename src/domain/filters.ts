@@ -86,6 +86,26 @@ export function filterTitles<T extends FilterCandidate>(
     return { count: matching.length, top };
 }
 
+/**
+ * Outra opção vindo dos filtros (US004 C2): sorteia um dos 10 que ainda não foi mostrado. Null
+ * quando todos já foram, e a tela passa ao estado de fim (C3).
+ */
+export function drawUnseen<T extends { id: number }>(
+    top: readonly T[],
+    seen: readonly number[],
+    random: () => number = Math.random,
+): T | null {
+    const pool = top.filter((t) => !seen.includes(t.id));
+    return pool.length > 0 ? pool[Math.floor(random() * pool.length)] : null;
+}
+
+/** Título do estado de fim (US004 C3): menos de 10 quando poucos combinam. */
+export function endOfOptionsHeading(total: number): string {
+    if (total === 0) return "Nenhum título combina mais com esses filtros";
+    if (total === 1) return "Você viu a melhor opção para esses filtros";
+    return `Você viu as ${total} melhores para esses filtros`;
+}
+
 const TYPES: readonly TypeChoice[] = ["movie", "series", "both"];
 
 const listOf = <T extends string>(value: unknown, max: number, is: (v: string) => v is T) =>

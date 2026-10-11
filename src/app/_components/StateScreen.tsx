@@ -4,7 +4,7 @@ import { Frame } from "./ui/Frame";
 
 type StateScreenProps = {
     heading: string;
-    text: string;
+    text?: string;
     /** a ação principal */
     action: ReactNode;
 };
@@ -19,7 +19,7 @@ export function StateScreen({ heading, text, action }: StateScreenProps) {
                     <h1 className="pb-1 font-display text-title font-medium text-balance">
                         {heading}
                     </h1>
-                    <p className="max-w-measure text-tagline text-soft">{text}</p>
+                    {text && <p className="max-w-measure text-tagline text-soft">{text}</p>}
                 </div>
                 <div className="desktop:mb-11.5">{action}</div>
             </div>

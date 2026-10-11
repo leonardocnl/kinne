@@ -64,3 +64,33 @@ export function saveFilters({ streamings, ...rest }: Filters) {
     write("localStorage", "kinne:streamings", streamings);
     write("sessionStorage", "kinne:filters", rest);
 }
+
+type FilteredRun = { filters: Filters; watched: number[]; seen: number[] };
+
+/**
+ * A rodada aberta por "Ver recomendação" (US004 C2 e C3): os filtros e os marcados de quando ela
+ * começou, para os 10 não mudarem (US005 RNE001), e os títulos já mostrados. Sem rodada salva
+ * (outra aba, endereço copiado), vale uma nova com os filtros atuais.
+ */
+export const filteredRun = {
+    read(): FilteredRun {
+        const value = read("sessionStorage", "kinne:filtered-run");
+        const run = typeof value === "object" && value !== null ? (value as FilteredRun) : null;
+        const filters = run && parseFilters(run.filters);
+        if (!run || !filters)
+            return { filters: savedFilters(), watched: watchedTitles.read(), seen: [] };
+        return { filters, watched: ids(run.watched), seen: ids(run.seen) };
+    },
+    start(filters: Filters, watched: number[]) {
+        write("sessionStorage", "kinne:filtered-run", { filters, watched, seen: [] });
+    },
+    see(id: number) {
+        const run = filteredRun.read();
+        if (!run.seen.includes(id)) run.seen.push(id);
+        write("sessionStorage", "kinne:filtered-run", run);
+    },
+    /** "Ver de novo" (US004 C3): os mesmos 10, do começo */
+    restart() {
+        write("sessionStorage", "kinne:filtered-run", { ...filteredRun.read(), seen: [] });
+    },
+};

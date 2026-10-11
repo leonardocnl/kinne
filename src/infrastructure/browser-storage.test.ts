@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_FILTERS } from "@/domain/filters";
 import {
+    filteredRun,
     saveFilters,
     savedFilters,
     savedStreamings,
@@ -73,5 +74,24 @@ describe("browser storage", () => {
         sessionStorage.setItem("kinne:filters", '{"type":"anime"}');
         vi.stubGlobal("window", { localStorage, sessionStorage });
         expect(savedFilters()).toEqual({ ...DEFAULT_FILTERS, streamings: ["netflix"] });
+    });
+
+    it("a rodada dos filtros guarda os mostrados e recomeça sem eles (US004 C2 e C3)", () => {
+        vi.stubGlobal("window", { localStorage: memoryStorage(), sessionStorage: memoryStorage() });
+        const filters = { ...DEFAULT_FILTERS, type: "movie" as const };
+        filteredRun.start(filters, [9]);
+        filteredRun.see(1);
+        filteredRun.see(2);
+        filteredRun.see(1);
+        expect(filteredRun.read()).toEqual({ filters, watched: [9], seen: [1, 2] });
+        filteredRun.restart();
+        expect(filteredRun.read()).toEqual({ filters, watched: [9], seen: [] });
+    });
+
+    it("sem rodada salva, começa uma com os filtros e os marcados de agora", () => {
+        const localStorage = memoryStorage();
+        localStorage.setItem("kinne:watched", "[4]");
+        vi.stubGlobal("window", { localStorage, sessionStorage: memoryStorage() });
+        expect(filteredRun.read()).toEqual({ filters: DEFAULT_FILTERS, watched: [4], seen: [] });
     });
 });

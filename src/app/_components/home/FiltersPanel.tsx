@@ -24,7 +24,12 @@ import {
 import { GENRE_LABELS, KINNE_GENRES } from "@/domain/genre";
 import { STREAMING_SERVICES } from "@/domain/streaming";
 import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
-import { saveFilters, savedFilters, watchedTitles } from "@/infrastructure/browser-storage";
+import {
+    filteredRun,
+    saveFilters,
+    savedFilters,
+    watchedTitles,
+} from "@/infrastructure/browser-storage";
 import { drawFiltered, filterCandidates } from "../../_actions/filters";
 import { loadError } from "../StateScreen";
 import { titleHref } from "../title/origin";
@@ -189,11 +194,13 @@ export function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelProps) {
         if (pending) return;
         startTransition(async () => {
             try {
-                const slug = await drawFiltered({
-                    filters,
-                    watched: watched.slice(-SURPRISE_MAX_EXCLUDED),
-                });
-                if (slug) return router.push(titleHref(slug, "filtros"));
+                const request = { filters, watched: watched.slice(-SURPRISE_MAX_EXCLUDED) };
+                const { slug } = await drawFiltered({ ...request, seen: [] });
+                if (slug) {
+                    // a rodada de "Outra opção" (US004 C2) começa aqui
+                    filteredRun.start(request.filters, request.watched);
+                    return router.push(titleHref(slug, "filtros"));
+                }
             } catch {
                 // cai no aviso abaixo
             }

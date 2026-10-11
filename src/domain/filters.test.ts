@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
     DEFAULT_FILTERS,
+    drawUnseen,
+    endOfOptionsHeading,
     filterTitles,
     parseFilters,
     withType,
@@ -121,6 +123,33 @@ describe("withType", () => {
         const filters = { ...DEFAULT_FILTERS, genres: ["romance", "drama"] } satisfies Filters;
         expect(withType(filters, "series").genres).toEqual(["drama"]);
         expect(withType(filters, "both").genres).toEqual(["romance", "drama"]);
+    });
+});
+
+describe("drawUnseen", () => {
+    const top = [title(1), title(2), title(3)];
+
+    it("sorteia só entre os que ainda não foram mostrados (US004 C2)", () => {
+        expect(drawUnseen(top, [1, 3], () => 0)?.id).toBe(2);
+        expect(drawUnseen(top, [1, 3], () => 0.99)?.id).toBe(2);
+        expect(drawUnseen(top, [], () => 0.99)?.id).toBe(3);
+    });
+
+    it("devolve null quando todos já foram mostrados (US004 C3)", () => {
+        expect(drawUnseen(top, [1, 2, 3])).toBeNull();
+        expect(drawUnseen([], [])).toBeNull();
+    });
+});
+
+describe("endOfOptionsHeading", () => {
+    it("diz quantos foram vistos, com menos de 10 quando poucos combinam (US004 C3)", () => {
+        expect(endOfOptionsHeading(10)).toBe("Você viu as 10 melhores para esses filtros");
+        expect(endOfOptionsHeading(3)).toBe("Você viu as 3 melhores para esses filtros");
+        expect(endOfOptionsHeading(1)).toBe("Você viu a melhor opção para esses filtros");
+    });
+
+    it("sem nenhum título, diz que nada combina mais", () => {
+        expect(endOfOptionsHeading(0)).toBe("Nenhum título combina mais com esses filtros");
     });
 });
 

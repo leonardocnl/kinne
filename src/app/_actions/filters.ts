@@ -1,6 +1,6 @@
 "use server";
 
-import { filterTitles, type FilterCandidate } from "@/domain/filters";
+import { drawUnseen, filterTitles, type FilterCandidate } from "@/domain/filters";
 import { candidates } from "../_data/candidates";
 import { parseFilterRequest } from "../_data/filters";
 
@@ -18,11 +18,14 @@ export async function filterCandidates(): Promise<FilterCandidate[]> {
 }
 
 /**
- * Ver recomendação (US002 C6): sorteia entre os 10 de maior nota que combinam (RNE003) e devolve
- * o slug, ou null se nenhum combina.
+ * Ver recomendação (US002 C6) e Outra opção vindo dos filtros (US004 C2): sorteia entre os 10 de
+ * maior nota que combinam (RNE003), sem os já mostrados. Devolve o slug, ou null quando não sobrou
+ * nenhum, e quantos são os 10 (menos, se poucos combinam) para o estado de fim (US004 C3).
  */
-export async function drawFiltered(input: unknown): Promise<string | null> {
-    const { filters, watched } = parseFilterRequest(input);
+export async function drawFiltered(
+    input: unknown,
+): Promise<{ slug: string | null; total: number }> {
+    const { filters, watched, seen } = parseFilterRequest(input);
     const { top } = filterTitles(await candidates(), filters, watched);
-    return top[Math.floor(Math.random() * top.length)]?.slug ?? null;
+    return { slug: drawUnseen(top, seen)?.slug ?? null, total: top.length };
 }
