@@ -16,6 +16,7 @@
         "db:seed": "tsx --env-file=.env.local scripts/seed.ts",
         "catalog:sync": "tsx --env-file-if-exists=.env.local scripts/sync-catalog.ts",
         "daily:pick": "tsx --env-file-if-exists=.env.local scripts/daily-pick.ts",
+        "events:delete": "tsx --env-file-if-exists=.env.local scripts/delete-test-events.ts",
         "smoke:title": "tsx scripts/smoke-title.ts"
     },
     "dependencies": {
