@@ -1,5 +1,6 @@
 import type { TitleType } from "@/domain/catalog";
 import type { KinneGenre } from "@/domain/genre";
+import type { FilterCandidate } from "@/domain/filters";
 import type { SurpriseCandidate } from "@/domain/surprise";
 
 // Um título com o que a tela do título mostra (US004 C1).
@@ -21,8 +22,11 @@ export type CatalogEntry = {
     streamingTmdbIds: number[];
 };
 
+// Um título que a surpresa (US003) e os filtros (US002) podem sortear.
+export type Candidate = FilterCandidate & SurpriseCandidate;
+
 export interface TitlesRepository {
     bySlug(slug: string): Promise<CatalogEntry | null>;
-    // títulos em algum streaming, já com a nota da surpresa (US003 RNE001)
-    surpriseCandidates(): Promise<SurpriseCandidate[]>;
+    // títulos em algum streaming, com o que a surpresa (US003) e os filtros (US002) sorteiam
+    candidates(): Promise<Candidate[]>;
 }

@@ -1,6 +1,6 @@
 import { meetsQualityFloor, MIN_RATING, type TitleType } from "./catalog";
-import type { KinneGenre } from "./genre";
-import { streamingTmdbIds, type Streaming } from "./streaming";
+import { isKinneGenre, KINNE_GENRES, type KinneGenre } from "./genre";
+import { isStreaming, STREAMING_SERVICES, streamingTmdbIds, type Streaming } from "./streaming";
 import type { SurpriseCandidate } from "./surprise";
 
 // Escolher agora (US002).
@@ -39,7 +39,8 @@ export const DEFAULT_FILTERS: Filters = {
 // Quantos títulos entram no sorteio (RNE003).
 export const DRAWABLE = 10;
 
-export type FilterCandidate = SurpriseCandidate & {
+// Sem o slug: a lista vai inteira ao navegador para o contador, e o slug dobraria o tamanho.
+export type FilterCandidate = Omit<SurpriseCandidate, "slug"> & {
     type: TitleType;
     runtimeMinutes: number | null;
     kinneGenres: readonly KinneGenre[];
@@ -83,4 +84,38 @@ export function filterTitles<T extends FilterCandidate>(
         .toSorted((a, b) => b.rating - a.rating || b.votes - a.votes || a.id - b.id)
         .slice(0, DRAWABLE);
     return { count: matching.length, top };
+}
+
+const TYPES: readonly TypeChoice[] = ["movie", "series", "both"];
+
+const listOf = <T extends string>(value: unknown, max: number, is: (v: string) => v is T) =>
+    Array.isArray(value) &&
+    value.length <= max &&
+    value.every((v) => typeof v === "string" && is(v)) &&
+    new Set(value).size === value.length;
+
+/**
+ * Filtros vindos de fora (navegador, sessionStorage): só passam no formato e nos limites dos
+ * campos (C1). Qualquer coisa fora disso devolve null.
+ */
+export function parseFilters(value: unknown): Filters | null {
+    if (typeof value !== "object" || value === null) return null;
+    const { streamings, type, genres, minRating, maxRuntime } = value as Record<string, unknown>;
+    const ok =
+        listOf(streamings, STREAMING_SERVICES.length, isStreaming) &&
+        TYPES.includes(type as TypeChoice) &&
+        listOf(genres, KINNE_GENRES.length, isKinneGenre) &&
+        typeof minRating === "number" &&
+        minRating >= MIN_RATING &&
+        minRating <= MAX_RATING &&
+        RUNTIME_LIMITS.some((l) => l.minutes === maxRuntime);
+    if (!ok) return null;
+    return {
+        streamings: streamings as Streaming[],
+        type: type as TypeChoice,
+        genres: genres as KinneGenre[],
+        // o slider anda de 0,1 em 0,1; o arredondamento tira o 7,199999… do ponto flutuante
+        minRating: Math.round(minRating * 10) / 10,
+        maxRuntime: maxRuntime as number | null,
+    };
 }

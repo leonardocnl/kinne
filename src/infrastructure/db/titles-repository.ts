@@ -1,8 +1,7 @@
 import type { CatalogEntry, TitlesRepository } from "@/application/titles";
 import type { TitleType } from "@/domain/catalog";
 import { isKinneGenre } from "@/domain/genre";
-import { SURPRISE_MIN_RATING } from "@/domain/surprise";
-import { and, eq, gte, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { Db } from "./client";
 import {
     catalogTitleGenres,
@@ -64,16 +63,21 @@ export class DrizzleTitlesRepository implements TitlesRepository {
         };
     }
 
-    async surpriseCandidates() {
+    async candidates() {
         const rows = await this.db
             .select({
                 id: catalogTitles.id,
                 slug: catalogTitles.slug,
+                type: catalogTitles.titleType,
                 rating: catalogTitles.tmdbAverageRating,
                 votes: catalogTitles.tmdbVoteCount,
+                runtimeMinutes: catalogTitles.runtimeMinutes,
+                kinneGenres: sql<(string | null)[]>`array_agg(distinct ${genres.kinneGenre})`,
                 streamingTmdbIds,
             })
             .from(catalogTitles)
+            .leftJoin(catalogTitleGenres, eq(catalogTitleGenres.catalogTitleId, catalogTitles.id))
+            .leftJoin(genres, eq(genres.id, catalogTitleGenres.genreId))
             .innerJoin(
                 streamingAvailability,
                 and(
@@ -85,8 +89,12 @@ export class DrizzleTitlesRepository implements TitlesRepository {
                 streamingServices,
                 eq(streamingServices.id, streamingAvailability.streamingServiceId),
             )
-            .where(gte(catalogTitles.tmdbAverageRating, SURPRISE_MIN_RATING.toFixed(1)))
             .groupBy(catalogTitles.id);
-        return rows.map((r) => ({ ...r, rating: Number(r.rating) }));
+        return rows.map((r) => ({
+            ...r,
+            type: r.type as TitleType,
+            rating: Number(r.rating),
+            kinneGenres: r.kinneGenres.filter((g) => g !== null && isKinneGenre(g)),
+        }));
     }
 }

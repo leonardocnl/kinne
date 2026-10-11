@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
     DEFAULT_FILTERS,
     filterTitles,
+    parseFilters,
     withType,
     type FilterCandidate,
     type Filters,
@@ -9,7 +10,6 @@ import {
 
 const title = (id: number, extra: Partial<FilterCandidate> = {}): FilterCandidate => ({
     id,
-    slug: `titulo-${id}`,
     type: "movie",
     rating: 7,
     votes: 1000,
@@ -121,5 +121,36 @@ describe("withType", () => {
         const filters = { ...DEFAULT_FILTERS, genres: ["romance", "drama"] } satisfies Filters;
         expect(withType(filters, "series").genres).toEqual(["drama"]);
         expect(withType(filters, "both").genres).toEqual(["romance", "drama"]);
+    });
+});
+
+describe("parseFilters", () => {
+    const ok = {
+        streamings: ["netflix"],
+        type: "movie",
+        genres: ["drama"],
+        minRating: 7.2,
+        maxRuntime: 105,
+    };
+
+    it("aceita filtros no formato e nos limites de cada campo", () => {
+        expect(parseFilters(ok)).toEqual(ok);
+        expect(parseFilters(DEFAULT_FILTERS)).toEqual(DEFAULT_FILTERS);
+        expect(parseFilters({ ...ok, minRating: 7.199999999 })?.minRating).toBe(7.2);
+    });
+
+    it.each([
+        ["nada", null],
+        ["streaming desconhecido", { ...ok, streamings: ["apple-tv"] }],
+        ["streaming repetido", { ...ok, streamings: ["netflix", "netflix"] }],
+        ["tipo desconhecido", { ...ok, type: "anime" }],
+        ["gênero desconhecido", { ...ok, genres: ["terror"] }],
+        ["nota abaixo do piso", { ...ok, minRating: 6.3 }],
+        ["nota acima de 9", { ...ok, minRating: 9.1 }],
+        ["nota que não é número", { ...ok, minRating: "7" }],
+        ["duração fora do slider", { ...ok, maxRuntime: 100 }],
+        ["campo faltando", { ...ok, maxRuntime: undefined }],
+    ])("recusa %s", (_, value) => {
+        expect(parseFilters(value)).toBeNull();
     });
 });
