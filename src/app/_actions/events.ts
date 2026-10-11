@@ -1,7 +1,7 @@
 "use server";
 
 import { after } from "next/server";
-import { parseUsageEvent } from "@/domain/usage-events";
+import { recordUsageEvent } from "@/application/usage-events";
 import { createDb } from "@/infrastructure/db/client";
 import { DrizzleUsageEventsRepository } from "@/infrastructure/db/usage-events-repository";
 
@@ -11,11 +11,11 @@ import { DrizzleUsageEventsRepository } from "@/infrastructure/db/usage-events-r
  * só ficam no log; a tela nunca sabe.
  */
 export async function recordEvent(input: unknown): Promise<void> {
-    const event = parseUsageEvent(input);
-    if (!event) return;
     after(() =>
-        new DrizzleUsageEventsRepository(createDb()).record(event).catch((error: unknown) => {
-            console.error("Evento não gravado:", event.name, error);
-        }),
+        recordUsageEvent(
+            input,
+            () => new DrizzleUsageEventsRepository(createDb()),
+            (error, event) => console.error("Evento não gravado:", event.name, error),
+        ),
     );
 }
