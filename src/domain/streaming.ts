@@ -16,6 +16,13 @@ export function isStreaming(value: string): value is Streaming {
     return STREAMING_SERVICES.some((s) => s.id === value);
 }
 
+// Os códigos no TMDB dos streamings marcados; nenhum marcado vale como todos (RNG003).
+export function streamingTmdbIds(streamings: readonly Streaming[]): number[] {
+    return STREAMING_SERVICES.filter(
+        (s) => streamings.length === 0 || streamings.includes(s.id),
+    ).map((s) => s.tmdbId);
+}
+
 // O primeiro, na ordem acima, entre os streamings em que o título está.
 export function primaryStreaming(tmdbIds: readonly number[]): StreamingService | null {
     return STREAMING_SERVICES.find((s) => tmdbIds.includes(s.tmdbId)) ?? null;

@@ -1,5 +1,5 @@
 import { meetsQualityFloor } from "./catalog";
-import { STREAMING_SERVICES, type Streaming } from "./streaming";
+import { streamingTmdbIds, type Streaming } from "./streaming";
 
 // US003 RNE001: piso mais alto que o do catálogo (valor de partida, ver 04-mudancas).
 export const SURPRISE_MIN_RATING = 7.5;
@@ -30,9 +30,7 @@ export function drawSurprise(
     request: SurpriseRequest,
     random: () => number = Math.random,
 ): SurpriseCandidate | null {
-    const wanted = STREAMING_SERVICES.filter(
-        (s) => request.streamings.length === 0 || request.streamings.includes(s.id),
-    ).map((s): number => s.tmdbId);
+    const wanted = streamingTmdbIds(request.streamings);
     const watched = new Set(request.watched);
     const shown = new Set(request.shown);
     const eligible = candidates.filter(
