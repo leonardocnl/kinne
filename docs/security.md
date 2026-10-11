@@ -14,14 +14,14 @@ Security by design: every feature is specified, built and reviewed against these
 
 ## 2. Threat model
 
-| Actor | Goal | Main controls |
-| --- | --- | --- |
-| Automated scanners and bots | Find `.env`, `.git`, source maps, admin panels, debug endpoints, known CVEs | §3, §4, §10 |
-| Script against server actions | Forge or flood events, distort test metrics, exhaust database or TMDB quota | §5, §7 |
-| Scraper | Copy the catalog at scale | §7 |
-| Malicious page or extension | XSS, clickjacking, data theft from storage | §6, §8, §9 |
-| Supply chain | Compromised npm package or GitHub Action | §11 |
-| Credential leak | Key in repo, logs, client bundle or chat | §4, §11 |
+| Actor                         | Goal                                                                        | Main controls |
+| ----------------------------- | --------------------------------------------------------------------------- | ------------- |
+| Automated scanners and bots   | Find `.env`, `.git`, source maps, admin panels, debug endpoints, known CVEs | §3, §4, §10   |
+| Script against server actions | Forge or flood events, distort test metrics, exhaust database or TMDB quota | §5, §7        |
+| Scraper                       | Copy the catalog at scale                                                   | §7            |
+| Malicious page or extension   | XSS, clickjacking, data theft from storage                                  | §6, §8, §9    |
+| Supply chain                  | Compromised npm package or GitHub Action                                    | §11           |
+| Credential leak               | Key in repo, logs, client bundle or chat                                    | §4, §11       |
 
 ## 3. Attack surface
 
@@ -138,18 +138,18 @@ Rules fixed now so the feature is designed against them:
 
 Every PR states which categories it touches and how the rules below are met.
 
-| OWASP 2025 | What it means for Kinne | Rules |
-| --- | --- | --- |
-| A01 Broken Access Control | Guest mode has no private data today; any future account data is reachable only by its owner, checked on the server for every request; capability path documented | §5, §13, §15 |
-| A02 Security Misconfiguration | Headers, no source maps, no debug pages, no `X-Powered-By`, previews isolated from production | §3, §4, §10 |
-| A03 Software Supply Chain Failures | Lockfile, `npm ci`, audit, Dependabot, pinned Actions, minimal workflow permissions | §11 |
-| A04 Cryptographic Failures | HTTPS only with HSTS; tokens from a CSPRNG and stored hashed; no homemade crypto | §10, §13 |
-| A05 Injection | Strict schemas, Drizzle bound parameters, no `dangerouslySetInnerHTML`, CSP | §5, §6, §10 |
-| A06 Insecure Design | Threat model, security section in every user story, abuse cases reviewed before build | §2, §16 |
-| A07 Authentication Failures | Magic-link rules fixed before the feature exists | §13 |
-| A08 Software or Data Integrity Failures | Only CI-checked code reaches `main`; catalog sync validates TMDB data with a schema before writing; no unsigned remote scripts | §5, §11 |
-| A09 Security Logging and Alerting Failures | Server-side logs for refused requests and rate-limit hits, without secrets or personal data; alert on sync failure | §6, §7 |
-| A10 Mishandling of Exceptional Conditions | Fail closed, generic messages, every external call has a timeout and a handled failure path | §1, §6 |
+| OWASP 2025                                 | What it means for Kinne                                                                                                                                           | Rules        |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| A01 Broken Access Control                  | Guest mode has no private data today; any future account data is reachable only by its owner, checked on the server for every request; capability path documented | §5, §13, §15 |
+| A02 Security Misconfiguration              | Headers, no source maps, no debug pages, no `X-Powered-By`, previews isolated from production                                                                     | §3, §4, §10  |
+| A03 Software Supply Chain Failures         | Lockfile, `npm ci`, audit, Dependabot, pinned Actions, minimal workflow permissions                                                                               | §11          |
+| A04 Cryptographic Failures                 | HTTPS only with HSTS; tokens from a CSPRNG and stored hashed; no homemade crypto                                                                                  | §10, §13     |
+| A05 Injection                              | Strict schemas, Drizzle bound parameters, no `dangerouslySetInnerHTML`, CSP                                                                                       | §5, §6, §10  |
+| A06 Insecure Design                        | Threat model, security section in every user story, abuse cases reviewed before build                                                                             | §2, §16      |
+| A07 Authentication Failures                | Magic-link rules fixed before the feature exists                                                                                                                  | §13          |
+| A08 Software or Data Integrity Failures    | Only CI-checked code reaches `main`; catalog sync validates TMDB data with a schema before writing; no unsigned remote scripts                                    | §5, §11      |
+| A09 Security Logging and Alerting Failures | Server-side logs for refused requests and rate-limit hits, without secrets or personal data; alert on sync failure                                                | §6, §7       |
+| A10 Mishandling of Exceptional Conditions  | Fail closed, generic messages, every external call has a timeout and a handled failure path                                                                       | §1, §6       |
 
 ## 16. How the rules are enforced
 
@@ -164,8 +164,8 @@ AI-assisted code follows these rules because the process checks them, not becaus
 
 ## 17. Accepted risks
 
-| Risk | Why accepted | Mitigation |
-| --- | --- | --- |
-| Anonymous events can be forged by a script that mimics the site | Guest mode has no identity to verify | Strict schemas, rate limits, dedupe, analysis ignores outliers |
-| Team capability path (US006) works for anyone who learns it | Simplest exclusion without accounts | Long random path, rotated if leaked; impact limited to excluding that browser from metrics |
-| Missing titles return 200 with `noindex` (soft 404) | Next.js cacheComponents behaviour; real 404 would need a database query per visit | Documented in requirements doc 04 |
+| Risk                                                            | Why accepted                                                                      | Mitigation                                                                                 |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Anonymous events can be forged by a script that mimics the site | Guest mode has no identity to verify                                              | Strict schemas, rate limits, dedupe, analysis ignores outliers                             |
+| Team capability path (US006) works for anyone who learns it     | Simplest exclusion without accounts                                               | Long random path, rotated if leaked; impact limited to excluding that browser from metrics |
+| Missing titles return 200 with `noindex` (soft 404)             | Next.js cacheComponents behaviour; real 404 would need a database query per visit | Documented in requirements doc 04                                                          |
