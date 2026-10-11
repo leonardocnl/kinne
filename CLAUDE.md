@@ -35,3 +35,9 @@ App web que recomenda um filme ou série por vez, só entre os streamings por as
 ## Antes de commitar
 
 `npm run format:check && npm run lint && npm run typecheck && npm test && npm run build` precisam passar.
+
+## Branch workflow
+
+- `main` = production. Never push to it directly.
+- `develop` = integration. Never push to it directly; it only changes through merged PRs.
+- `feat/…`, `fix/…`, `docs/…` = short-lived task branches, one per task, in kebab-case (e.g. `feat/analytics-events`). Branch off `develop` and open the PR into `develop`.
