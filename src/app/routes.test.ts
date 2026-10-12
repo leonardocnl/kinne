@@ -21,9 +21,21 @@ describe("rotas (H3)", () => {
         const action = readFileSync(join(appDir, "_actions/search.ts"), "utf8");
         expect(action.match(/^export /gm)).toHaveLength(1);
         const panel = readFileSync(join(appDir, "_components/search/SearchPanel.tsx"), "utf8");
-        expect(panel).toContain('titleHref(result.slug, "busca")');
+        expect(panel).toContain('goToTitle(router, "push", result.slug, "busca")');
         expect(panel).not.toMatch(/searchParams|URLSearchParams|\?(q|termo|busca)=/);
         expect(panel).not.toMatch(/localStorage|sessionStorage/); // G10
         expect(panel).toContain('autoComplete="off"');
+    });
+
+    it("nenhum código monta ou lê query string de endereço do Kinne (security §8)", () => {
+        const offenders = files
+            .filter((f) => /\.tsx?$/.test(f) && !/\.test\.tsx?$/.test(f))
+            .filter((f) => {
+                const source = readFileSync(join(appDir, f), "utf8");
+                return /useSearchParams|searchParams\b|["'`][^"'`\s]*\?(origem|filtros)\b/.test(
+                    source,
+                );
+            });
+        expect(offenders).toEqual([]);
     });
 });

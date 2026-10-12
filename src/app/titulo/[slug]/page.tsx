@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { brasiliaDay } from "@/domain/day";
-import { parseOrigin } from "../../_components/title/origin";
 import { TitleSkeleton } from "../../_components/title/TitleSkeleton";
 import { TitleView } from "../../_components/title/TitleView";
 import { homePicks } from "../../_data/home";
@@ -26,26 +25,20 @@ export default function TitlePage(props: PageProps<"/titulo/[slug]">) {
     );
 }
 
-async function Title({ params, searchParams }: PageProps<"/titulo/[slug]">) {
+async function Title({ params }: PageProps<"/titulo/[slug]">) {
     const { slug } = await params;
-    const origin = parseOrigin((await searchParams).origem);
     const title = await titleScreen(slug);
     if (!title) notFound();
-    if (origin !== "dia") {
-        return <TitleView key={slug} title={title} origin={origin} nextDailySlug={null} />;
-    }
 
-    // US004 C5: a seguinte das indicações de hoje, voltando à primeira depois da última
+    // US004 C5: se o título está entre as indicações de hoje, o gênero em que foi indicado e a
+    // seguinte, voltando à primeira depois da última. A tela só usa isso na origem "dia", que
+    // vive no navegador (security §8).
     await connection();
-    const picks = await homePicks(brasiliaDay(new Date()));
+    const picks = await homePicks(brasiliaDay(new Date())).catch(() => []);
     const index = picks.findIndex((p) => p.slug === slug);
-    return (
-        <TitleView
-            key={slug}
-            // o gênero em que o título foi indicado hoje, o mesmo da tela inicial
-            title={{ ...title, genre: picks[index]?.genre ?? title.genre }}
-            origin={origin}
-            nextDailySlug={picks[(index + 1) % picks.length]?.slug ?? null}
-        />
-    );
+    const daily =
+        index < 0
+            ? null
+            : { genre: picks[index].genre, nextSlug: picks[(index + 1) % picks.length].slug };
+    return <TitleView key={slug} title={title} daily={daily} />;
 }

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { parseSearchTerm, type SearchOutcome, type SearchResult } from "@/domain/search";
 import { searchTitles } from "../../_actions/search";
-import { titleHref } from "../title/origin";
+import { goToTitle } from "../title/origin";
 import { Button } from "../ui/Button";
 import { cx } from "../ui/cx";
 import { GlassPanel } from "../ui/GlassPanel";
@@ -81,7 +81,7 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
     function open(result: SearchResult) {
         onClose(false);
         // G7: navegação só no clique, sem prefetch das opções
-        router.push(titleHref(result.slug, "busca"));
+        goToTitle(router, "push", result.slug, "busca");
     }
 
     function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {

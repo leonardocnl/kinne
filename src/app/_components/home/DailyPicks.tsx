@@ -9,6 +9,7 @@ import { Fact, Facts } from "../ui/Facts";
 import { PauseIcon, PlayIcon } from "../ui/icons";
 import { TextLink } from "../ui/TextLink";
 import { billingRow, screenMain } from "../layout";
+import { titleOrigin } from "@/infrastructure/browser-storage";
 import { titleHref } from "../title/origin";
 import { useSurprise } from "../title/useSurprise";
 import { FiltersPanel, useFiltersRoute } from "./FiltersPanel";
@@ -177,7 +178,11 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
                                 </Fact>
                             )}
                         </Facts>
-                        <TextLink href={titleHref(pick.slug, "dia")} className="-mt-1.5 -mb-2.5">
+                        <TextLink
+                            href={titleHref(pick.slug)}
+                            onClick={() => titleOrigin.set(pick.slug, "dia")}
+                            className="-mt-1.5 -mb-2.5"
+                        >
                             Ver este título<span className="sr-only">: {pick.title}</span>{" "}
                             <span aria-hidden="true">→</span>
                         </TextLink>
