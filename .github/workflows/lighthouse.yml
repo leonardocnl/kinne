@@ -25,21 +25,23 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
+      # No secret is ever in this job: @lhci/cli comes from npx, outside the lockfile, so its
+      # dependencies must not see anything worth stealing. Previews must be reachable without
+      # Vercel Deployment Protection for this check to pass.
       - name: Run Lighthouse CI
         env:
           TARGET_URL: ${{ github.event.inputs.url || github.event.deployment_status.environment_url || github.event.deployment_status.target_url }}
-          # optional: lets Lighthouse through Vercel Deployment Protection on previews
-          BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
-          case "$TARGET_URL" in https://*) ;; *) echo "Not an https URL"; exit 1 ;; esac
-          extra=()
-          if [ -n "$BYPASS" ]; then
-            extra+=("--collect.settings.extraHeaders={\"x-vercel-protection-bypass\":\"$BYPASS\"}")
+          if ! printf '%s' "$TARGET_URL" | grep -Eq '^https://[a-z0-9-]+\.vercel\.app/?$'; then
+            echo "Target must be an https://*.vercel.app deployment URL"
+            exit 1
           fi
-          npx --yes @lhci/cli@0.15.1 autorun --collect.url="${TARGET_URL%/}/" "${extra[@]}"
+          npx --yes @lhci/cli@0.15.1 autorun --collect.url="${TARGET_URL%/}/"
       - name: Summary
         if: always()
         run: node scripts/lighthouse-summary.mjs
