@@ -26,6 +26,12 @@ describe("parseUsageEvent", () => {
         ["origem em outro evento", { ...ok, name: "trailer_opened" }],
         ["título que não é inteiro positivo", { ...ok, titleId: 0 }],
         ["campo faltando", { ...ok, titleId: undefined }],
+        ["chave desconhecida", { ...ok, ip: "1.2.3.4" }],
+        ["código com tipo errado", { ...ok, browserId: 7 }],
+        ["código longo demais", { ...ok, browserId: `${ok.browserId}${"0".repeat(5000)}` }],
+        ["título não inteiro", { ...ok, titleId: 1.5 }],
+        ["título gigante", { ...ok, titleId: 1e21 }],
+        ["lista no lugar de objeto", [ok]],
     ])("recusa %s", (_, value) => {
         expect(parseUsageEvent(value)).toBeNull();
     });

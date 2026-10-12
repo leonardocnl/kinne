@@ -1,4 +1,27 @@
-import { parseUsageEvent, type UsageEvent } from "@/domain/usage-events";
+import { z } from "zod";
+import {
+    EVENT_NAMES,
+    RECOMMENDATION_SOURCES,
+    isBrowserId,
+    type UsageEvent,
+} from "@/domain/usage-events";
+
+export const usageEventSchema = z
+    .strictObject({
+        browserId: z.string().refine(isBrowserId),
+        name: z.enum(EVENT_NAMES),
+        source: z.enum(RECOMMENDATION_SOURCES).nullable(),
+        titleId: z.int().positive().nullable(),
+    })
+    // a origem só existe em recommendation_shown
+    .refine((e) => e.source === null || e.name === "recommendation_shown")
+    .transform((e): UsageEvent => ({ ...e, browserId: e.browserId.toLowerCase() }));
+
+/** O evento vem do navegador: só passa no formato esperado. Qualquer coisa fora disso é null. */
+export function parseUsageEvent(value: unknown): UsageEvent | null {
+    const parsed = usageEventSchema.safeParse(value);
+    return parsed.success ? parsed.data : null;
+}
 
 export interface UsageEventsRepository {
     // grava com a hora do banco, e não a do navegador

@@ -3,6 +3,8 @@ import {
     baseSlug,
     cleanText,
     formatRuntime,
+    isSlug,
+    MAX_SLUG_LENGTH,
     meetsQualityFloor,
     pickTrailer,
     uniqueSlug,
@@ -45,6 +47,28 @@ describe("baseSlug", () => {
     it("funciona sem ano e sem letras latinas", () => {
         expect(baseSlug("Duna", null)).toBe("duna");
         expect(baseSlug("기생충", 2019)).toBe("2019");
+    });
+});
+
+describe("isSlug", () => {
+    it("aceita o que baseSlug gera", () => {
+        expect(isSlug(baseSlug("Suzume", 2022))).toBe(true);
+        expect(isSlug("123")).toBe(true);
+    });
+
+    it.each([
+        ["vazio", ""],
+        ["maiúscula", "Suzume"],
+        ["hífen duplo", "a--b"],
+        ["hífen nas pontas", "-a"],
+        ["barra", "a/b"],
+        ["longo demais", "a".repeat(MAX_SLUG_LENGTH + 1)],
+    ])("recusa %s", (_, value) => {
+        expect(isSlug(value)).toBe(false);
+    });
+
+    it("aceita o tamanho máximo", () => {
+        expect(isSlug("a".repeat(MAX_SLUG_LENGTH))).toBe(true);
     });
 });
 

@@ -1,6 +1,6 @@
 import { cacheLife } from "next/cache";
 import type { CatalogEntry } from "@/application/titles";
-import { formatRuntime } from "@/domain/catalog";
+import { formatRuntime, isSlug } from "@/domain/catalog";
 import { GENRE_LABELS, mainGenre } from "@/domain/genre";
 import { primaryStreaming, type StreamingService } from "@/domain/streaming";
 import { createDb } from "@/infrastructure/db/client";
@@ -26,7 +26,7 @@ export type TitleScreen = {
 /** O título do endereço, ou null se não existe. Em cache por slug: o catálogo muda uma vez por dia. */
 export async function titleScreen(slug: string): Promise<TitleScreen | null> {
     // slugs são sempre assim; o resto nem chega ao banco nem ocupa o cache
-    if (!/^[a-z0-9-]{1,200}$/.test(slug)) return null;
+    if (!isSlug(slug)) return null;
     return cachedTitleScreen(slug);
 }
 
