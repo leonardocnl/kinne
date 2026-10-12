@@ -9,6 +9,7 @@ import {
 import { createDb } from "@/infrastructure/db/client";
 import { DrizzleUsageEventsRepository } from "@/infrastructure/db/usage-events-repository";
 import { dbEnvErrors } from "@/infrastructure/sync-env";
+import { publicErrorMessage } from "@/infrastructure/tmdb/client";
 
 async function main() {
     let args: DeleteEventsArgs;
@@ -38,6 +39,7 @@ async function main() {
 }
 
 main().catch((e) => {
-    console.error(e);
+    // nada do erro vai para o terminal: pode trazer host ou URL do banco (security §6)
+    console.error(publicErrorMessage(e, "Erro ao apagar os eventos"));
     process.exit(1);
 });

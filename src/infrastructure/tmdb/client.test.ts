@@ -76,5 +76,8 @@ describe("publicErrorMessage (D1)", () => {
     ])("troca qualquer outro erro por uma mensagem fixa", (e) => {
         const message = publicErrorMessage(e);
         expect(message).toBe("Erro na carga (detalhe omitido por segurança)");
+        expect(publicErrorMessage(e, "Erro no seed")).toBe(
+            "Erro no seed (detalhe omitido por segurança)",
+        );
     });
 });

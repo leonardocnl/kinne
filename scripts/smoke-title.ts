@@ -4,6 +4,8 @@
 // Não confere status 404: com cacheComponents a rota tem estado "postponed", e o Next envia o status
 // da pré-renderização (200) antes de rodar a página (node_modules/next/dist/build/templates/
 // app-page-runtime.js:1390-1391 e 1553). O garantido é a tela de não encontrado com noindex.
+import { publicErrorMessage } from "@/infrastructure/tmdb/client";
+
 const base = process.argv[2] ?? "http://localhost:3000";
 
 async function page(path: string) {
@@ -42,6 +44,6 @@ main().catch((e) => {
     // servidor fora do ar: uma linha basta; o resto é erro de verdade e merece o rastro
     if (e instanceof TypeError && e.message === "fetch failed") {
         console.error(`não consegui conectar em ${base}`);
-    } else console.error(e);
+    } else console.error(publicErrorMessage(e, "Erro no smoke"));
     process.exit(1);
 });
