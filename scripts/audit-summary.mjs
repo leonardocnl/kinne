@@ -13,7 +13,16 @@ try {
     process.exit(0);
 }
 
-const counts = report.metadata?.vulnerabilities ?? {};
+// npm audit falhou (registro fora do ar, rede): sem relatório, nada de "nenhum achado"
+if (report.error || !report.metadata) {
+    const line = "### npm audit (all dependencies): failed, results unknown";
+    console.log(line);
+    if (process.env.GITHUB_STEP_SUMMARY)
+        appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${line}\n`);
+    process.exit(0);
+}
+
+const counts = report.metadata.vulnerabilities ?? {};
 const rows = Object.entries(report.vulnerabilities ?? {})
     .map(([name, v]) => ({
         name,

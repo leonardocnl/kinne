@@ -41,7 +41,7 @@ async function main() {
 }
 
 main().catch((e) => {
-    // servidor fora do ar: uma linha basta; o resto é erro de verdade e merece o rastro
+    // servidor fora do ar: uma linha basta; o resto sai com mensagem fixa (security §6)
     if (e instanceof TypeError && e.message === "fetch failed") {
         console.error(`não consegui conectar em ${base}`);
     } else console.error(publicErrorMessage(e, "Erro no smoke"));

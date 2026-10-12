@@ -1,6 +1,6 @@
 # Release checklist — guest mode to production
 
-For the owner, in order. Every command is copy-paste ready; replace only the `<...>` placeholders. Secrets go straight from a password manager into the dashboard or terminal: never into a file in the repo, a chat or a PR.
+For the owner, in order. Every command is copy-paste ready; replace only the `<...>` placeholders. Secrets go straight from a password manager into the dashboard, or into the terminal through `read -rs` (no echo, no shell history): never typed inline in a command, never into a file, a chat or a PR. `unset` them when the step is done.
 
 **Dates.** Release cut-off **22/10/2026**: everything for the test is merged into `develop` and promoted to `main` by then. Deploy freeze **26/10–01/11/2026** (user test): no deploys, no migrations, no env changes, except an emergency rollback (step 10).
 
@@ -25,7 +25,7 @@ For the owner, in order. Every command is copy-paste ready; replace only the `<.
 
 ## 3. Production database (Neon, production branch, owner role)
 
-Use the **owner's direct connection to the production branch** (from your password manager or `.env.release.local`, which only you read). Check the target first:
+Use the **owner's direct connection to the production branch**, from your password manager. Run these SQL steps with `psql` (not the Neon SQL Editor, which keeps a query history). Check the target first:
 
 ```sql
 select key, value from meta;
@@ -36,9 +36,12 @@ select id, created_at from drizzle.__drizzle_migrations order by id;
 
    ```sh
    npm ci
-   touch .env.local   # drizzle.config.ts loads it; the URL below wins
-   DATABASE_URL='<owner direct production URL>' npx drizzle-kit migrate
-   rm .env.local
+   # drizzle.config.ts loads .env.local; create an empty one only if there is none
+   [ -e .env.local ] || { touch .env.local; CREATED_ENV=1; }
+   read -rs DATABASE_URL && export DATABASE_URL   # paste the owner direct production URL
+   npx drizzle-kit migrate   # an exported variable wins over .env.local
+   unset DATABASE_URL
+   [ -n "$CREATED_ENV" ] && rm .env.local; unset CREATED_ENV
    ```
 
 2. Mark the branch as production (the sync refuses to run on a branch whose `meta.environment` differs from its target, catalog-sync C3):
@@ -48,19 +51,28 @@ select id, created_at from drizzle.__drizzle_migrations order by id;
    on conflict (key) do update set value = excluded.value;
    ```
 
-3. Give both roles a login password (generate each with `openssl rand -base64 32`; keep them only in your password manager):
+3. Give both roles a login password. Generate each with `openssl rand -base64 32` and keep them only in your password manager. In `psql`, `\password` asks for the password without echo and sends only a SCRAM hash, so it stays out of the history and the server logs:
 
    ```sql
-   alter role kinne_sync with login password '<random password 1>';
-   alter role kinne_app with login password '<random password 2>';
+   alter role kinne_sync with login;
+   alter role kinne_app with login;
+   \password kinne_sync
+   \password kinne_app
    ```
 
-4. Check the grants landed:
+4. Check the grants landed, and that what the threat models promise is absent really is (all of the second query must be `false`):
 
    ```sql
    select r, t, has_table_privilege(r, t, 'SELECT') as can_select
    from unnest(array['kinne_app', 'kinne_sync']) r,
         unnest(array['catalog_titles', 'people', 'title_credits', 'daily_picks']) t;
+
+   select
+     has_table_privilege('kinne_app', 'anonymous_usage_events', 'DELETE') as app_deletes_events,
+     has_table_privilege('kinne_app', 'catalog_titles', 'UPDATE') as app_updates_catalog,
+     has_table_privilege('kinne_app', 'rate_limit_buckets', 'SELECT') as app_reads_limiter,
+     has_table_privilege('kinne_sync', 'anonymous_usage_events', 'DELETE') as sync_deletes_events,
+     has_table_privilege('kinne_sync', 'people', 'DELETE') as sync_deletes_people;
    ```
 
 5. Neon compute fixed at 0.25 CU minimum and maximum (RNF06).
@@ -119,6 +131,7 @@ Open the PR `develop` → `main`, wait for CI, merge. Vercel deploys Production 
 The sync calls `/api/revalidate` at the end of every run. Check the route by hand (every failure answers the same empty 404):
 
 ```sh
+read -rs REVALIDATE_SECRET && export REVALIDATE_SECRET   # paste the secret
 # no secret: 404
 curl -s -o /dev/null -w '%{http_code}\n' -X POST https://<production domain>/api/revalidate
 # wrong method: 404
@@ -127,18 +140,21 @@ curl -s -o /dev/null -w '%{http_code}\n' https://<production domain>/api/revalid
 curl -s -o /dev/null -w '%{http_code}\n' -X POST https://<production domain>/api/revalidate \
   -H 'content-type: application/json' -H "x-revalidate-secret: $REVALIDATE_SECRET" \
   -d '{"tags":["catalog:lists"]}'
+unset REVALIDATE_SECRET
 ```
 
-Run the third one with the secret in an environment variable, not typed into the command, so it stays out of your shell history. Then reload the home: it must still render (the lists were rebuilt). The sync summary of step 7 also reports how many revalidation requests succeeded.
+Then reload the home: it must still render (the lists were rebuilt). The third call spends one of the route's 30 tokens per minute, which is harmless. The sync summary of step 7 also reports how many revalidation requests succeeded.
 
 ## 9. Before the test starts (by 25/10)
 
 - Mark every team browser and device through `https://<production domain>/<TEAM_SECRET_PATH>` (US006).
-- Delete trial events from production if any (RNF10 script, dry run first):
+- Delete trial events from production if any (RNF10 script, dry run first). It needs the owner role: no other role has `DELETE` on the events table.
 
   ```sh
-  DATABASE_URL_POOLED='<owner production pooled URL>' npm run events:delete -- --from 2026-10-01 --to 2026-10-25
-  DATABASE_URL_POOLED='<owner production pooled URL>' npm run events:delete -- --from 2026-10-01 --to 2026-10-25 --confirm
+  read -rs DATABASE_URL_POOLED && export DATABASE_URL_POOLED   # owner production pooled URL
+  npm run events:delete -- --from 2026-10-01 --to 2026-10-25
+  npm run events:delete -- --from 2026-10-01 --to 2026-10-25 --confirm
+  unset DATABASE_URL_POOLED
   ```
 
 - `npm run smoke:title -- https://<production domain>`.
@@ -149,4 +165,4 @@ Run the third one with the secret in an environment variable, not typed into the
 - **App:** Vercel → Deployments → the last good Production deployment → Instant Rollback (or Promote). The schema changes in 0002–0008 are additive, so the previous build runs on the current database.
 - **Search misbehaving during the freeze:** set `SEARCH_TMDB_FALLBACK=off` and redeploy the same build (title-search I2).
 - **Sync misbehaving:** Actions → Sync catalog → ⋯ → Disable workflow. The site keeps serving the last good catalog from its cache and database. The safety valve already aborts a run that would remove more than 5% of active titles (catalog-sync B1).
-- **Suspected secret leak:** rotate first, investigate after (security §4): new `kinne_app` / `kinne_sync` password (`alter role ... password ...`), update Vercel or GitHub, redeploy; new `REVALIDATE_SECRET` in both places; new `RATE_LIMIT_SECRET` in Vercel.
+- **Suspected secret leak:** rotate first, investigate after (security §4): new `kinne_app` / `kinne_sync` password (`\password <role>` in `psql`), update Vercel or GitHub, redeploy; new `REVALIDATE_SECRET` in both places; new `RATE_LIMIT_SECRET` in Vercel.
