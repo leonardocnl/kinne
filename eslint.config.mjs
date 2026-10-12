@@ -8,6 +8,8 @@ const eslintConfig = defineConfig([
     ...nextTs,
     // Desliga regras de formatação que conflitam com o Prettier; deve vir depois das configs do Next.
     prettier,
+    // security.md §6: nada de dangerouslySetInnerHTML (texto do TMDB é sempre texto)
+    { rules: { "react/no-danger": "error" } },
     // Override default ignores of eslint-config-next.
     globalIgnores([
         // Default ignores of eslint-config-next:

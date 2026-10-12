@@ -1,6 +1,6 @@
 # Threat analysis — Cast and direction on the title page (phase 2)
 
-Status: proposed 2026-10-12, awaiting the owner's approval. Every mitigation marked **AC** is an acceptance criterion of `feat/title-credits` and has a covering test.
+Status: proposed 2026-10-12, awaiting the owner's approval. Every mitigation marked **AC** is an acceptance criterion of `feat/title-credits`. A1 is enforced by lint (`react/no-danger`), D2 by structure and review (where the read sits); the rest have covering tests.
 
 ## Scope
 
@@ -60,6 +60,6 @@ There is no new browser → server input: the slug was already validated (`isSlu
 
 Not applicable: read-only display, no events added.
 
-## Accepted risks
+## Accepted risks (proposed, awaiting approval)
 
-None proposed.
+- D1: a title with more than 20 directors shows the first 20 without saying more exist. Today's maximum is 15.
