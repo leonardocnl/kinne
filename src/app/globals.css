@@ -113,7 +113,8 @@
         100vh * 16 / 9
     ); /* largura máxima da página: nunca mais larga que um quadro 16:9 da altura da janela */
     --container-measure: 80ch; /* texto corrido */
-    --container-panel: 33.125rem; /* painel de filtros */
+    /* painel de filtros; não pode se chamar "panel": w-panel acharia antes --spacing-panel */
+    --container-filters: 33.125rem;
 
     /*
      * raios concêntricos: o raio de fora é o raio de dentro mais o respiro entre os dois.

@@ -205,7 +205,7 @@ export function FiltersDemo() {
     const none = picked.length === 0;
 
     return (
-        <GlassPanel className="max-w-panel" aria-label="Exemplo de painel de filtros">
+        <GlassPanel className="max-w-filters" aria-label="Exemplo de painel de filtros">
             <div className="flex flex-col gap-2 border-t border-line px-1 pt-3">
                 <span id="demo-streamings" className="text-data text-soft">
                     Streamings
