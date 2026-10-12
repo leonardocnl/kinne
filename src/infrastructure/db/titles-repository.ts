@@ -111,6 +111,8 @@ export class DrizzleTitlesRepository implements TitlesRepository {
             .where(
                 and(
                     eq(catalogTitles.isRecommendable, true),
+                    // bloqueado à mão sai mesmo antes de a carga recalcular is_recommendable
+                    eq(catalogTitles.isBlocked, false),
                     ne(catalogTitles.certificationBr, ADULT_CERTIFICATION),
                 ),
             )

@@ -2,14 +2,11 @@
 
 import "server-only";
 import { createHash } from "node:crypto";
-import { headers } from "next/headers";
 import { z } from "zod";
 import { MAX_PERSON_ID, parsePersonTerm, type PersonOutcome } from "@/domain/person-search";
 import { MAX_RAW_TERM_LENGTH } from "@/domain/search";
-import { clientKey, getClientIp, ipBucket } from "@/infrastructure/client-ip";
-import { MemoryLimiter } from "@/infrastructure/memory-limiter";
-import { searchConfig } from "@/infrastructure/search-config";
 import { personSuggestions, personTitleIds } from "../_data/people";
+import { admitPersonQuery } from "../_data/person-limit";
 
 const DEADLINE_MS = 5_000;
 const UNAVAILABLE = { kind: "unavailable" } as const;
@@ -18,18 +15,6 @@ const UNAVAILABLE = { kind: "unavailable" } as const;
 const searchSchema = z.strictObject({ term: z.string().max(MAX_RAW_TERM_LENGTH) });
 // A6
 const personSchema = z.strictObject({ personId: z.int().min(1).max(MAX_PERSON_ID) });
-
-// B1, B4, B5: um limite por visitante para as duas ações, do tamanho de uma sala de aula.
-const limiter = new MemoryLimiter(
-    () => searchConfig().catalogPerMinute,
-    () => searchConfig().catalogPerMinute / 60,
-);
-
-async function admitted(): Promise<boolean> {
-    const ip = getClientIp(await headers());
-    const key = clientKey(ip, searchConfig().secret, new Date());
-    return limiter.take(key ?? ipBucket(ip));
-}
 
 function withDeadline<T>(work: Promise<T>, fallback: T): Promise<T> {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -48,7 +33,7 @@ export async function searchPeople(input: unknown): Promise<PersonOutcome> {
     const term = parsed.success ? parsePersonTerm(parsed.data.term) : null;
     if (!term) return { kind: "none" };
     // B1: recusa antes de qualquer consulta
-    if (!(await admitted())) return UNAVAILABLE;
+    if (!(await admitPersonQuery())) return UNAVAILABLE;
     try {
         const termHash = createHash("sha256").update(term).digest("hex");
         const people = await withDeadline(personSuggestions(term, termHash), null);
@@ -68,7 +53,7 @@ export async function searchPeople(input: unknown): Promise<PersonOutcome> {
 export async function personTitles(input: unknown): Promise<number[] | null> {
     const parsed = personSchema.safeParse(input);
     if (!parsed.success) return null;
-    if (!(await admitted())) return null;
+    if (!(await admitPersonQuery())) return null;
     try {
         return await withDeadline(personTitleIds(parsed.data.personId), null);
     } catch {

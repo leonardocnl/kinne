@@ -8,12 +8,13 @@ import { candidateTitle, suggestionsQuery, titleIdsQuery } from "./people-reposi
 const db = createDb("postgresql://user:pw@localhost/db");
 
 describe("títulos sorteáveis (person-search C3)", () => {
-    it("o mesmo critério dos candidatos dos filtros: recomendável, fora do 18, em streaming no BR", () => {
+    it("o mesmo critério dos candidatos dos filtros: recomendável, não bloqueado, fora do 18, em streaming no BR", () => {
         const query = new PgDialect().sqlToQuery(candidateTitle!);
         expect(query.sql).toContain('"catalog_titles"."is_recommendable" = $1');
-        expect(query.sql).toContain('"catalog_titles"."certification_br" <> $2');
+        expect(query.sql).toContain('"catalog_titles"."is_blocked" = $2');
+        expect(query.sql).toContain('"catalog_titles"."certification_br" <> $3');
         expect(query.sql).toContain('"streaming_availability"."country_code" = \'BR\'');
-        expect(query.params).toEqual([true, "18"]);
+        expect(query.params).toEqual([true, false, "18"]);
     });
 });
 

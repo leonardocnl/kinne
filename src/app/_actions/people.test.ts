@@ -4,6 +4,7 @@ const suggestions = vi.fn();
 const titleIds = vi.fn();
 vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
 vi.mock("../_data/people", () => ({ personSuggestions: suggestions, personTitleIds: titleIds }));
+// o limite de verdade, para os testes de B1 e B4
 
 const load = async (env: Record<string, string> = {}) => {
     vi.resetModules();

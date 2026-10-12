@@ -4,7 +4,9 @@ import { DEFAULT_FILTERS, wireFilters } from "@/domain/filters";
 const candidates = vi.fn();
 const personTitleIds = vi.fn();
 vi.mock("../_data/candidates", () => ({ candidates }));
+const admit = vi.fn();
 vi.mock("../_data/people", () => ({ personTitleIds }));
+vi.mock("../_data/person-limit", () => ({ admitPersonQuery: admit }));
 
 const title = (id: number) => ({
     id,
@@ -20,6 +22,7 @@ const title = (id: number) => ({
 beforeEach(() => {
     candidates.mockReset().mockResolvedValue([1, 2, 3, 4].map(title));
     personTitleIds.mockReset().mockResolvedValue([3]);
+    admit.mockReset().mockResolvedValue(true);
 });
 
 describe("drawFiltered com pessoa (person-search A7, D1)", () => {
@@ -47,5 +50,19 @@ describe("drawFiltered com pessoa (person-search A7, D1)", () => {
         const filters = { ...wireFilters(DEFAULT_FILTERS), personId: 1056, titles: [1, 2] };
         await expect(drawFiltered({ filters, watched: [], seen: [] })).rejects.toThrow();
         expect(candidates).not.toHaveBeenCalled();
+    });
+
+    it("com pessoa, passa pelo limite antes do banco (B4)", async () => {
+        admit.mockResolvedValue(false);
+        const { drawFiltered } = await import("./filters");
+        const filters = { ...wireFilters(DEFAULT_FILTERS), personId: 1056 };
+        await expect(drawFiltered({ filters, watched: [], seen: [] })).rejects.toThrow();
+        expect(personTitleIds).not.toHaveBeenCalled();
+    });
+
+    it("sem pessoa, o sorteio não gasta ficha do limite", async () => {
+        const { drawFiltered } = await import("./filters");
+        await drawFiltered({ filters: wireFilters(DEFAULT_FILTERS), watched: [], seen: [] });
+        expect(admit).not.toHaveBeenCalled();
     });
 });

@@ -19,6 +19,7 @@ const STATEMENT_TIMEOUT = "2s"; // person-search B2
  */
 export const candidateTitle = and(
     eq(catalogTitles.isRecommendable, true),
+    eq(catalogTitles.isBlocked, false),
     ne(catalogTitles.certificationBr, ADULT_CERTIFICATION),
     sql`exists (select 1 from ${streamingAvailability}
         where ${streamingAvailability.catalogTitleId} = ${catalogTitles.id}
