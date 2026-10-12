@@ -5,7 +5,7 @@ import { filteredRun, watchedTitles } from "@/infrastructure/browser-storage";
 import { drawFiltered } from "../../_actions/filters";
 import { loadError } from "../StateScreen";
 import { showToast } from "../toast";
-import { titleHref } from "./origin";
+import { goToTitle } from "./origin";
 
 /**
  * Outra opção vindo dos filtros (US004 C2): sorteia outro dos mesmos 10 da rodada, sem repetir.
@@ -34,7 +34,7 @@ export function useFilteredDraw(currentSlug: string) {
                 if (slug)
                     return startTransition(() => {
                         setEnd(null);
-                        router.replace(titleHref(slug, "filtros"));
+                        goToTitle(router, "replace", slug, "filtros");
                     });
                 setEnd(total);
             } catch {

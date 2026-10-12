@@ -1,5 +1,6 @@
 "use server";
 
+import "server-only";
 import { drawUnseen, filterTitles, type FilterCandidate } from "@/domain/filters";
 import { candidates } from "../_data/candidates";
 import { parseFilterRequest } from "../_data/filters";

@@ -1,3 +1,4 @@
+import "server-only";
 import type {
     CatalogRepository,
     CatalogTitle,
@@ -31,6 +32,13 @@ const COUNTRY = "BR";
 const CHUNK = 2000;
 // Qualquer número fixo serve; só a carga usa este lock.
 const LOCK_KEY = 7_311_001;
+// title-search B5: o orçamento diário do TMDB já limita as linhas novas; o teto cobre o resto
+const MAX_SEARCH_CACHE_ROWS = 10_000;
+
+export type SearchState = {
+    cacheRows: number;
+    counters: { day: string; name: string; count: number }[];
+};
 
 const chunks = <T>(items: readonly T[], size = CHUNK) =>
     Array.from({ length: Math.ceil(items.length / size) }, (_, i) =>
@@ -147,6 +155,33 @@ export class DrizzleCatalogRepository implements CatalogRepository {
             })
             .where(eq(syncRuns.id, id));
         return size;
+    }
+
+    /**
+     * Limpeza diária da busca (title-search B5, G15) e os contadores para o resumo (F1). Um balde
+     * parado há mais de um dia já está cheio de novo: apagar é o mesmo que deixá-lo.
+     */
+    async cleanSearchState(runId: number): Promise<SearchState> {
+        await this.db.execute(sql`delete from search_cache where expires_at <= now()`);
+        await this.db.execute(sql`delete from search_cache where term_hash in (
+            select term_hash from search_cache order by created_at desc offset ${MAX_SEARCH_CACHE_ROWS})`);
+        await this.db.execute(
+            sql`delete from rate_limit_buckets where updated_at < now() - interval '1 day'`,
+        );
+        await this.db.execute(sql`delete from search_counters where day < current_date - 35`);
+        const rows = await this.db.execute<{ n: string }>(
+            sql`select count(*) as n from search_cache`,
+        );
+        const cacheRows = Number(rows.rows[0].n);
+        await this.db
+            .update(syncRuns)
+            .set({ searchCacheRows: cacheRows })
+            .where(eq(syncRuns.id, runId));
+        const counters = await this.db.execute<{ day: string; name: string; count: number }>(
+            sql`select day::text, name, count from search_counters
+                where day >= current_date - 1 order by day, name`,
+        );
+        return { cacheRows, counters: counters.rows };
     }
 
     async databaseSizeBytes(): Promise<number> {

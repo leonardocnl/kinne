@@ -40,8 +40,8 @@ Security by design: every feature is specified, built and reviewed against these
 - Every module that reads a secret or touches the database imports `server-only`, so importing it from client code breaks the build.
 - Environment variables are validated at startup with a strict schema; the process refuses to start on missing or malformed values, and the error names the variable, never its value.
 - **Database roles:**
-  - `kinne_app` (used by the site): `SELECT` on catalog tables, `INSERT` on events, nothing else. No DDL, no `UPDATE`/`DELETE` on events.
-  - `kinne_sync` (used by the daily job): read/write on catalog tables only.
+  - `kinne_app` (used by the site, created by migration 0006): `SELECT` on catalog tables, `INSERT` on events and on `daily_picks` (the home page writes a missing day), `SELECT`/`INSERT`/`UPDATE` on `search_cache` and `search_counters`, and `EXECUTE` on `kinne_take_tokens` and `kinne_trip_breaker` (`SECURITY DEFINER`, migration 0007: the site never writes the limiter tables directly). No DDL, no `DELETE` anywhere, no `UPDATE` on catalog or events.
+  - `kinne_sync` (used by the daily job): read/write on catalog tables, plus `SELECT`/`DELETE` on the search state (`search_cache`, `rate_limit_buckets`, `search_counters`) for the daily purge and run summary.
   - Owner role: migrations only, used from a developer machine, never stored in Vercel.
 - Preview deployments never receive production credentials.
 - Rotation: on any suspected leak, rotate the key first and investigate after. Rotation steps are documented per secret.
@@ -67,8 +67,10 @@ Security by design: every feature is specified, built and reviewed against these
 ## 7. Abuse and rate limiting
 
 - Rate limits per client on every write and every expensive read: events, draws, filter list, surprise.
-- Implementation stays portable (RNF11): a token bucket in Postgres or the hosting provider's firewall rules, not a vendor-only store.
-- The client IP is used only in memory or as a salted, rotating hash for rate limiting; it is never stored with events.
+- Implementation stays portable (RNF11): a token bucket in Postgres (`kinne_take_tokens`, migration 0006) on expensive paths (TMDB search fallback, global TMDB budget, `/api/revalidate`), an in-memory per-instance limit plus caching on cheap paths (catalog search). No vendor-only store.
+- The client IP comes only from `getClientIp()` (`src/infrastructure/client-ip.ts`), the one place that knows the host: on Vercel the platform-set `x-real-ip`, never the raw `X-Forwarded-For`. IPv6 is bucketed by /64.
+- If the Postgres limiter cannot answer, the protected action is refused (fail closed).
+- The client IP is used only in memory or as a salted, rotating hash for rate limiting (HMAC with a salt derived from `RATE_LIMIT_SECRET` and the UTC date, never stored); it is never stored with events.
 - Events are idempotent where possible and deduplicated server-side within a short window.
 - On limit: respond with a generic refusal; the UI degrades silently (events are best effort, never block the screen).
 
@@ -171,6 +173,4 @@ AI-assisted code follows these rules because the process checks them, not becaus
 | Missing titles return 200 with `noindex` (soft 404)             | Next.js cacheComponents behaviour; real 404 would need a database query per visit | Documented in requirements doc 04                                                                                   |
 | `braces` <=3.0.3 (GHSA-vfj7-8cjw-p6xm) via `eslint-config-next` | Dev-only lint tooling; no patched release exists                                  | Never reaches the production bundle; lint only processes repo-controlled paths; revisit when Dependabot opens a fix |
 
-### Temporary
-
-- `/api/revalidate` counts failed attempts in memory, per instance (only attempts that carry the right secret, so an anonymous flood cannot lock out the sync). This is a stopgap, replaced in step 2 (rate limiting decision) by a shared limiter (§7). Until then the 32-byte random secret and the identical 404 for every failure carry the protection.
+The temporary in-memory limit on `/api/revalidate` was replaced in step 2 by the Postgres token bucket (§7): only requests that carry the right secret take a token, so an anonymous flood cannot spend the sync's budget, and a limiter failure answers the same 404.

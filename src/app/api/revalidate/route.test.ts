@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const revalidateTag = vi.fn();
 vi.mock("next/cache", () => ({ revalidateTag }));
+const takeTokens = vi.fn();
+vi.mock("@/infrastructure/db/rate-limiter", () => ({ takeTokens }));
+vi.mock("@/infrastructure/db/client", () => ({ createDb: () => ({}) }));
 
 const SECRET = "s".repeat(43);
 
@@ -19,6 +22,7 @@ describe("POST /api/revalidate (C4, C8)", () => {
     beforeEach(() => {
         vi.resetModules();
         revalidateTag.mockClear();
+        takeTokens.mockReset().mockResolvedValue("ok");
         process.env.REVALIDATE_SECRET = SECRET;
     });
 
@@ -63,26 +67,31 @@ describe("POST /api/revalidate (C4, C8)", () => {
         }
     });
 
-    it("só falhas contam: flood sem segredo vira 404 e não barra quem tem o segredo", async () => {
+    it("flood sem segredo vira 404 sem gastar fichas da carga", async () => {
         const { POST } = await import("./route");
         for (let i = 0; i < 100; i++) {
             expect((await POST(post({ tags: ["catalog"] }, "errado"))).status).toBe(404);
         }
+        expect(takeTokens).not.toHaveBeenCalled();
         expect((await POST(post({ tags: ["catalog"] }))).status).toBe(204);
     });
 
-    it("sucessos não contam para o limite", async () => {
+    it("com o segredo certo, cada pedido gasta uma ficha do limitador no Postgres", async () => {
         const { POST } = await import("./route");
-        for (let i = 0; i < 100; i++) {
-            expect((await POST(post({ tags: ["catalog"] }))).status).toBe(204);
-        }
+        await POST(post({ tags: ["catalog"] }));
+        expect(takeTokens).toHaveBeenCalledWith({}, [["revalidate", 30, 0.5]]);
     });
 
-    it("com o segredo certo, corpos ruins em excesso também viram 404, sem 429", async () => {
+    it("sem ficha, 404 sem ler o corpo nem invalidar", async () => {
+        takeTokens.mockResolvedValue("limited");
         const { POST } = await import("./route");
-        const statuses = new Set<number>();
-        for (let i = 0; i < 40; i++) statuses.add((await POST(post("{"))).status);
-        expect([...statuses]).toEqual([404]);
+        expect((await POST(post({ tags: ["catalog"] }))).status).toBe(404);
+        expect(revalidateTag).not.toHaveBeenCalled();
+    });
+
+    it("limitador fora do ar falha fechado (404)", async () => {
+        takeTokens.mockRejectedValue(new Error("banco fora"));
+        const { POST } = await import("./route");
         expect((await POST(post({ tags: ["catalog"] }))).status).toBe(404);
         expect(revalidateTag).not.toHaveBeenCalled();
     });

@@ -2,7 +2,14 @@ import { Button, ButtonLink } from "../../_components/ui/Button";
 import { Dock } from "../../_components/ui/Dock";
 import { Fact, Facts } from "../../_components/ui/Facts";
 import { Frame } from "../../_components/ui/Frame";
-import { BackIcon, CheckIcon, CloseIcon, DiceIcon, PauseIcon } from "../../_components/ui/icons";
+import {
+    BackIcon,
+    CheckIcon,
+    CloseIcon,
+    DiceIcon,
+    PauseIcon,
+    SearchIcon,
+} from "../../_components/ui/icons";
 import { Chip } from "../../_components/ui/Chip";
 import { GlassPanel } from "../../_components/ui/GlassPanel";
 import { Slider } from "../../_components/ui/Slider";
@@ -36,6 +43,12 @@ export function Controls() {
                     </Button>
                     <Button variant="round" aria-label="Outra opção" spinIcon>
                         <DiceIcon />
+                    </Button>
+                    <Button variant="ghost" icon={<SearchIcon />}>
+                        Buscar
+                    </Button>
+                    <Button variant="round" aria-label="Buscar filme ou série">
+                        <SearchIcon />
                     </Button>
                 </Row>
                 <Row label="ButtonLink: leva a outra página">

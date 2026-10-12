@@ -1,3 +1,4 @@
+import "server-only";
 const BASE_URL = "https://api.themoviedb.org/3";
 const MAX_CONCURRENT = 8; // B5
 const MAX_ATTEMPTS = 6;
@@ -92,7 +93,7 @@ export class TmdbClient {
 // Exponencial com jitter completo: 0..min(30 s, 0,5 s × 2^tentativa).
 const backoff = (attempt: number) => Math.random() * Math.min(MAX_BACKOFF_MS, 500 * 2 ** attempt);
 
-async function readCapped(res: Response, path: string): Promise<string> {
+export async function readCapped(res: Response, path: string): Promise<string> {
     if (Number(res.headers.get("content-length")) > MAX_BODY_BYTES) {
         await res.body?.cancel();
         throw new Error(`Resposta grande demais em ${path}`);

@@ -2,7 +2,7 @@ import { cx } from "./cx";
 
 const BASE_URL = "https://image.tmdb.org/t/p/";
 
-type Width = "w300" | "w780" | "w1280";
+type Width = "w92" | "w300" | "w780" | "w1280";
 
 type TmdbImageProps = {
     /** caminho guardado no banco, como "/abc.jpg" */

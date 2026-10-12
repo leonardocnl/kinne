@@ -1,5 +1,6 @@
 "use server";
 
+import "server-only";
 import { drawSurprise } from "@/domain/surprise";
 import { candidates } from "../_data/candidates";
 import { parseSurpriseRequest } from "../_data/surprise";

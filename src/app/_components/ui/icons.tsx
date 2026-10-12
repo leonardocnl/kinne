@@ -82,3 +82,19 @@ export function CloseIcon() {
         </svg>
     );
 }
+
+export function SearchIcon() {
+    return (
+        <svg
+            viewBox="0 0 20 20"
+            className="size-4.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            aria-hidden="true"
+        >
+            <circle cx="8.5" cy="8.5" r="5.5" />
+            <path d="M12.5 12.5L17 17" />
+        </svg>
+    );
+}

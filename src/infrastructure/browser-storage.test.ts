@@ -3,11 +3,13 @@ import { DEFAULT_FILTERS } from "@/domain/filters";
 import {
     browserId,
     filteredRun,
+    filtersOnArrival,
     saveFilters,
     savedFilters,
     savedStreamings,
     shownTitles,
     teamBrowser,
+    titleOrigin,
     watchedTitles,
 } from "./browser-storage";
 
@@ -113,5 +115,52 @@ describe("browser storage", () => {
         expect(teamBrowser.is()).toBe(true);
         vi.stubGlobal("window", { localStorage: memoryStorage() });
         expect(teamBrowser.is()).toBe(false);
+    });
+});
+
+describe("origem do título (security §8, §9)", () => {
+    it.each(["dia", "surpresa", "filtros", "busca"] as const)("guarda e lê %s", (origin) => {
+        vi.stubGlobal("window", { sessionStorage: memoryStorage() });
+        titleOrigin.set("matrix-1999", origin);
+        expect(titleOrigin.read("matrix-1999")).toBe(origin);
+    });
+
+    it("vale só para o título com que foi gravada", () => {
+        vi.stubGlobal("window", { sessionStorage: memoryStorage() });
+        titleOrigin.set("matrix-1999", "busca");
+        expect(titleOrigin.read("outro-2020")).toBe("link");
+    });
+
+    it.each([
+        ["nada gravado", null],
+        ["origem desconhecida", JSON.stringify({ slug: "matrix-1999", origin: "admin" })],
+        ["origem 'link' gravada", JSON.stringify({ slug: "matrix-1999", origin: "link" })],
+        ["não é objeto", JSON.stringify("busca")],
+        ["JSON quebrado", "{"],
+    ])("%s vira link", (_, raw) => {
+        const sessionStorage = memoryStorage();
+        if (raw !== null) sessionStorage.setItem("kinne:origin", raw);
+        vi.stubGlobal("window", { sessionStorage });
+        expect(titleOrigin.read("matrix-1999")).toBe("link");
+    });
+
+    it("armazenamento bloqueado vira link, sem quebrar", () => {
+        vi.stubGlobal("window", {
+            get sessionStorage(): Storage {
+                throw new Error("bloqueado");
+            },
+        });
+        expect(() => titleOrigin.set("matrix-1999", "dia")).not.toThrow();
+        expect(titleOrigin.read("matrix-1999")).toBe("link");
+    });
+});
+
+describe("abrir os filtros ao chegar (US004 C3)", () => {
+    it("vale uma vez", () => {
+        vi.stubGlobal("window", { sessionStorage: memoryStorage() });
+        expect(filtersOnArrival.take()).toBe(false);
+        filtersOnArrival.request();
+        expect(filtersOnArrival.take()).toBe(true);
+        expect(filtersOnArrival.take()).toBe(false);
     });
 });

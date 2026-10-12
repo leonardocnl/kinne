@@ -1,25 +1,20 @@
+import "server-only";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { revalidateTag } from "next/cache";
+import { createDb } from "@/infrastructure/db/client";
+import { takeTokens } from "@/infrastructure/db/rate-limiter";
 import { REVALIDATE_SECRET_HEADER, revalidateBodySchema } from "@/infrastructure/revalidation";
 
 // Invalidação do cache do catálogo, chamada pela carga no fim de cada execução (C4). Superfície
-// pública (C8): só POST, segredo no cabeçalho comparado em tempo constante, corpo estrito e o
-// mesmo 404 vazio para qualquer falha (segredo errado, corpo ruim, excesso, outro método).
+// pública (C8): só POST, segredo no cabeçalho comparado em tempo constante, corpo estrito, limite
+// de taxa no Postgres (security §7) e o mesmo 404 vazio para qualquer falha (segredo errado, corpo
+// ruim, excesso, limitador fora do ar, outro método).
 
 const MAX_BODY_BYTES = 16 * 1024;
-const WINDOW_MS = 60_000;
-const MAX_FAILURES_PER_WINDOW = 30;
-// ponytail: contador de falhas autenticadas por instância, em memória; mover para um token bucket no Postgres
-// (security §7) quando houver limite de taxa de verdade. O segredo de 32 bytes já torna força
-// bruta inviável, e quem tem o segredo (a carga) nunca é barrado pelo contador.
-let windowStart = 0;
-let failures = 0;
+// A carga manda no máximo 6 pedidos por execução (tagsFor); 30 por minuto sobra.
+const BUCKET: [string, number, number] = ["revalidate", 30, 30 / 60];
 
 const notFound = () => new Response(null, { status: 404 });
-const fail = () => {
-    failures++;
-    return notFound();
-};
 
 function sameSecret(given: string | null): boolean {
     const expected = process.env.REVALIDATE_SECRET;
@@ -30,27 +25,24 @@ function sameSecret(given: string | null): boolean {
 }
 
 export async function POST(request: Request): Promise<Response> {
-    const now = Date.now();
-    if (now - windowStart > WINDOW_MS) {
-        windowStart = now;
-        failures = 0;
-    }
-    // O segredo vem antes do limite e segredo errado não conta: senão um flood anônimo esgotaria
-    // o contador e a carga ficaria sem invalidar (C5). Mesmo 404, sem custo de corpo.
+    // O segredo vem antes do limite: um flood anônimo não gasta as fichas da carga (C5).
     if (!sameSecret(request.headers.get(REVALIDATE_SECRET_HEADER))) return notFound();
-    // Só falhas de quem tem o segredo contam: corpo ruim em excesso recusa sem ler o corpo.
-    if (failures > MAX_FAILURES_PER_WINDOW) return fail();
-    if (Number(request.headers.get("content-length")) > MAX_BODY_BYTES) return fail();
+    // Falha fechada: sem resposta do limitador, nada é invalidado.
+    const admission = await (async () => takeTokens(createDb(), [BUCKET]))().catch(
+        () => "limited" as const,
+    );
+    if (admission !== "ok") return notFound();
+    if (Number(request.headers.get("content-length")) > MAX_BODY_BYTES) return notFound();
     const text = await request.text();
-    if (text.length > MAX_BODY_BYTES) return fail();
+    if (text.length > MAX_BODY_BYTES) return notFound();
     let json: unknown;
     try {
         json = JSON.parse(text);
     } catch {
-        return fail();
+        return notFound();
     }
     const body = revalidateBodySchema.safeParse(json);
-    if (!body.success) return fail();
+    if (!body.success) return notFound();
 
     // expire 0: conteúdo corrigido ou bloqueado não pode continuar sendo servido (C5).
     for (const tag of body.data.tags) revalidateTag(tag, { expire: 0 });

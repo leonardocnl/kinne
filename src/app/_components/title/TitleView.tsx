@@ -3,7 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { endOfOptionsHeading } from "@/domain/filters";
-import { filteredRun, shownTitles, watchedTitles } from "@/infrastructure/browser-storage";
+import {
+    filteredRun,
+    filtersOnArrival,
+    shownTitles,
+    watchedTitles,
+} from "@/infrastructure/browser-storage";
 import type { TitleScreen } from "../../_data/title";
 import { screenMain } from "../layout";
 import { track } from "../measure";
@@ -17,15 +22,14 @@ import { Frame, FrameImage } from "../ui/Frame";
 import { BackIcon, CheckIcon, DiceIcon, PlayIcon } from "../ui/icons";
 import { Score } from "../ui/Score";
 import { TextLink } from "../ui/TextLink";
-import { RECOMMENDATION_SOURCE, titleHref, type Origin } from "./origin";
+import { goToTitle, RECOMMENDATION_SOURCE, useOrigin } from "./origin";
 import { useFilteredDraw } from "./useFilteredDraw";
 import { useSurprise } from "./useSurprise";
 
 type TitleViewProps = {
     title: TitleScreen;
-    origin: Origin;
-    /** a indicação seguinte do dia, só na origem "dia" (US004 C5) */
-    nextDailySlug: string | null;
+    /** o título entre as indicações de hoje: gênero e a seguinte, usados na origem "dia" (C5) */
+    daily: { genre: string; nextSlug: string } | null;
 };
 
 // O botão que levou ao título seguinte. A tela é outra depois da navegação, então o foco é
@@ -33,7 +37,12 @@ type TitleViewProps = {
 let focusOnArrival: "seen" | "another" | null = null;
 
 /** Tela do título (US004) com as respostas "Vou assistir" e "Já vi" (US005). */
-export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
+export function TitleView({ title, daily }: TitleViewProps) {
+    // a origem vem da aba (security §8, §9); até a hidratação terminar, ainda não se sabe
+    const knownOrigin = useOrigin(title.slug);
+    const origin = knownOrigin ?? "link";
+    const nextDailySlug = daily?.nextSlug ?? null;
+    const genre = origin === "dia" && daily ? daily.genre : title.genre;
     const router = useRouter();
     const surprise = useSurprise("replace");
     const filtered = useFilteredDraw(title.slug);
@@ -48,12 +57,15 @@ export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
     // "Ver de novo" pode voltar ao mesmo título sem trocar de endereço: ele conta como mostrado
     useEffect(() => {
         if (ended) return changeRef.current?.focus();
+        // o evento sai uma vez, com a origem certa, e não com a do servidor
+        if (knownOrigin === null) return;
+        const origin = knownOrigin;
         shownTitles.add(title.id);
         if (origin === "filtros") filteredRun.see(title.id);
         track("recommendation_shown", { source: RECOMMENDATION_SOURCE[origin], titleId: title.id });
         if (focusOnArrival) (focusOnArrival === "seen" ? seenRef : anotherRef).current?.focus();
         focusOnArrival = null;
-    }, [title.id, origin, ended]);
+    }, [title.id, knownOrigin, ended]);
 
     useEffect(() => {
         if (done) homeRef.current?.focus();
@@ -66,7 +78,7 @@ export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
         const stay = () => {
             focusOnArrival = null;
         };
-        if (origin === "dia" && nextDailySlug) router.replace(titleHref(nextDailySlug, "dia"));
+        if (origin === "dia" && nextDailySlug) goToTitle(router, "replace", nextDailySlug, "dia");
         else if (origin === "filtros") filtered.draw(stay);
         else surprise.draw(stay);
     }
@@ -74,7 +86,8 @@ export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
     function markSeen() {
         watchedTitles.add(title.id);
         showToast(`Anotado: você já viu ${title.title}.`);
-        next("seen");
+        // fora das recomendações não há próxima opção: a tela fica onde está
+        if (title.recommendable) next("seen");
         track("already_watched_clicked", { titleId: title.id });
     }
 
@@ -94,7 +107,13 @@ export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
                 heading={endOfOptionsHeading(filtered.end ?? 0)}
                 action={
                     <div className="flex gap-2.5" aria-busy={pending}>
-                        <ButtonLink ref={changeRef} variant="primary" href="/?filtros" replace>
+                        <ButtonLink
+                            ref={changeRef}
+                            variant="primary"
+                            href="/"
+                            replace
+                            onClick={filtersOnArrival.request}
+                        >
                             Mudar filtros
                         </ButtonLink>
                         <Button variant="quiet" onClick={filtered.again}>
@@ -146,7 +165,7 @@ export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
                     )}
                     {title.synopsis && <Synopsis text={title.synopsis} />}
                     <Facts className="max-desktop:mt-4">
-                        {[title.genre, ...title.facts].map(
+                        {[genre, ...title.facts].map(
                             (text) => text && <Fact key={text}>{text}</Fact>,
                         )}
                     </Facts>
@@ -190,20 +209,22 @@ export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
                             >
                                 Já vi
                             </Button>
-                            <Button
-                                ref={anotherRef}
-                                variant="round"
-                                spinIcon
-                                aria-label={anotherLabel}
-                                title={anotherLabel}
-                                onClick={() => {
-                                    next("another");
-                                    // depois do sorteio: as server actions saem uma por vez
-                                    track("another_option_clicked", { titleId: title.id });
-                                }}
-                            >
-                                <DiceIcon />
-                            </Button>
+                            {title.recommendable && (
+                                <Button
+                                    ref={anotherRef}
+                                    variant="round"
+                                    spinIcon
+                                    aria-label={anotherLabel}
+                                    title={anotherLabel}
+                                    onClick={() => {
+                                        next("another");
+                                        // depois do sorteio: as server actions saem uma por vez
+                                        track("another_option_clicked", { titleId: title.id });
+                                    }}
+                                >
+                                    <DiceIcon />
+                                </Button>
+                            )}
                         </div>
                     )}
                 </Dock>

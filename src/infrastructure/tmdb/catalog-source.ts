@@ -1,3 +1,4 @@
+import "server-only";
 import type { CatalogSource, Credit, DetailsResult, Tag } from "@/application/sync-catalog";
 import { pickTrailer, type TitleType } from "@/domain/catalog";
 import { pickBackdrop, pickCertification } from "@/domain/catalog-sync";

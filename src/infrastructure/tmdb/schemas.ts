@@ -144,3 +144,25 @@ export const changesPageSchema = z.object({
     total_pages: z.number().int().min(0),
     results: z.array(z.object({ id })),
 });
+
+// Busca ao vivo (busca D1, C4): só id e tipo saem daqui, e nada adulto. Pessoas e entradas
+// inválidas são descartadas uma a uma; uma resposta sem lista é erro, não "nada encontrado".
+const searchHit = z.object({
+    id,
+    media_type: z.enum(["movie", "tv"]),
+    adult: z.boolean().optional(),
+});
+
+export const searchMultiSchema = z.object({
+    results: z
+        .array(z.unknown())
+        .max(1000)
+        .transform((items) =>
+            items.flatMap((item) => {
+                const hit = searchHit.safeParse(item);
+                if (!hit.success || hit.data.adult === true) return [];
+                const type = hit.data.media_type === "tv" ? "series" : "movie";
+                return [{ tmdbId: hit.data.id, type } as const];
+            }),
+        ),
+});

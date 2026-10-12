@@ -1,3 +1,4 @@
+import "server-only";
 import type { CatalogEntry, TitlesRepository } from "@/application/titles";
 import type { TitleType } from "@/domain/catalog";
 import { ADULT_CERTIFICATION } from "@/domain/catalog-sync";
@@ -37,6 +38,7 @@ export class DrizzleTitlesRepository implements TitlesRepository {
                 kinneGenres: sql<(string | null)[]>`array_agg(distinct ${genres.kinneGenre})`,
                 genreNames: sql<(string | null)[]>`array_agg(distinct ${genres.name})`,
                 streamingTmdbIds,
+                recommendable: catalogTitles.isRecommendable,
             })
             .from(catalogTitles)
             .leftJoin(catalogTitleGenres, eq(catalogTitleGenres.catalogTitleId, catalogTitles.id))

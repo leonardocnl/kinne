@@ -54,7 +54,7 @@ Status: **done** = built and checked. **Partial** = built, but something is unve
 | C2     | done   | Duration slider only with Filmes, ignored otherwise (`filterTitles`); E2E                                                                                        |
 | C3     | done   | Client-side count over the cached day list, without watched titles; `filters.test.ts`; E2E                                                                       |
 | C4     | done   | E2E: Netflix + Filmes + 9.0 gives "0 títulos combinam", disabled button and the hint                                                                             |
-| C5     | done   | Close button, Esc and browser back (`?filtros` in history); values kept; E2E for Esc and back                                                                    |
+| C5     | done   | Close button, Esc and browser back (open state in `history.state`, not the URL); values kept; E2E for Esc and back                                               |
 | C6     | done   | `drawFiltered` server action, `filtered` origin; E2E                                                                                                             |
 | C7     | done   | E2E: a new tab keeps Netflix and resets the type to "Os dois"                                                                                                    |
 | C8     | done   | `withType` and the Romance rule in `filterTitles`; `filters.test.ts`                                                                                             |
@@ -85,7 +85,7 @@ Status: **done** = built and checked. **Partial** = built, but something is unve
 | C5     | done    | "Próxima de hoje", wraps after the fifth (`titulo/[slug]/page.tsx`); E2E                                                                        |
 | C6     | done    | Opens YouTube in a new tab; hidden without a trailer; E2E (the tab opened; YouTube itself is blocked in this sandbox)                           |
 | C7     | done    | `/titulo/<slug>`; every next title uses `router.replace`, so back goes home; E2E                                                                |
-| C8     | done    | No `?origem` means link; filters are never in the URL; E2E                                                                                      |
+| C8     | done    | Origin kept in `sessionStorage` per title (security §8); none or another title means link; filters are never in the URL; E2E                    |
 | C9     | partial | "Ler mais"/"Ler menos" at 4 lines: E2E in Chromium at 360px. Safari on iPhone not tested (04, Design)                                           |
 | C10    | done    | Desktop grid in `TitleView.tsx`; code reading and E2E at 1280                                                                                   |
 | C11    | partial | `Dock` fixed to the bottom with `pb-safe`; E2E keyboard pass found no focused element hidden behind it in Chromium. Safari on iPhone not tested |

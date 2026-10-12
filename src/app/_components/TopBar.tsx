@@ -1,3 +1,4 @@
+import { SearchLauncher } from "./search/SearchLauncher";
 import { Button, ButtonLink } from "./ui/Button";
 import { Wordmark } from "./ui/Wordmark";
 
@@ -12,7 +13,7 @@ type TopBarProps = {
     back?: boolean;
 };
 
-/** Barra do topo: wordmark, data e "Entrar" (se SHOW_SIGN_IN) ou "Voltar", fora da tela inicial. */
+/** Barra do topo: wordmark, data, busca e "Entrar" (se SHOW_SIGN_IN) ou "Voltar", fora da tela inicial. */
 export function TopBar({ date, back }: TopBarProps) {
     return (
         <header className="grid grid-cols-3 items-center gap-3 max-desktop:grid-cols-2">
@@ -20,22 +21,21 @@ export function TopBar({ date, back }: TopBarProps) {
             <p className="justify-self-center text-data whitespace-nowrap text-soft max-desktop:hidden">
                 {date}
             </p>
-            {back ? (
-                <ButtonLink
-                    variant="ghost"
-                    href="/"
-                    icon={<span aria-hidden="true">←</span>}
-                    className="justify-self-end max-desktop:hidden"
-                >
-                    Voltar<span className="sr-only"> ao início</span>
-                </ButtonLink>
-            ) : (
-                SHOW_SIGN_IN && (
-                    <Button variant="ghost" className="justify-self-end">
-                        Entrar
-                    </Button>
-                )
-            )}
+            <div className="flex items-center gap-2.5 justify-self-end">
+                <SearchLauncher />
+                {back ? (
+                    <ButtonLink
+                        variant="ghost"
+                        href="/"
+                        icon={<span aria-hidden="true">←</span>}
+                        className="max-desktop:hidden"
+                    >
+                        Voltar<span className="sr-only"> ao início</span>
+                    </ButtonLink>
+                ) : (
+                    SHOW_SIGN_IN && <Button variant="ghost">Entrar</Button>
+                )}
+            </div>
         </header>
     );
 }

@@ -1,3 +1,4 @@
+import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import type { Candidate } from "@/application/titles";
 import { createDb } from "@/infrastructure/db/client";

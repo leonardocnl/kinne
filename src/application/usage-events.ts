@@ -15,6 +15,8 @@ export const usageEventSchema = z
     })
     // a origem só existe em recommendation_shown
     .refine((e) => e.source === null || e.name === "recommendation_shown")
+    // busca D3: "search" só com um título; o banco confere que ele existe (chave estrangeira)
+    .refine((e) => e.source !== "search" || e.titleId !== null)
     .transform((e): UsageEvent => ({ ...e, browserId: e.browserId.toLowerCase() }));
 
 /** O evento vem do navegador: só passa no formato esperado. Qualquer coisa fora disso é null. */
