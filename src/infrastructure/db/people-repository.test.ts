@@ -2,13 +2,18 @@ import { PgDialect } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
 import { MAX_PERSON_RESULTS, MAX_PERSON_TITLES } from "@/domain/person-search";
 import { createDb } from "./client";
-import { candidateTitle, suggestionsQuery, titleIdsQuery } from "./people-repository";
+import {
+    candidateTitle,
+    drawableTitle,
+    suggestionsQuery,
+    titleIdsQuery,
+} from "./people-repository";
 
 // Só monta as consultas: nada vai ao banco.
 const db = createDb("postgresql://user:pw@localhost/db");
 
-describe("títulos sorteáveis (person-search C3)", () => {
-    it("o mesmo critério dos candidatos dos filtros: recomendável, não bloqueado, fora do 18, em streaming no BR", () => {
+describe("títulos de pessoas (person-search C3, recommendation-rounds C2)", () => {
+    it("sugestões e contagens: sorteáveis fora do 18", () => {
         const query = new PgDialect().sqlToQuery(candidateTitle!);
         expect(query.sql).toContain('"catalog_titles"."is_recommendable" = $1');
         expect(query.sql).toContain('"catalog_titles"."is_blocked" = $2');
@@ -52,5 +57,19 @@ describe("títulos de uma pessoa", () => {
     it("só títulos sorteáveis (C3)", () => {
         expect(query.sql).toContain('"catalog_titles"."is_recommendable" = $');
         expect(query.sql).toContain("exists (select 1 from");
+    });
+});
+
+describe("o 18 nas consultas de pessoas (recommendation-rounds C2)", () => {
+    it("sorteáveis: recomendável, não bloqueado e em streaming no BR, com os 18", () => {
+        const query = new PgDialect().sqlToQuery(drawableTitle!);
+        expect(query.sql).not.toContain("certification_br");
+    });
+
+    it("as sugestões tiram os 18; os títulos da pessoa não, o chip decide", () => {
+        expect(suggestionsQuery(db, "hanks").toSQL().sql).toContain(
+            '"catalog_titles"."certification_br" <> $',
+        );
+        expect(titleIdsQuery(db, 1).toSQL().sql).not.toContain("certification_br");
     });
 });

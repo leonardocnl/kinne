@@ -92,8 +92,7 @@ export class DrizzleTitlesRepository implements TitlesRepository {
                 runtimeMinutes: catalogTitles.runtimeMinutes,
                 kinneGenres: sql<(string | null)[]>`array_agg(distinct ${genres.kinneGenre})`,
                 streamingTmdbIds,
-                // 18: os filtros só os mostram com o chip 18+; a surpresa nunca (fase 4)
-                adult: sql<boolean>`${catalogTitles.certificationBr} = ${ADULT_CERTIFICATION}`,
+                adult: adultTitle,
             })
             .from(catalogTitles)
             .leftJoin(catalogTitleGenres, eq(catalogTitleGenres.catalogTitleId, catalogTitles.id))
@@ -147,3 +146,10 @@ export function creditsQuery(db: Db, titleId: number) {
         .orderBy(asc(titleCredits.role), asc(titleCredits.creditOrder))
         .limit(CAST_SHOWN + MAX_DIRECTORS);
 }
+
+/**
+ * 18: os filtros só os mostram com o chip 18+, a surpresa nunca (recommendation-rounds A2). Sem
+ * classificação conta como 18 (falha fechada): hoje is_recommendable já exige uma, mas esta é a
+ * única marca entre esses títulos e a surpresa.
+ */
+export const adultTitle = sql<boolean>`coalesce(${catalogTitles.certificationBr} = ${ADULT_CERTIFICATION}, true)`;

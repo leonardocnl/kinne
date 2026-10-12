@@ -1,6 +1,6 @@
 # Threat analysis — Recommendation rounds and the 18+ chip (phase 4)
 
-Status: proposed 2026-10-12, awaiting the owner's approval. Every mitigation marked **AC** is an acceptance criterion of `feat/recommendation-rounds` and has a covering test unless it says otherwise.
+Status: proposed 2026-10-12, awaiting the owner's approval. Every mitigation marked **AC** is an acceptance criterion of `feat/recommendation-rounds` and has a covering test, except F1 and F2, which were verified manually in the browser (no component tests in the repo).
 
 ## Scope
 
@@ -32,13 +32,13 @@ New input: `adult` (boolean) in the filters and `round` (integer) in the filtere
 
 ### A. Tampering
 
-| #   | Threat                                                                     | L / I | Mitigation                                                                                                                                                |
-| --- | -------------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A1  | Forged `adult: true` sent without using the chip                           | M / L | By design the chip is the visitor's own choice and there is no age verification in guest mode (accepted risk below); AC: strict boolean, default false    |
-| A2  | 18-rated titles reaching surprise or daily picks through any input         | L / H | AC: surprise drops `adult` candidates in the domain whatever the request says; the daily picks query excludes certification 18; neither reads the filters |
-| A3  | Forged `round` (negative, huge, text) to read past the end or force errors | M / L | AC: strict integer 0–999; a round past the last answers "nothing left" (end state), never an error or another round's titles                              |
-| A4  | Forged `seen`/`watched` lists to shape the draw                            | M / L | AC: existing bounds (≤ 1000 positive integers); they can only remove titles from the visitor's own round, never add one                                   |
-| A5  | Tampered sessionStorage run (round, adult, seen) breaking the screen       | M / L | AC: the run is validated on read; anything invalid resets to a new run with the current filters                                                           |
+| #   | Threat                                                                     | L / I | Mitigation                                                                                                                                                                                                             |
+| --- | -------------------------------------------------------------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A1  | Forged `adult: true` sent without using the chip                           | M / L | By design the chip is the visitor's own choice and there is no age verification in guest mode (accepted risk below); AC: strict boolean, default false                                                                 |
+| A2  | 18-rated titles reaching surprise or daily picks through any input         | L / H | AC: surprise drops `adult` candidates in the domain whatever the request says; a title without certification counts as adult (fail closed); the daily picks query excludes certification 18; neither reads the filters |
+| A3  | Forged `round` (negative, huge, text) to read past the end or force errors | M / L | AC: strict integer 0–999; a round past the last answers "nothing left" (end state), never an error or another round's titles                                                                                           |
+| A4  | Forged `seen`/`watched` lists to shape the draw                            | M / L | AC: existing bounds (≤ 1000 positive integers); they can only remove titles from the visitor's own round, never add one                                                                                                |
+| A5  | Tampered sessionStorage run (round, adult, seen) breaking the screen       | M / L | AC: the run is validated on read; anything invalid resets to a new run with the current filters                                                                                                                        |
 
 ### B. Abuse and cost (Denial of service)
 
@@ -56,11 +56,11 @@ New input: `adult` (boolean) in the filters and `round` (integer) in the filtere
 
 ### D. Integrity and repudiation
 
-| #   | Threat                                                 | L / I | Mitigation                                                                                              |
-| --- | ------------------------------------------------------ | ----- | ------------------------------------------------------------------------------------------------------- |
-| D1  | Rounds differ between requests, so "no repeats" breaks | M / M | AC: rounds are deterministic for the same filters and watched snapshot (ties by votes, then id); tested |
-| D2  | A title shown twice in one run (multi-genre titles)    | M / L | AC: a title is placed in one round only; tested                                                         |
-| D3  | Event schema drifting with the feature                 | L / M | AC: no new event or source value; the existing zod event schema tests stay green                        |
+| #   | Threat                                                 | L / I | Mitigation                                                                                                                                                                                                                                                                    |
+| --- | ------------------------------------------------------ | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | Rounds differ between requests, so "no repeats" breaks | M / M | AC: rounds are deterministic for the same filters and watched snapshot (ties by votes, then id); tested. Holds per catalog snapshot: if the daily load refreshes the candidate list mid-run, later rounds can shift; repeats stay blocked because `seen` covers the whole run |
+| D2  | A title shown twice in one run (multi-genre titles)    | M / L | AC: a title is placed in one round only; tested                                                                                                                                                                                                                               |
+| D3  | Event schema drifting with the feature                 | L / M | AC: no new event or source value; the existing zod event schema tests stay green                                                                                                                                                                                              |
 
 ### E. Elevation of privilege
 
