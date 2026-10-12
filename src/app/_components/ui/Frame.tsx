@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { cx } from "./cx";
 import { TmdbImage } from "./TmdbImage";
+import { backdropSources, FRAME_SIZES } from "./tmdb-sources";
 
 type FrameProps = {
     /** escurece a imagem de cima a baixo, para a nota e o trailer ficarem legíveis */
@@ -36,17 +37,19 @@ export function Frame({ bottomShade, children, className }: FrameProps) {
 
 type FrameImageProps = {
     path: string;
+    /** largura do original no TMDB; sem ela, o srcset fica nos tamanhos fixos */
+    width: number | null;
     /** com várias imagens no quadro, só a visível aparece; a troca dissolve */
     visible?: boolean;
     priority?: boolean;
 };
 
 /** Imagem do TMDB que preenche o quadro, por baixo do gradiente e do grão. */
-export function FrameImage({ path, visible = true, priority }: FrameImageProps) {
+export function FrameImage({ path, width, visible = true, priority }: FrameImageProps) {
     return (
         <TmdbImage
-            path={path}
-            widths={["w780", "w1280"]}
+            sources={backdropSources(path, width)}
+            sizes={FRAME_SIZES}
             priority={priority}
             className={cx(
                 "absolute inset-0 -z-3 size-full transition-opacity duration-dissolve motion-reduce:transition-none",

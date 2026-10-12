@@ -4,7 +4,7 @@ Polish noticed while getting guest mode ready for the 2026-10-26 test, left for 
 
 ## Title screen
 
-- On a 1280×800 window the image takes most of the height. "Vou assistir", "Já vi" and the dice end up below the fold, and the main action needs a scroll. Consider capping the frame height by the window height on desktop (US004 C10).
+- Resolved in feat/layout-polish (phase 1): on desktop the action group sits on the title's first line, so it stays above the fold at 1280×800 whatever the synopsis length.
 
 ## Filters panel
 
@@ -12,7 +12,7 @@ Polish noticed while getting guest mode ready for the 2026-10-26 test, left for 
 
 ## Title search
 
-- Result rows are pill-shaped to follow the "every touchable control is a pill" rule; with a poster at the left edge the highlight looks a bit heavy. Consider a softer row highlight or a dedicated list-row token.
+- Resolved in feat/layout-polish (phase 1): result rows are taller (56 px posters) with a radius concentric to the panel instead of a pill.
 - On mobile the panel covers the top of the cover with no dimming behind it. Consider a scrim below the panel, as in the filters panel.
 - Titles without a poster image show an empty frame. Consider a typographic placeholder (initials or type icon).
 - A non-recommendable title opened from search shows only "Vou assistir" and "Já vi". After "Já vi" the screen stays put with the toast; consider offering "Buscar outro" there.

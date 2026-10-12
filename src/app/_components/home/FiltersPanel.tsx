@@ -1,16 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import {
-    useEffect,
-    useEffectEvent,
-    useId,
-    useMemo,
-    useRef,
-    useState,
-    useSyncExternalStore,
-    useTransition,
-} from "react";
+import { useEffect, useEffectEvent, useId, useMemo, useRef, useState, useTransition } from "react";
 import { MIN_RATING } from "@/domain/catalog";
 import {
     filterTitles,
@@ -26,7 +17,6 @@ import { STREAMING_SERVICES } from "@/domain/streaming";
 import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
 import {
     filteredRun,
-    filtersOnArrival,
     saveFilters,
     savedFilters,
     watchedTitles,
@@ -52,55 +42,6 @@ const section = "flex flex-col gap-2 border-t border-line px-1 pt-3";
 
 const thousands = new Intl.NumberFormat("pt-BR");
 
-// O painel aberto vive no histórico da aba (history.state), nunca na URL (security §8): o
-// "voltar" fecha o painel (C5) e recarregar a página o mantém aberto. Os valores ficam no
-// navegador (RNG005). Só abre depois da hidratação, porque os valores salvos não existem no
-// servidor.
-const OPEN_KEY = "kinneFilters";
-const CHANGE = "kinne:filters-route";
-
-const isOpen = () => window.history.state?.[OPEN_KEY] === true;
-
-function subscribe(onChange: () => void) {
-    window.addEventListener("popstate", onChange);
-    window.addEventListener(CHANGE, onChange);
-    return () => {
-        window.removeEventListener("popstate", onChange);
-        window.removeEventListener(CHANGE, onChange);
-    };
-}
-
-function setOpen(open: boolean, mode: "push" | "replace") {
-    const state = { ...window.history.state, [OPEN_KEY]: open };
-    if (mode === "push") window.history.pushState(state, "");
-    else window.history.replaceState(state, "");
-    window.dispatchEvent(new Event(CHANGE));
-}
-
-export function useFiltersRoute() {
-    const open = useSyncExternalStore(subscribe, isOpen, () => false);
-    // aberto por aqui: fechar é voltar. Aberto por "Mudar filtros" ou recarregando: fechar só
-    // tira a marca
-    const pushed = useRef(false);
-
-    useEffect(() => {
-        if (filtersOnArrival.take()) setOpen(true, "replace");
-    }, []);
-
-    return {
-        open,
-        show() {
-            pushed.current = true;
-            setOpen(true, "push");
-        },
-        hide() {
-            if (pushed.current) window.history.back();
-            else setOpen(false, "replace");
-            pushed.current = false;
-        },
-    };
-}
-
 // A lista do contador vem uma vez por aba; se falhar, a próxima abertura tenta de novo.
 let candidatesRequest: Promise<FilterCandidate[]> | null = null;
 function loadCandidates() {
@@ -123,7 +64,7 @@ type FiltersPanelProps = {
  * no celular, tela cheia e modal (C1). Os campos rolam por dentro, entre o título e o rodapé com o
  * contador. O contador conta no navegador sobre a lista do dia (C3), e o sorteio é no servidor (C6).
  */
-export function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelProps) {
+export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelProps) {
     const router = useRouter();
     const titleId = useId();
     const dialogRef = useRef<HTMLDialogElement>(null);

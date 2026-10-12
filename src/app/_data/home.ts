@@ -21,6 +21,7 @@ export type HomePick = {
     facts: string[];
     streaming: StreamingService | null;
     backdropImagePath: string | null;
+    backdropWidth: number | null;
 };
 
 /**
@@ -51,5 +52,6 @@ function toHomePick(p: DailyPickTitle): HomePick {
         ].filter((fact) => fact !== undefined),
         streaming: primaryStreaming(p.streamingTmdbIds),
         backdropImagePath: p.backdropImagePath,
+        backdropWidth: p.backdropWidth,
     };
 }

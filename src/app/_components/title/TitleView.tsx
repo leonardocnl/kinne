@@ -128,7 +128,13 @@ export function TitleView({ title, daily }: TitleViewProps) {
     return (
         <main className={screenMain}>
             <Frame bottomShade>
-                {title.backdropImagePath && <FrameImage path={title.backdropImagePath} priority />}
+                {title.backdropImagePath && (
+                    <FrameImage
+                        path={title.backdropImagePath}
+                        width={title.backdropWidth}
+                        priority
+                    />
+                )}
                 <ButtonLink
                     variant="round"
                     href="/"
@@ -154,14 +160,17 @@ export function TitleView({ title, daily }: TitleViewProps) {
                 <Score value={title.score} />
             </Frame>
 
-            {/* no computador, os botões ficam no canto inferior direito, por cima do texto (C10) */}
-            <div className="pt-2 desktop:grid desktop:pt-3.5">
-                <div className="flex min-w-0 flex-col desktop:col-start-1 desktop:row-start-1 desktop:gap-3.5">
+            {/* no computador, os botões ficam à direita, na altura da primeira linha do título, e
+                o texto vai até eles: o tamanho da sinopse não os move (C10) */}
+            <div className="pt-2 desktop:flex desktop:items-start desktop:gap-12 desktop:pt-3.5">
+                <div className="flex min-w-0 flex-col desktop:flex-1 desktop:gap-3.5">
                     <h1 className="pb-1 font-display text-title font-medium text-balance max-desktop:mb-3 desktop:text-wrap">
                         {title.title}
                     </h1>
                     {title.tagline && (
-                        <p className="text-tagline text-paper max-desktop:mb-5">{title.tagline}</p>
+                        <p className="max-w-measure text-tagline text-balance text-paper max-desktop:mb-5">
+                            {title.tagline}
+                        </p>
                     )}
                     {title.synopsis && <Synopsis text={title.synopsis} />}
                     <Facts className="max-desktop:mt-4">
@@ -179,7 +188,7 @@ export function TitleView({ title, daily }: TitleViewProps) {
 
                 <Dock
                     tall={done}
-                    className="desktop:col-start-1 desktop:row-start-1 desktop:self-end desktop:justify-self-end"
+                    className="desktop:flex desktop:h-title-line desktop:shrink-0 desktop:items-center"
                 >
                     {done ? (
                         // US005 C1: no lugar e na altura da fileira de botões
@@ -255,7 +264,7 @@ function Synopsis({ text }: { text: string }) {
                 id={id}
                 ref={ref}
                 className={cx(
-                    "max-w-measure text-synopsis text-soft",
+                    "max-w-measure text-synopsis text-pretty text-soft",
                     !open && "max-desktop:line-clamp-4",
                 )}
             >
