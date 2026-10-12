@@ -13,6 +13,8 @@ export type SurpriseCandidate = {
     rating: number;
     votes: number;
     streamingTmdbIds: readonly number[];
+    // classificação 18: a surpresa nunca os sorteia (recommendation-rounds A2)
+    adult: boolean;
 };
 
 export type SurpriseRequest = {
@@ -35,6 +37,7 @@ export function drawSurprise(
     const shown = new Set(request.shown);
     const eligible = candidates.filter(
         (c) =>
+            !c.adult &&
             c.rating >= SURPRISE_MIN_RATING &&
             meetsQualityFloor(c.rating, c.votes) &&
             c.streamingTmdbIds.some((id) => wanted.includes(id)) &&

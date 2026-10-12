@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useEffectEvent, useId, useMemo, useRef, useState, useTransition } from "react";
 import { MIN_RATING } from "@/domain/catalog";
 import {
-    filterTitles,
+    matchTitles,
     MAX_RATING,
     RUNTIME_LIMITS,
     wireFilters,
@@ -162,10 +162,10 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
 
     const count = useMemo(() => {
         if (!Array.isArray(candidates)) return null;
-        if (personId === null) return filterTitles(candidates, filters, watched).count;
+        if (personId === null) return matchTitles(candidates, filters, watched).length;
         // a pessoa escolhida ainda sem os títulos: o contador espera
         if (!(personTitleSet instanceof Set)) return null;
-        return filterTitles(candidates, filters, watched, personTitleSet).count;
+        return matchTitles(candidates, filters, watched, personTitleSet).length;
     }, [candidates, filters, watched, personId, personTitleSet]);
 
     // sobra campo abaixo da área visível? A folga de 1 cobre o arredondamento do zoom
@@ -205,6 +205,7 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
                     filters: wireFilters(filters),
                     watched: request.watched,
                     seen: [],
+                    round: 0,
                 });
                 if (slug) {
                     // a rodada de "Outra opção" (US004 C2) começa aqui
@@ -353,6 +354,26 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
                         </div>
 
                         <div className={section}>
+                            <span id={`${titleId}-rating`} className="text-data text-soft">
+                                Classificação
+                            </span>
+                            <div
+                                role="group"
+                                aria-labelledby={`${titleId}-rating`}
+                                className="flex flex-wrap gap-1.5"
+                            >
+                                {/* desligado por padrão: só com ele os títulos 18 entram (fase 4) */}
+                                <Chip
+                                    pressed={filters.adult}
+                                    aria-label="18+, incluir títulos para maiores de 18 anos"
+                                    onClick={() => update({ ...filters, adult: !filters.adult })}
+                                >
+                                    18+
+                                </Chip>
+                            </div>
+                        </div>
+
+                        <div className={section}>
                             <span id={`${titleId}-person`} className="text-data text-soft">
                                 Buscar ator ou diretor
                             </span>
@@ -435,7 +456,7 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
                                 aria-busy={pending}
                                 onClick={see}
                             >
-                                Ver recomendação
+                                Sortear um título
                             </Button>
                         )}
                     </div>

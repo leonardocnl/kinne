@@ -5,7 +5,7 @@ import { parseFilterRequest } from "./filters";
 
 // os filtros como saem do navegador: da pessoa, só o id (person-search A7)
 const WIRE = wireFilters(DEFAULT_FILTERS);
-const ok = { filters: WIRE, watched: [1, 2], seen: [3] };
+const ok = { filters: WIRE, watched: [1, 2], seen: [3], round: 0 };
 
 describe("parseFilterRequest", () => {
     it("aceita o pedido no formato esperado", () => {
@@ -38,6 +38,11 @@ describe("parseFilterRequest", () => {
         ["streaming desconhecido", { ...ok, filters: { ...WIRE, streamings: ["hbo"] } }],
         ["texto no lugar de id", { ...ok, seen: ["x".repeat(100_000)] }],
         ["pessoa com id zero", { ...ok, filters: { ...WIRE, personId: 0 } }],
+        ["sem a rodada", { ...ok, round: undefined }],
+        ["rodada negativa", { ...ok, round: -1 }],
+        ["rodada acima de 999", { ...ok, round: 1000 }],
+        ["18+ que não é booleano", { ...ok, filters: { ...WIRE, adult: "sim" } }],
+        ["sem o 18+", { ...ok, filters: { ...WIRE, adult: undefined } }],
         ["pessoa com id texto", { ...ok, filters: { ...WIRE, personId: "1056" } }],
         ["pessoa com id grande demais", { ...ok, filters: { ...WIRE, personId: 2 ** 31 } }],
         [

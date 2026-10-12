@@ -42,10 +42,10 @@ New input: `adult` (boolean) in the filters and `round` (integer) in the filtere
 
 ### B. Abuse and cost (Denial of service)
 
-| #   | Threat                                                 | L / I | Mitigation                                                                                                                               |
-| --- | ------------------------------------------------------ | ----- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| B1  | Round building (rank about 9k titles) on every draw    | M / L | AC: pure, in-memory over the already cached candidate list; no new database query; O(n log n), measured below a few ms                   |
-| B2  | Many rounds requested to scan the whole ranked catalog | L / L | Accepted: each answer is one slug of the visitor's own filters, the catalog is public TMDB data, and the per-person path keeps its limit |
+| #   | Threat                                                 | L / I | Mitigation                                                                                                                                                                                                  |
+| --- | ------------------------------------------------------ | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B1  | Round building (rank about 9k titles) on every draw    | M / L | AC: pure, in-memory over the already cached candidate list; no new database query; O(n log n); measured on 9,000 titles: 2.6 ms with a genre, 6.1 ms without (scores computed once, outside the comparator) |
+| B2  | Many rounds requested to scan the whole ranked catalog | L / L | Accepted: each answer is one slug of the visitor's own filters, the catalog is public TMDB data, and the per-person path keeps its limit                                                                    |
 
 ### C. Information disclosure
 

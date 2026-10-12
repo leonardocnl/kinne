@@ -4,7 +4,7 @@ import type { TitleType } from "@/domain/catalog";
 import { ADULT_CERTIFICATION } from "@/domain/catalog-sync";
 import { CAST_SHOWN, MAX_DIRECTORS } from "@/domain/credits";
 import { isKinneGenre } from "@/domain/genre";
-import { and, asc, eq, lt, ne, or, sql } from "drizzle-orm";
+import { and, asc, eq, lt, or, sql } from "drizzle-orm";
 import type { Db } from "./client";
 import {
     catalogTitleGenres,
@@ -92,6 +92,8 @@ export class DrizzleTitlesRepository implements TitlesRepository {
                 runtimeMinutes: catalogTitles.runtimeMinutes,
                 kinneGenres: sql<(string | null)[]>`array_agg(distinct ${genres.kinneGenre})`,
                 streamingTmdbIds,
+                // 18: os filtros só os mostram com o chip 18+; a surpresa nunca (fase 4)
+                adult: sql<boolean>`${catalogTitles.certificationBr} = ${ADULT_CERTIFICATION}`,
             })
             .from(catalogTitles)
             .leftJoin(catalogTitleGenres, eq(catalogTitleGenres.catalogTitleId, catalogTitles.id))
@@ -107,13 +109,13 @@ export class DrizzleTitlesRepository implements TitlesRepository {
                 streamingServices,
                 eq(streamingServices.id, streamingAvailability.streamingServiceId),
             )
-            // Recomendável (C7); 18 só pelo chip 18+, que ainda não existe (A7).
+            // Recomendável (C7). Os 18 vêm marcados em `adult`: quem decide é o chip 18+ nos
+            // filtros, e a surpresa os tira sempre (recommendation-rounds A2).
             .where(
                 and(
                     eq(catalogTitles.isRecommendable, true),
                     // bloqueado à mão sai mesmo antes de a carga recalcular is_recommendable
                     eq(catalogTitles.isBlocked, false),
-                    ne(catalogTitles.certificationBr, ADULT_CERTIFICATION),
                 ),
             )
             .groupBy(catalogTitles.id);
