@@ -190,7 +190,7 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
                     leaving && event.target === event.currentTarget && onLeft()
                 }
                 className={cx(
-                    "min-h-0 overflow-hidden max-desktop:h-full desktop:pointer-events-auto desktop:max-h-panel-height desktop:w-panel desktop:max-w-full desktop:scroll-mb-4",
+                    "min-h-0 overflow-hidden max-desktop:h-full desktop:pointer-events-auto desktop:max-h-panel-height desktop:w-filters desktop:max-w-full desktop:scroll-mb-4",
                     // com movimento reduzido, nem entra nem sai animado (CM004)
                     leaving
                         ? "motion-safe:max-desktop:animate-panel-down motion-safe:desktop:animate-panel-out"

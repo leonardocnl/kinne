@@ -24,7 +24,12 @@ const named = [
         token: "--spacing-skeleton-title",
         note: "Título do skeleton",
     },
-    { label: "panel", className: "w-panel", token: "--container-panel", note: "Painel de filtros" },
+    {
+        label: "filters",
+        className: "w-filters",
+        token: "--container-filters",
+        note: "Painel de filtros",
+    },
     {
         label: "measure",
         className: "w-measure",
