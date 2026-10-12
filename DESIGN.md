@@ -22,6 +22,8 @@ Leitura obrigatória antes de qualquer tarefa de interface. A fonte da verdade v
 - O que não se toca nunca é pílula. A nota, por exemplo, é texto.
 - Única exceção: o skeleton imita a forma do que vai substituir (imagem reta, botão e linhas de texto em pílula, título com `rounded-card`).
 - Imagens de filmes e séries têm cantos retos.
+- Raios concêntricos: elemento arredondado dentro de outro usa raio de fora = raio de dentro + respiro entre os dois (`--radius-panel` = `--radius-control` + `--spacing-panel`; `--radius-tag` = botão de 32px/2 + `--spacing-tag`).
+- Toda tela usa `page-container`: largura toda, margem `--spacing-gutter` e, em tela ultralarga, no máximo `--container-page` (16:9 da altura da janela), centralizada.
 
 ## Componentes
 
@@ -34,6 +36,6 @@ WCAG 2.2 AA, mais estes critérios AAA do projeto:
 
 - Contraste de 7:1 no texto.
 - Alvo de toque de no mínimo 44px (`h-target`). Controles têm 50px (`h-control`).
-- Foco sempre visível (contorno claro, definido no `globals.css`).
+- Foco visível só no teclado, com um estilo único (anel claro com fio escuro, definido no `globals.css`). Depois de mouse ou toque não há anel: `InputModality` marca `data-input` no `<html>`.
 - Movimento reduzido: com `prefers-reduced-motion`, nada se move nem pulsa (`motion-reduce:`).
 - Texto corrido com até 80 caracteres por linha (`max-w-measure`).

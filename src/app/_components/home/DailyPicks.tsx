@@ -90,7 +90,7 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
                                 />
                             ),
                     )}
-                    <div className="absolute top-2.5 left-3 flex items-center gap-2 text-caption text-paper">
+                    <div className="absolute top-2.5 left-3 flex items-center gap-2 rounded-tag bg-scrim-strong p-tag text-caption text-paper backdrop-blur-veil">
                         {!reducedMotion && (
                             <Button
                                 ref={pauseRef}
@@ -105,7 +105,7 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
                                 {rotating ? <PauseIcon /> : <PlayIcon />}
                             </Button>
                         )}
-                        <span>
+                        <span className="pr-2 pl-1">
                             {current + 1} de {picks.length}
                         </span>
                     </div>
