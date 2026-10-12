@@ -147,7 +147,7 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
                         value={term}
                         onChange={(event) => setTerm(event.target.value)}
                         onKeyDown={onKeyDown}
-                        className="h-control min-w-0 flex-1 rounded-pill border border-line bg-quiet px-5 text-body text-paper placeholder:text-faint"
+                        className="h-control min-w-0 flex-1 rounded-pill border border-line bg-scrim-strong px-5 text-small text-paper placeholder:text-soft"
                     />
                     <Button variant="round" aria-label="Fechar busca" onClick={() => onClose(true)}>
                         <CloseIcon />
@@ -169,7 +169,7 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
                             onClick={() => open(result)}
                             onPointerMove={() => setActive(i)}
                             className={cx(
-                                "flex min-h-target cursor-pointer items-center gap-3 rounded-pill py-1.5 pr-5 pl-4 transition duration-hover motion-reduce:transition-none",
+                                "flex h-control cursor-pointer items-center gap-3 rounded-pill pr-5 pl-4 transition duration-hover motion-reduce:transition-none",
                                 i === active && "bg-hover outline outline-line-strong",
                             )}
                         >
@@ -177,10 +177,10 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
                                 <TmdbImage
                                     path={result.posterPath}
                                     widths={["w92"]}
-                                    className="h-12 w-8 shrink-0"
+                                    className="h-10 w-6.5 shrink-0"
                                 />
                             ) : (
-                                <span aria-hidden="true" className="h-12 w-8 shrink-0 bg-frame" />
+                                <span aria-hidden="true" className="h-10 w-6.5 shrink-0 bg-frame" />
                             )}
                             <span className="flex min-w-0 flex-col">
                                 <span className="truncate text-body text-paper">

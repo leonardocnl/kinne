@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function DesignPage() {
     return (
-        <div className="mx-auto grid w-full max-w-page gap-x-10 px-gutter py-8 desktop:grid-cols-12">
+        <div className="page-container grid gap-x-10 py-8 desktop:grid-cols-12">
             <aside className="flex flex-col gap-6 pb-8 desktop:sticky desktop:top-0 desktop:col-span-2 desktop:h-dvh desktop:self-start desktop:pt-2">
                 <Wordmark className="self-start" />
                 <nav aria-label="Seções">

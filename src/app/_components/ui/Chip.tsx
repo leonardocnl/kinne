@@ -38,7 +38,7 @@ export function RadioChip({
         <label
             className={cx(
                 base,
-                "not-has-checked:hover:border-line-strong not-has-checked:hover:bg-hover has-checked:border-paper has-checked:bg-paper has-checked:text-ink has-focus-visible:outline-2 has-focus-visible:outline-offset-3 has-focus-visible:outline-paper",
+                "not-has-checked:hover:border-line-strong not-has-checked:hover:bg-hover has-checked:border-paper has-checked:bg-paper has-checked:text-ink",
                 className,
             )}
         >

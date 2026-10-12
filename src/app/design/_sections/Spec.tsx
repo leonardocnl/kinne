@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 /** Simula o foco do teclado (o mesmo contorno do :focus-visible do globals.css). */
-export const focusRing = "outline-2 outline-offset-3 outline-paper";
+export const focusRing = "outline-2 outline-offset-3 outline-paper shadow-focus";
 
 /** Ficha de um componente: nome e props em fonte de código, a função em uma frase. */
 export function Spec({

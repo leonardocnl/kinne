@@ -16,3 +16,4 @@ Polish noticed while getting guest mode ready for the 2026-10-26 test, left for 
 - On mobile the panel covers the top of the cover with no dimming behind it. Consider a scrim below the panel, as in the filters panel.
 - Titles without a poster image show an empty frame. Consider a typographic placeholder (initials or type icon).
 - A non-recommendable title opened from search shows only "Vou assistir" and "Já vi". After "Já vi" the screen stays put with the toast; consider offering "Buscar outro" there.
+- When the catalog finds some matches, the TMDB fallback is skipped. So a title missing from the catalog (e.g. "Instinto Selvagem", 1992) is not reported as "not on these streamings" ("Esse título não está em nenhum desses streamings."): the person only sees the other matches. Consider running the fallback when the best catalog match does not look like the term, or noting that the exact title was not found.
