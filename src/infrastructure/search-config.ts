@@ -1,3 +1,4 @@
+import "server-only";
 import { z } from "zod";
 
 // Limites da busca, lidos a cada pedido (H1, I2): mudar exige só um redeploy do mesmo build.

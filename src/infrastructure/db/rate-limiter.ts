@@ -1,3 +1,4 @@
+import "server-only";
 import { sql } from "drizzle-orm";
 import type { Admission } from "@/application/title-search";
 import type { Db } from "./client";

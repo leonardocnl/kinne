@@ -1,3 +1,4 @@
+import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { dailyPicksFor, type DailyPickTitle } from "@/application/daily-picks";
 import { formatRuntime } from "@/domain/catalog";

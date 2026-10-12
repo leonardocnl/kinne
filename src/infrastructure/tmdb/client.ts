@@ -1,3 +1,4 @@
+import "server-only";
 const BASE_URL = "https://api.themoviedb.org/3";
 const MAX_CONCURRENT = 8; // B5
 const MAX_ATTEMPTS = 6;

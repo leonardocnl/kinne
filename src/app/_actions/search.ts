@@ -1,5 +1,6 @@
 "use server";
 
+import "server-only";
 import { createHash } from "node:crypto";
 import { headers } from "next/headers";
 import { after } from "next/server";

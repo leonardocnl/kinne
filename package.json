@@ -13,12 +13,12 @@
         "format:check": "prettier --check .",
         "db:generate": "drizzle-kit generate",
         "db:migrate": "drizzle-kit migrate",
-        "db:seed": "tsx --env-file=.env.local scripts/seed.ts",
-        "catalog:sync": "tsx --env-file-if-exists=.env.local scripts/sync-catalog.ts",
-        "daily:pick": "tsx --env-file-if-exists=.env.local scripts/daily-pick.ts",
-        "events:delete": "tsx --env-file-if-exists=.env.local scripts/delete-test-events.ts",
-        "smoke:title": "tsx scripts/smoke-title.ts",
-        "search:check-normalization": "tsx --env-file-if-exists=.env.local scripts/check-search-normalization.ts"
+        "db:seed": "tsx --conditions=react-server --env-file=.env.local scripts/seed.ts",
+        "catalog:sync": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/sync-catalog.ts",
+        "daily:pick": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/daily-pick.ts",
+        "events:delete": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/delete-test-events.ts",
+        "smoke:title": "tsx --conditions=react-server scripts/smoke-title.ts",
+        "search:check-normalization": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/check-search-normalization.ts"
     },
     "dependencies": {
         "@neondatabase/serverless": "^1.2.0",
@@ -26,6 +26,7 @@
         "next": "16.4.0",
         "react": "19.3.0",
         "react-dom": "19.3.0",
+        "server-only": "0.0.1",
         "zod": "^4.6.6"
     },
     "devDependencies": {

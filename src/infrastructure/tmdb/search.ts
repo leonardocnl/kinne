@@ -1,3 +1,4 @@
+import "server-only";
 import type { TmdbHit } from "@/application/title-search";
 import { readCapped, TmdbHttpError } from "./client";
 import { searchMultiSchema } from "./schemas";

@@ -1,3 +1,4 @@
+import "server-only";
 import { createHmac } from "node:crypto";
 import { isIPv4, isIPv6 } from "node:net";
 

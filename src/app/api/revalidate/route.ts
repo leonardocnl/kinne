@@ -1,3 +1,4 @@
+import "server-only";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { revalidateTag } from "next/cache";
 import { createDb } from "@/infrastructure/db/client";

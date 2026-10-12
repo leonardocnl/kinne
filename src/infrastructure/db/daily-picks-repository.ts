@@ -1,3 +1,4 @@
+import "server-only";
 import type { DailyPickTitle, DailyPicksRepository } from "@/application/daily-picks";
 import type { TitleType } from "@/domain/catalog";
 import { ADULT_CERTIFICATION } from "@/domain/catalog-sync";

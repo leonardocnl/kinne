@@ -1,3 +1,4 @@
+import "server-only";
 import { z } from "zod";
 import { MAX_SLUG_LENGTH } from "@/domain/catalog";
 

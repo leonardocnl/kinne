@@ -1,3 +1,4 @@
+import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import type { CatalogEntry } from "@/application/titles";
 import { formatRuntime, isSlug } from "@/domain/catalog";

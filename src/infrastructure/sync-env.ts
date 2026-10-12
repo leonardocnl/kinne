@@ -1,3 +1,4 @@
+import "server-only";
 const POSTGRES_URL = /^postgres(ql)?:\/\/[^"'\s]+$/;
 export const SYNC_TARGETS = ["develop", "production"] as const;
 export type SyncTarget = (typeof SYNC_TARGETS)[number];

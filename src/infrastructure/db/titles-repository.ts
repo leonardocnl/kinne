@@ -1,3 +1,4 @@
+import "server-only";
 import type { CatalogEntry, TitlesRepository } from "@/application/titles";
 import type { TitleType } from "@/domain/catalog";
 import { ADULT_CERTIFICATION } from "@/domain/catalog-sync";
