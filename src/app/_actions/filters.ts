@@ -4,6 +4,7 @@ import "server-only";
 import { drawUnseen, filterTitles, type FilterCandidate } from "@/domain/filters";
 import { candidates } from "../_data/candidates";
 import { parseFilterRequest } from "../_data/filters";
+import { personTitleIds } from "../_data/people";
 
 /** Os títulos para o contador dos filtros (US002 C3), que conta no navegador, sem o slug. */
 export async function filterCandidates(): Promise<FilterCandidate[]> {
@@ -27,6 +28,9 @@ export async function drawFiltered(
     input: unknown,
 ): Promise<{ slug: string | null; total: number }> {
     const { filters, watched, seen } = parseFilterRequest(input);
-    const { top } = filterTitles(await candidates(), filters, watched);
+    // person-search A7, D1: os títulos da pessoa vêm do servidor, nunca do navegador
+    const person =
+        filters.personId === null ? null : new Set(await personTitleIds(filters.personId));
+    const { top } = filterTitles(await candidates(), filters, watched, person);
     return { slug: drawUnseen(top, seen)?.slug ?? null, total: top.length };
 }

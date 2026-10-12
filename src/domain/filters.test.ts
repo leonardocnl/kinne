@@ -5,6 +5,7 @@ import {
     endOfOptionsHeading,
     filterTitles,
     parseFilters,
+    wireFilters,
     withType,
     type FilterCandidate,
     type Filters,
@@ -35,7 +36,19 @@ describe("filterTitles", () => {
             genres: [],
             minRating: 6.4,
             maxRuntime: null,
+            person: null,
         });
+    });
+
+    it("com uma pessoa, conta só os títulos dela, junto com os outros filtros (fase 3)", () => {
+        const pool = [title(1), title(2), title(3)];
+        const all = filterTitles(pool, DEFAULT_FILTERS, []);
+        const person = filterTitles(pool, DEFAULT_FILTERS, [], new Set([2, 3, 99]));
+        expect(all.count).toBe(3);
+        expect(person.count).toBe(2);
+        expect(person.top.map((t) => t.id).sort()).toEqual([2, 3]);
+        // sem nenhum título da pessoa entre os candidatos, nada combina
+        expect(filterTitles(pool, DEFAULT_FILTERS, [], new Set()).count).toBe(0);
     });
 
     it("conta o que passa no piso e nos filtros, sem os marcados (US002 C3, RNG004)", () => {
@@ -160,12 +173,28 @@ describe("parseFilters", () => {
         genres: ["drama"],
         minRating: 7.2,
         maxRuntime: 105,
+        person: { id: 1056, name: "Tom Hanks", role: "cast" },
     };
 
     it("aceita filtros no formato e nos limites de cada campo", () => {
         expect(parseFilters(ok)).toEqual(ok);
         expect(parseFilters(DEFAULT_FILTERS)).toEqual(DEFAULT_FILTERS);
         expect(parseFilters({ ...ok, minRating: 7.199999999 })?.minRating).toBe(7.2);
+    });
+
+    it("pessoa ausente ou adulterada vale como ninguém, sem perder os outros campos (A9)", () => {
+        expect(parseFilters({ ...ok, person: undefined })).toEqual({ ...ok, person: null });
+        expect(parseFilters({ ...ok, person: { id: -1, name: "x", role: "cast" } })).toEqual({
+            ...ok,
+            person: null,
+        });
+    });
+
+    it("manda ao servidor só o id da pessoa (A7)", () => {
+        const wire = wireFilters(ok as Filters);
+        expect(wire).not.toHaveProperty("person");
+        expect(wire).toMatchObject({ type: "movie", genres: ["drama"], personId: 1056 });
+        expect(wireFilters(DEFAULT_FILTERS).personId).toBeNull();
     });
 
     it.each([

@@ -15,7 +15,7 @@ import { GlassPanel } from "../../_components/ui/GlassPanel";
 import { Slider } from "../../_components/ui/Slider";
 import { TextLink } from "../../_components/ui/TextLink";
 import { Wordmark } from "../../_components/ui/Wordmark";
-import { FiltersDemo, TokenValue } from "./live";
+import { FiltersDemo, RemovableChipDemo, TokenValue } from "./live";
 import { DoDont, focusRing, Row, Spec, States } from "./Spec";
 
 export function Controls() {
@@ -263,6 +263,19 @@ export function Controls() {
                             </>
                         ),
                     }}
+                />
+            </Spec>
+
+            <Spec
+                name="RemovableChip"
+                props={["children", "removeLabel: string", "onRemove", "removeRef?"]}
+                does="Mostra uma escolha que se tira com um toque, como a pessoa escolhida nos filtros. O botão de remover tem o alvo de toque inteiro e é concêntrico à pílula."
+            >
+                <States
+                    states={["normal", "foco"]}
+                    render={(state) => (
+                        <RemovableChipDemo className={state === "foco" ? focusRing : undefined} />
+                    )}
                 />
             </Spec>
 
