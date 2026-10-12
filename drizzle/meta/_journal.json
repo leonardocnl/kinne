@@ -57,6 +57,13 @@
       "when": 1791825423315,
       "tag": "0007_limiter_security_definer",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791836695556,
+      "tag": "0008_person_name_search",
+      "breakpoints": true
     }
   ]
 }
