@@ -104,4 +104,5 @@ Likelihood and impact are estimates (L/M/H).
 
 - A8: valid but offensive text can appear until blocked (C5) or fixed upstream.
 - A9: provider availability can be wrong when TMDB/JustWatch is wrong.
+- B2 residual: a malformed but schema-valid TMDB response can overwrite fields of the titles in its batch (up to 200, or more before the 2% check starts at 1,000 responses) before the run aborts, because each batch is saved on arrival so an interrupted run can resume (B4). Mitigated by the degraded-field check (a non-null synopsis, backdrop, certification or title that comes back empty keeps the stored value and counts as a rejection) and by the recommendability valve (B1) before `finalize`. Fields that change to another valid value are not detected.
 - Forged anonymous events (see security.md §17) — unchanged.

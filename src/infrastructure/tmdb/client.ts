@@ -15,6 +15,11 @@ export class TmdbHttpError extends Error {
     }
 }
 
+// Mensagem de erro que pode ir para o log do Actions (D1): só a do TMDB, que traz status e
+// caminho. Qualquer outra (banco, rede, zod) pode carregar host, URL ou valores.
+export const publicErrorMessage = (e: unknown): string =>
+    e instanceof TmdbHttpError ? e.message : "Erro na carga (detalhe omitido por segurança)";
+
 export class TmdbClient {
     requestCount = 0;
     private active = 0;

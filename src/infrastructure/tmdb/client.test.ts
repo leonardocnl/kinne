@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { TmdbClient, TmdbHttpError } from "./client";
+import { publicErrorMessage, TmdbClient, TmdbHttpError } from "./client";
 
 const json = (body: unknown, init?: ResponseInit) => new Response(JSON.stringify(body), init);
 
@@ -58,5 +58,23 @@ describe("TmdbClient", () => {
         const big = () => new Response("x".repeat(5 * 1024 * 1024 + 1));
         const { c } = client(Array(6).fill(big));
         await expect(c.get("/x")).rejects.toThrow(/grande demais/);
+    });
+});
+
+describe("publicErrorMessage (D1)", () => {
+    it("mantém a mensagem do TMDB, que só tem status e caminho", () => {
+        expect(publicErrorMessage(new TmdbHttpError(500, "/movie/1"))).toBe(
+            "TMDB respondeu 500 em /movie/1",
+        );
+    });
+
+    it.each([
+        new Error("getaddrinfo ENOTFOUND ep-secreto.neon.tech"),
+        new Error("password authentication failed for user kinne_sync postgres://u:p@h/db"),
+        "texto solto",
+        null,
+    ])("troca qualquer outro erro por uma mensagem fixa", (e) => {
+        const message = publicErrorMessage(e);
+        expect(message).toBe("Erro na carga (detalhe omitido por segurança)");
     });
 });

@@ -63,11 +63,27 @@ describe("POST /api/revalidate (C4, C8)", () => {
         }
     });
 
-    it("limita a taxa", async () => {
+    it("só falhas contam: flood sem segredo vira 404 e não barra quem tem o segredo", async () => {
         const { POST } = await import("./route");
-        const statuses = [];
-        for (let i = 0; i < 31; i++)
-            statuses.push((await POST(post({ tags: ["catalog"] }))).status);
-        expect(statuses.at(-1)).toBe(429);
+        for (let i = 0; i < 100; i++) {
+            expect((await POST(post({ tags: ["catalog"] }, "errado"))).status).toBe(404);
+        }
+        expect((await POST(post({ tags: ["catalog"] }))).status).toBe(204);
+    });
+
+    it("sucessos não contam para o limite", async () => {
+        const { POST } = await import("./route");
+        for (let i = 0; i < 100; i++) {
+            expect((await POST(post({ tags: ["catalog"] }))).status).toBe(204);
+        }
+    });
+
+    it("com o segredo certo, corpos ruins em excesso também viram 404, sem 429", async () => {
+        const { POST } = await import("./route");
+        const statuses = new Set<number>();
+        for (let i = 0; i < 40; i++) statuses.add((await POST(post("{"))).status);
+        expect([...statuses]).toEqual([404]);
+        expect((await POST(post({ tags: ["catalog"] }))).status).toBe(404);
+        expect(revalidateTag).not.toHaveBeenCalled();
     });
 });

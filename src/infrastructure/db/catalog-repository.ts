@@ -73,6 +73,8 @@ const contentChanged = sql.raw(
 // uma transação de verdade (B4).
 export async function connectSyncDb(url: string) {
     const client = new Client(url);
+    // D1: erro assíncrono da conexão sem handler imprimiria o erro do driver (host, usuário).
+    client.on("error", () => console.error("Conexão com o banco falhou (detalhe omitido)"));
     await client.connect();
     return { db: drizzle({ client }), close: () => client.end() };
 }

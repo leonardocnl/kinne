@@ -38,7 +38,11 @@ const details = (tmdbId: number, change: Partial<TitleDetails> = {}): TitleDetai
 });
 
 // Fonte: todos os ids em Netflix; detalhes por id, ou "rejected".
-function fakeSource(ids: number[], rejected: number[] = []): CatalogSource & { fetched: number[] } {
+function fakeSource(
+    ids: number[],
+    rejected: number[] = [],
+    change: (id: number) => Partial<TitleDetails> = () => ({}),
+): CatalogSource & { fetched: number[] } {
     const fetched: number[] = [];
     return {
         requestCount: 0,
@@ -49,7 +53,7 @@ function fakeSource(ids: number[], rejected: number[] = []): CatalogSource & { f
             fetched.push(id);
             return rejected.includes(id)
                 ? { status: "rejected" }
-                : { status: "ok", title: details(id) };
+                : { status: "ok", title: details(id, change(id)) };
         },
     };
 }
@@ -205,6 +209,57 @@ describe("syncCatalog", () => {
         const ok = await syncCatalog(fakeSource(range(100), [1, 2]), repo, full);
         expect(ok.status).toBe("ok");
         expect(ok.counts).toMatchObject({ rejected: 2, deleted: 0, inactivated: 0 });
+    });
+
+    it("válvula: aborta se mais de 5% deixariam de ser recomendáveis (B1)", async () => {
+        const seed = range(100).map((tmdbId) => ({ tmdbId, isRecommendable: true }));
+        const lowVotes = (n: number) => (id: number) => (id <= n ? { voteCount: 10 } : {});
+
+        const bad = fakeRepository(seed);
+        const r = await syncCatalog(fakeSource(range(100), [], lowVotes(6)), bad.repo, full);
+        expect(r.status).toBe("aborted");
+        expect(r.abortReason).toMatch(/recomendáveis/);
+        expect(bad.plans).toEqual([]);
+        expect(bad.rows.get("movie:1")?.isRecommendable).toBe(true);
+
+        const edge = fakeRepository(seed);
+        const ok = await syncCatalog(fakeSource(range(100), [], lowVotes(5)), edge.repo, full);
+        expect(ok.status).toBe("ok");
+        expect(edge.rows.get("movie:1")?.isRecommendable).toBe(false);
+    });
+
+    it.each<[string, Partial<TitleDetails>]>([
+        ["sinopse", { synopsis: null }],
+        ["imagem larga", { backdrop: null }],
+        ["classificação", { certification: null }],
+        ["nome", { displayTitle: "  " }],
+    ])(
+        "campo que tinha valor e voltou sem %s mantém o gravado e conta como recusa (B2)",
+        async (_, change) => {
+            const { repo, rows } = fakeRepository(range(100).map((tmdbId) => ({ tmdbId })));
+            const r = await syncCatalog(
+                fakeSource(range(100), [], (id) => (id === 1 ? change : {})),
+                repo,
+                full,
+            );
+            expect(r.status).toBe("ok");
+            expect(r.counts).toMatchObject({ rejected: 1, inserted: 0 });
+            expect(rows.get("movie:1")).toMatchObject({ hasSynopsis: true, hasBackdrop: true });
+            expect(rows.get("movie:1")?.certification).toBe("14");
+            expect(rows.get("movie:1")?.title).toBeUndefined();
+        },
+    );
+
+    it("três campos degradados em cem títulos passam de 2% e abortam (B2)", async () => {
+        const { repo, plans } = fakeRepository(range(100).map((tmdbId) => ({ tmdbId })));
+        const r = await syncCatalog(
+            fakeSource(range(100), [], (id) => (id <= 3 ? { synopsis: null } : {})),
+            repo,
+            full,
+        );
+        expect(r.status).toBe("aborted");
+        expect(r.abortReason).toMatch(/recusas/);
+        expect(plans).toEqual([]);
     });
 
     it("slug fica fixo e colisão ganha sufixo numérico (B9)", async () => {

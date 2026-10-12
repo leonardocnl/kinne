@@ -7,7 +7,7 @@ import { connectSyncDb, DrizzleCatalogRepository } from "@/infrastructure/db/cat
 import { requestRevalidation } from "@/infrastructure/revalidation";
 import { syncEnvErrors } from "@/infrastructure/sync-env";
 import { TmdbCatalogSource } from "@/infrastructure/tmdb/catalog-source";
-import { TmdbClient } from "@/infrastructure/tmdb/client";
+import { publicErrorMessage, TmdbClient } from "@/infrastructure/tmdb/client";
 
 const NEON_FREE_BYTES = 512 * 1024 * 1024;
 const SIZE_WARNING_RATIO = 0.7; // C2
@@ -100,7 +100,7 @@ async function main() {
 }
 
 main().catch((e) => {
-    // Só a mensagem: o erro do TMDB já vem com status e caminho, sem query nem cabeçalhos (D1).
-    console.error(e instanceof Error ? e.message : "Erro desconhecido");
+    // D1: só o erro do TMDB (status e caminho) tem mensagem própria; o resto não ecoa o cliente.
+    console.error(publicErrorMessage(e));
     process.exit(1);
 });

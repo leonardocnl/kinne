@@ -120,6 +120,13 @@ const MAX_CHANGES_WINDOW_MS = 14 * DAY_MS;
 
 const key = (type: TitleType, tmdbId: number) => `${type}:${tmdbId}`;
 
+// O título gravado tem sinopse, imagem larga, classificação ou nome, e o novo não (B2).
+const degrades = (stored: ExistingTitle, d: TitleDetails) =>
+    (stored.hasSynopsis && !d.synopsis) ||
+    (stored.hasBackdrop && !d.backdrop) ||
+    (stored.certification !== null && d.certification === null) ||
+    !d.displayTitle.trim();
+
 // Cada janela começa um dia antes do fim da última carga boa (B12). Sem carga anterior, null:
 // todos os detalhes são buscados.
 export function changesWindow(lastOkWindowEnd: Date | null, now: Date): ChangesWindow {
@@ -203,6 +210,13 @@ export async function syncCatalog(
                 return;
             }
             const d = r.title;
+            // Campo que tinha valor e voltou vazio: o TMDB degradou o dado. Mantém o gravado e
+            // conta como recusa para o limite de 2% (B2).
+            const stored = before.get(key(d.type, d.tmdbId));
+            if (stored && degrades(stored, d)) {
+                rejected.add(key(d.type, d.tmdbId));
+                return;
+            }
             // Slug fixo na criação (B9): quem já existe mantém o seu.
             const slug =
                 before.get(key(d.type, d.tmdbId))?.slug ??
@@ -283,6 +297,13 @@ export async function syncCatalog(
             .filter((r) => !r.on && r.t.isRecommendable)
             .map((r) => r.t.id),
     };
+    // B1 também vale para quem deixa de ser recomendável (conteúdo que sumiu em massa).
+    const recommendableNow = remaining.filter((t) => t.isRecommendable).length;
+    if (exceedsSafetyValve(recommendableNow, plan.notRecommendableIds.length)) {
+        return abort(
+            `válvula: ${plan.notRecommendableIds.length} de ${recommendableNow} recomendáveis deixariam de ser`,
+        );
+    }
     await repository.finalize(plan);
 
     const byId = new Map(titles.map((t) => [t.id, t]));
