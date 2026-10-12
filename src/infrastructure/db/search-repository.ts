@@ -2,10 +2,10 @@ import { and, desc, eq, or, sql } from "drizzle-orm";
 import type { Admission, CachedAnswer, CounterName, TmdbHit } from "@/application/title-search";
 import type { TitleType } from "@/domain/catalog";
 import { ADULT_CERTIFICATION } from "@/domain/catalog-sync";
-import { escapeLike, MAX_RESULTS, type SearchResult } from "@/domain/search";
+import { MAX_RESULTS, type SearchResult } from "@/domain/search";
 import type { Db } from "./client";
 import { takeTokens } from "./rate-limiter";
-import { catalogTitles, circuitBreakers, searchCache, searchCounters } from "./schema";
+import { catalogTitles, searchCache, searchCounters } from "./schema";
 
 const CACHE_TTL = "24 hours"; // G5
 // mais que o tempo limite do TMDB (3 s): a marca de quem caiu no meio libera o termo logo
@@ -47,12 +47,16 @@ type Row = {
     certification: string | null;
 };
 
+// G14: kinne_normalize dos dois lados, a mesma função do índice. A2: os curingas do LIKE são
+// escapados depois de normalizar, para que nenhuma regra do unaccent crie um curinga novo.
+export const likeNeedle = (term: string) =>
+    sql`replace(replace(replace(kinne_normalize(${term}), '\\', '\\\\'), '%', '\\%'), '_', '\\_')`;
+
 export class DrizzleSearchRepository {
     constructor(private readonly db: Db) {}
 
     async catalog(term: string): Promise<SearchResult[]> {
-        // G14: kinne_normalize dos dois lados, a mesma função do índice (A1, A2: só parâmetros)
-        const needle = sql`kinne_normalize(${escapeLike(term)})`;
+        const needle = likeNeedle(term);
         const display = sql`kinne_normalize(${catalogTitles.displayTitle})`;
         const original = sql`kinne_normalize(${catalogTitles.originalTitle})`;
         const contains = sql`'%' || ${needle} || '%'`;
@@ -157,18 +161,17 @@ export class DrizzleSearchRepository {
                     limits.fallbackPerMinute / 60,
                 ],
                 ["search:tmdb:minute", limits.tmdbPerMinute, limits.tmdbPerMinute / 60],
-                ["search:tmdb:day", limits.tmdbPerDay, limits.tmdbPerDay / 86_400],
+                // B1: orçamento do dia de calendário (UTC), sem reposição; a carga apaga o de ontem
+                [`search:tmdb:day:${new Date().toISOString().slice(0, 10)}`, limits.tmdbPerDay, 0],
             ],
             BREAKER,
         );
     }
 
     async tripBreaker(): Promise<void> {
-        const openUntil = sql`now() + ${BREAKER_COOLDOWN}::interval`;
-        await this.db
-            .insert(circuitBreakers)
-            .values({ name: BREAKER, openUntil })
-            .onConflictDoUpdate({ target: circuitBreakers.name, set: { openUntil } });
+        await this.db.execute(
+            sql`select kinne_trip_breaker(${BREAKER}, ${BREAKER_COOLDOWN}::interval)`,
+        );
     }
 
     async addCounts(counts: ReadonlyMap<CounterName, number>): Promise<void> {

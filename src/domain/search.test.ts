@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { escapeLike, normalizeSearchText, parseSearchTerm } from "./search";
+import { normalizeSearchText, parseSearchTerm } from "./search";
 import { NORMALIZATION_CASES } from "./search-cases";
 
 describe("normalizeSearchText (G14, A5)", () => {
@@ -37,15 +37,5 @@ describe("parseSearchTerm (A3, H4)", () => {
         // 201 caracteres invisíveis viram "" depois de limpos, mas nem chegam a ser limpos
         expect(parseSearchTerm("ab" + "​".repeat(199))).toBeNull();
         expect(parseSearchTerm("ab" + "​".repeat(198))).toBe("ab");
-    });
-});
-
-describe("escapeLike (A2)", () => {
-    it("transforma curingas do LIKE em texto", () => {
-        expect(escapeLike("100%_\\")).toBe("100\\%\\_\\\\");
-    });
-
-    it("não muda o resto", () => {
-        expect(escapeLike("matrix reloaded")).toBe("matrix reloaded");
     });
 });

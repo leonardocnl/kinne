@@ -46,9 +46,6 @@ export function parseSearchTerm(raw: string): string | null {
     return length >= MIN_TERM_LENGTH && length <= MAX_TERM_LENGTH ? term : null;
 }
 
-// A2: o termo vira texto literal dentro do LIKE.
-export const escapeLike = (term: string) => term.replace(/[\\%_]/g, (c) => `\\${c}`);
-
 export type SearchResult = {
     slug: string;
     title: string;

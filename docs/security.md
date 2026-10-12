@@ -40,8 +40,8 @@ Security by design: every feature is specified, built and reviewed against these
 - Every module that reads a secret or touches the database imports `server-only`, so importing it from client code breaks the build.
 - Environment variables are validated at startup with a strict schema; the process refuses to start on missing or malformed values, and the error names the variable, never its value.
 - **Database roles:**
-  - `kinne_app` (used by the site, created by migration 0006): `SELECT` on catalog tables, `INSERT` on events and on `daily_picks` (the home page writes a missing day), `SELECT`/`INSERT`/`UPDATE` on the search state (`search_cache`, `rate_limit_buckets`, `circuit_breakers`, `search_counters`) and `EXECUTE` on `kinne_take_tokens`. No DDL, no `DELETE` anywhere, no `UPDATE` on catalog or events.
-  - `kinne_sync` (used by the daily job): read/write on catalog tables only.
+  - `kinne_app` (used by the site, created by migration 0006): `SELECT` on catalog tables, `INSERT` on events and on `daily_picks` (the home page writes a missing day), `SELECT`/`INSERT`/`UPDATE` on `search_cache` and `search_counters`, and `EXECUTE` on `kinne_take_tokens` and `kinne_trip_breaker` (`SECURITY DEFINER`, migration 0007: the site never writes the limiter tables directly). No DDL, no `DELETE` anywhere, no `UPDATE` on catalog or events.
+  - `kinne_sync` (used by the daily job): read/write on catalog tables, plus `SELECT`/`DELETE` on the search state (`search_cache`, `rate_limit_buckets`, `search_counters`) for the daily purge and run summary.
   - Owner role: migrations only, used from a developer machine, never stored in Vercel.
 - Preview deployments never receive production credentials.
 - Rotation: on any suspected leak, rotate the key first and investigate after. Rotation steps are documented per secret.
