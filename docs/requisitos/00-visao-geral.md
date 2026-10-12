@@ -1,6 +1,6 @@
 # 00 – Visão geral e regras gerais
 
-Kinne · Requisitos da semana 0 · versão de 10/10/2026
+Kinne · Requisitos da semana 0 · versão de 12/10/2026
 
 ## Objetivo
 
@@ -43,13 +43,14 @@ Este conjunto especifica o modo visitante do Kinne: indicação do dia, Escolher
 
 ## Regras de negócio gerais
 
-- **RNG001 – Piso de qualidade.** Um título só pode ser recomendado com nota TMDB de 6,4 ou mais, pelo menos 500 votos e disponibilidade em ao menos um streaming participante. A contagem de 09/10/2026 confirmou os 500 votos: passam 2.190 filmes e 710 séries.
+- **RNG001 – Catálogo em duas camadas.** O catálogo guarda todos os títulos por assinatura nos streamings participantes (RNG002), não só os que passam no piso. Uma segunda camada, `is_recommendable`, marca o que as recomendações podem usar: sinopse em português, imagem larga, pelo menos 50 votos, classificação indicativa conhecida, ativo e não bloqueado. Sobre ela vale o piso de qualidade dos filtros e da surpresa: nota TMDB de 6,4 ou mais e pelo menos 500 votos. A busca de títulos alcança o catálogo inteiro; indicações do dia, filtros e surpresa, só os recomendáveis. Substitui o piso único de 09/10/2026 (2.190 filmes e 710 séries); em 12/10/2026, no banco develop, eram 21.968 títulos, 8.599 recomendáveis.
 - **RNG002 – Streamings participantes.** Netflix, Max, Prime Video, Disney+ e Globoplay, apenas por assinatura e apenas no Brasil.
 - **RNG003 – Nenhum marcado vale como todos.** Em qualquer seleção múltipla, nenhuma opção marcada equivale a todas marcadas.
 - **RNG004 – Títulos marcados.** Títulos marcados como "Já vi" saem de todas as recomendações daquele navegador, exceto da indicação do dia. A marcação é permanente no navegador.
 - **RNG005 – Memória do navegador.** Streamings marcados, títulos marcados e o código do navegador ficam no localStorage, entre visitas. Os demais filtros ficam no sessionStorage e voltam ao padrão quando a aba é fechada.
 - **RNG006 – Horário.** Toda data e todo "dia" do sistema seguem o horário de Brasília.
 - **RNG007 – Gêneros no TMDB.** Ação = Ação (filme) e Action & Adventure (série); Comédia = Comédia; Drama = Drama; Romance = Romance, só para filmes, porque o TMDB não tem Romance para séries; Suspense = Thriller (filme) e Mistério (série).
+- **RNG008 – Classificação 18.** Títulos com classificação indicativa 18 nunca entram na indicação do dia nem no Me surpreenda. Nos filtros, só aparecem com o chip "18+" marcado (US002 C10), que vem desmarcado. Título sem classificação conta como 18.
 
 ## Comportamentos comuns
 
@@ -88,7 +89,7 @@ Este conjunto especifica o modo visitante do Kinne: indicação do dia, Escolher
 | ---------------- | ----------------------------------------------------------------------------------------------- |
 | Visitante        | Pessoa que usa o Kinne sem login                                                                |
 | Indicação do dia | Os cinco títulos da tela inicial, um por gênero, iguais para todos no dia                       |
-| Piso             | Condições mínimas para um título ser recomendado (RNG001)                                       |
+| Piso             | Condições mínimas para um título recomendável entrar nos filtros e na surpresa (RNG001)         |
 | Título           | Um filme ou uma série                                                                           |
 | Tagline          | Frase curta de divulgação do título, vinda do TMDB; na tela do título, aparece como chamada     |
 | Origem           | Caminho pelo qual a pessoa chegou à tela do título: indicação do dia, filtros, surpresa ou link |

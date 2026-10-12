@@ -1,8 +1,17 @@
 # 04 – Mudanças e pendências
 
-Kinne · Requisitos da semana 0 · versão de 10/10/2026
+Kinne · Requisitos da semana 0 · versão de 12/10/2026
 
 ## Pendências
+
+### Sincronizar com o Drive
+
+- [ ] Levar ao Google Drive as mudanças de 12/10/2026 abaixo (fases 1 a 4 do backlog do MVP): esta cópia foi atualizada antes da fonte da verdade.
+
+### Aguardando aprovação (12/10/2026)
+
+- [ ] m = 500 na nota ponderada (US002 RNE003) e a ordem 3/3/2/2 das séries sem gênero (RNE005).
+- [ ] Riscos aceitos propostos nos PRs #21 a #24 (Lighthouse por npx; 18+ sem verificação de idade; leitura lenta de filmografias pela busca de pessoas; até 20 diretores por título).
 
 ### Decisões de produto
 
@@ -51,3 +60,18 @@ Kinne · Requisitos da semana 0 · versão de 10/10/2026
 | Eventos                 | Cinco tipos                                                        | Seis tipos e recommendation_source                                        |
 | Hospedagem              | Vercel                                                             | Vercel, com código portável (RNF11)                                       |
 | Aviso do rodapé         | "Conta visitas de forma anônima"                                   | "Conta visitas sem identificar quem você é"                               |
+
+## Mudanças de 12/10/2026 (fases 1 a 4 do backlog do MVP)
+
+| Ponto                                 | Antes                           | Agora                                                                                                           |
+| ------------------------------------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Catálogo                              | Só o que passa no piso (RNG001) | Catálogo inteiro mais a camada `is_recommendable`; o piso vale nos filtros e na surpresa                        |
+| Classificação 18                      | Sem regra                       | Nunca na indicação do dia nem na surpresa; nos filtros, só com o chip "18+" (RNG008)                            |
+| Ordem nos filtros                     | Nota TMDB                       | Nota ponderada no estilo do IMDb, m = 500 (US002 RNE003)                                                        |
+| Sorteio nos filtros                   | Entre os 10 de maior nota       | Rodadas de 10; sem gênero, 2 de cada gênero (3/3/2/2 em séries) (US002 RNE003, RNE005)                          |
+| Ação dos filtros                      | "Ver recomendação"              | "Sortear um título"                                                                                             |
+| Fim das opções                        | "Ver de novo" os mesmos 10      | "Sortear entre os próximos 10" / "os últimos N"; no fim, "Você viu todos os N títulos" e "Recomeçar" (US004 C3) |
+| Busca de pessoas                      | Não existia                     | "Buscar ator ou diretor" nos filtros (US002 C9)                                                                 |
+| Tela do título                        | Sem créditos                    | "Direção de X" e "Com A, B e C" (US004 C1)                                                                      |
+| Botões da tela do título (computador) | No canto inferior direito       | Alinhados à primeira linha do título (US004 C10)                                                                |
+| Imagens                               | w780 e w1280, sizes 100vw       | w780, w1280 e original com a largura real; sizes do quadro; preconnect ao image.tmdb.org                        |
