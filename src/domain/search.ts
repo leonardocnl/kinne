@@ -51,7 +51,6 @@ export type SearchResult = {
     title: string;
     year: number | null;
     type: TitleType;
-    // null em títulos 18 (C4) e sem pôster
     posterPath: string | null;
 };
 

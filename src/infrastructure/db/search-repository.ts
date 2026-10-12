@@ -1,7 +1,7 @@
+import "server-only";
 import { and, desc, eq, or, sql } from "drizzle-orm";
 import type { Admission, CachedAnswer, CounterName, TmdbHit } from "@/application/title-search";
 import type { TitleType } from "@/domain/catalog";
-import { ADULT_CERTIFICATION } from "@/domain/catalog-sync";
 import { MAX_RESULTS, type SearchResult } from "@/domain/search";
 import type { Db } from "./client";
 import { takeTokens } from "./rate-limiter";
@@ -22,30 +22,17 @@ const columns = {
     year: catalogTitles.releaseYear,
     type: catalogTitles.titleType,
     posterPath: catalogTitles.posterImagePath,
-    certification: catalogTitles.certificationBr,
 };
 
 // G9: inativos e bloqueados nunca aparecem.
 export const visible = and(eq(catalogTitles.isActive, true), eq(catalogTitles.isBlocked, false));
 
-// C4: título 18 aparece (a pessoa buscou por ele), mas sem imagem até existir o chip 18+. Sem
-// classificação conhecida também fica sem imagem: é onde o conteúdo adulto escapa (sync A7).
-export function toResult({ certification, ...row }: Row): SearchResult {
-    return {
-        ...row,
-        type: row.type as TitleType,
-        posterPath:
-            certification === null || certification === ADULT_CERTIFICATION ? null : row.posterPath,
-    };
-}
-type Row = {
-    slug: string;
-    title: string;
-    year: number | null;
-    type: string;
-    posterPath: string | null;
-    certification: string | null;
-};
+// C4 (decisão da dona do produto): todo resultado mostra o pôster, inclusive 18 e sem
+// classificação; 18 continua fora das indicações do dia e da surpresa.
+const toResult = (row: { type: string } & Omit<SearchResult, "type">): SearchResult => ({
+    ...row,
+    type: row.type as TitleType,
+});
 
 // G14: kinne_normalize dos dois lados, a mesma função do índice. A2: os curingas do LIKE são
 // escapados depois de normalizar, para que nenhuma regra do unaccent crie um curinga novo.
