@@ -14,7 +14,7 @@ export type CounterName = "catalog_searches" | "tmdb_fallbacks" | "rate_limited"
 
 export interface TitleSearchPorts {
     /** títulos ativos e não bloqueados cujo título em português ou original contém o termo */
-    catalog(term: string): Promise<SearchResult[]>;
+    catalog(term: string, termHash: string): Promise<SearchResult[]>;
     /** os mesmos filtros (G9), pelos ids do TMDB */
     catalogByTmdb(hits: TmdbHit[]): Promise<SearchResult[]>;
     /** resposta do TMDB ainda válida para este termo, ou null */
@@ -48,7 +48,7 @@ export async function searchTitles(
     ports: TitleSearchPorts,
 ): Promise<SearchOutcome> {
     ports.count("catalog_searches");
-    const results = await ports.catalog(request.term);
+    const results = await ports.catalog(request.term, request.termHash);
     if (results.length) return { kind: "results", results };
     if (!request.fallback) return { kind: "none" };
 

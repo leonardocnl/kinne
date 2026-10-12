@@ -1,3 +1,4 @@
+import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import type { CounterName, TitleSearchPorts } from "@/application/title-search";
 import type { SearchResult } from "@/domain/search";
@@ -12,16 +13,33 @@ const COUNTER_FLUSH_MS = 60_000;
 
 const repository = () => new DrizzleSearchRepository(createDb());
 
+// C2: a chave do cache compartilhado é feita dos argumentos, então ele recebe só o hash. O termo
+// fica na memória desta instância enquanto o pedido roda, só para o caso de o cache não ter a
+// resposta.
+const termsInFlight = new Map<string, { term: string; users: number }>();
+
 // B3: o mesmo termo não volta ao banco; a carga invalida pela etiqueta do catálogo (C4).
-async function cachedCatalog(term: string): Promise<SearchResult[]> {
+async function cachedCatalog(termHash: string): Promise<SearchResult[]> {
     "use cache: remote";
     cacheLife("hours");
     cacheTag(CATALOG_TAG);
-    return repository().catalog(term);
+    const entry = termsInFlight.get(termHash);
+    // erro não fica em cache: o próximo pedido tenta de novo
+    if (!entry) throw new Error("Termo da busca indisponível");
+    return repository().catalog(entry.term);
 }
 
-const catalog = (term: string) =>
-    [...term].length >= MIN_CACHED_LENGTH ? cachedCatalog(term) : repository().catalog(term);
+export async function catalog(term: string, termHash: string): Promise<SearchResult[]> {
+    if ([...term].length < MIN_CACHED_LENGTH) return repository().catalog(term);
+    const entry = termsInFlight.get(termHash) ?? { term, users: 0 };
+    entry.users++;
+    termsInFlight.set(termHash, entry);
+    try {
+        return await cachedCatalog(termHash);
+    } finally {
+        if (--entry.users === 0) termsInFlight.delete(termHash);
+    }
+}
 
 // F1: contadores somados na instância e gravados no máximo uma vez por minuto, para que
 // pedidos recusados não cheguem ao banco a cada vez (B7).
