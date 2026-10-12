@@ -1,6 +1,8 @@
 import { sql } from "drizzle-orm";
 import {
+    bigint,
     bigserial,
+    boolean,
     char,
     check,
     date,
@@ -37,9 +39,24 @@ export const catalogTitles = pgTable(
         tmdbAverageRating: numeric("tmdb_average_rating", { precision: 3, scale: 1 }).notNull(),
         tmdbVoteCount: integer("tmdb_vote_count").notNull(),
         lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }).notNull(),
+        backdropWidth: integer("backdrop_width"),
+        certificationBr: text("certification_br"),
+        certificationSource: text("certification_source").notNull().default("none"),
+        isActive: boolean("is_active").notNull().default(true),
+        isRecommendable: boolean("is_recommendable").notNull().default(false),
+        // Manual (C5): a carga nunca escreve; o papel kinne_sync nem tem UPDATE nesta coluna.
+        isBlocked: boolean("is_blocked").notNull().default(false),
     },
     (t) => [
         check("catalog_titles_title_type_check", sql`${t.titleType} in ('movie', 'series')`),
+        check(
+            "catalog_titles_certification_br_check",
+            sql`${t.certificationBr} in ('L', '10', '12', '14', '16', '18')`,
+        ),
+        check(
+            "catalog_titles_certification_source_check",
+            sql`${t.certificationSource} in ('br', 'us', 'none')`,
+        ),
         unique("catalog_titles_tmdb_id_title_type_unique").on(t.tmdbId, t.titleType),
         index("catalog_titles_title_type_rating_idx").on(t.titleType, t.tmdbAverageRating),
         index("catalog_titles_runtime_minutes_idx").on(t.runtimeMinutes),
@@ -172,3 +189,67 @@ export const anonymousUsageEvents = pgTable(
         ),
     ],
 );
+
+// Elenco e direção (A11): só id do TMDB e nome; nada de foto, aniversário ou biografia.
+export const people = pgTable("people", {
+    id: serial("id").primaryKey(),
+    tmdbPersonId: integer("tmdb_person_id").notNull().unique(),
+    name: text("name").notNull(),
+});
+
+export const titleCredits = pgTable(
+    "title_credits",
+    {
+        catalogTitleId: integer("catalog_title_id")
+            .notNull()
+            .references(() => catalogTitles.id),
+        personId: integer("person_id")
+            .notNull()
+            .references(() => people.id),
+        role: text("role").notNull(),
+        creditOrder: smallint("credit_order").notNull(),
+    },
+    (t) => [
+        check("title_credits_role_check", sql`${t.role} in ('director', 'cast')`),
+        primaryKey({ columns: [t.catalogTitleId, t.personId, t.role] }),
+        index("title_credits_person_idx").on(t.personId),
+    ],
+);
+
+// Uma linha por execução da carga (E1). Nasce 'failed' e só vira outra coisa no fim: uma carga
+// que morre no meio fica registrada como falha.
+export const syncRuns = pgTable(
+    "sync_runs",
+    {
+        id: serial("id").primaryKey(),
+        startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+        finishedAt: timestamp("finished_at", { withTimezone: true }),
+        target: text("target").notNull(),
+        status: text("status").notNull().default("failed"),
+        // Janela do /changes, em UTC (B12).
+        changesWindowStartAt: timestamp("changes_window_start_at", { withTimezone: true }),
+        changesWindowEndAt: timestamp("changes_window_end_at", { withTimezone: true }),
+        fetchedCount: integer("fetched_count").notNull().default(0),
+        insertedCount: integer("inserted_count").notNull().default(0),
+        updatedCount: integer("updated_count").notNull().default(0),
+        inactivatedCount: integer("inactivated_count").notNull().default(0),
+        deletedCount: integer("deleted_count").notNull().default(0),
+        rejectedCount: integer("rejected_count").notNull().default(0),
+        recommendableCount: integer("recommendable_count").notNull().default(0),
+        totalCount: integer("total_count").notNull().default(0),
+        activeCount: integer("active_count").notNull().default(0),
+        databaseSizeBytes: bigint("database_size_bytes", { mode: "number" }),
+        abortReason: text("abort_reason"),
+    },
+    (t) => [
+        check("sync_runs_target_check", sql`${t.target} in ('develop', 'production')`),
+        check("sync_runs_status_check", sql`${t.status} in ('ok', 'aborted', 'failed', 'skipped')`),
+        index("sync_runs_status_started_at_idx").on(t.status, t.startedAt),
+    ],
+);
+
+// Configuração por banco. A linha 'environment' é gravada à mão em cada branch do Neon (C3).
+export const meta = pgTable("meta", {
+    key: text("key").primaryKey(),
+    value: text("value").notNull(),
+});

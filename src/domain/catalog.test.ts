@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
     baseSlug,
-    cleanText,
+    sanitizeText,
     formatRuntime,
     isSlug,
     MAX_SLUG_LENGTH,
@@ -22,16 +22,27 @@ describe("meetsQualityFloor", () => {
     });
 });
 
-describe("cleanText", () => {
-    it("tira espaços e caracteres invisíveis só das pontas", () => {
-        expect(cleanText("\u200eFuja.\u200e")).toBe("Fuja.");
-        expect(cleanText("\ufeff\u200b Fuja. \u200d\u2060")).toBe("Fuja.");
-        expect(cleanText("a\u200eb")).toBe("a\u200eb");
+describe("sanitizeText", () => {
+    it("tira controle e invisíveis em qualquer posição e colapsa espaços (A4)", () => {
+        expect(sanitizeText("\u200eFuja.\u200e", 300)).toBe("Fuja.");
+        expect(sanitizeText("\ufeff\u200b Fuja. \u200d\u2060", 300)).toBe("Fuja.");
+        expect(sanitizeText("a\u200eb\u202ec\u0007d", 300)).toBe("abcd");
+        expect(sanitizeText("um\n\n dois\t três", 300)).toBe("um dois três");
     });
 
-    it("devolve null para texto vazio ou só invisível", () => {
-        expect(cleanText(null)).toBeNull();
-        expect(cleanText(" \u200e ")).toBeNull();
+    it("normaliza para NFC (A4)", () => {
+        expect(sanitizeText("a\u0301", 300)).toBe("\u00e1");
+    });
+
+    it("recusa o campo vazio ou acima do limite (A5)", () => {
+        expect(sanitizeText(null, 300)).toBeNull();
+        expect(sanitizeText(" \u200e ", 300)).toBeNull();
+        expect(sanitizeText("a".repeat(301), 300)).toBeNull();
+        expect(sanitizeText("a".repeat(300), 300)).toHaveLength(300);
+    });
+
+    it("mantém marcação como texto puro (A1: o React escapa)", () => {
+        expect(sanitizeText("<script>x</script>", 300)).toBe("<script>x</script>");
     });
 });
 
@@ -47,6 +58,25 @@ describe("baseSlug", () => {
     it("funciona sem ano e sem letras latinas", () => {
         expect(baseSlug("Duna", null)).toBe("duna");
         expect(baseSlug("기생충", 2019)).toBe("2019");
+    });
+
+    it("corta títulos longos para caber com sufixo em MAX_SLUG_LENGTH (B9)", () => {
+        const slug = uniqueSlug(
+            baseSlug("palavra ".repeat(40), 2020),
+            "movie",
+            12345678,
+            new Set(),
+        );
+        const taken = new Set([slug]);
+        const collided = uniqueSlug(
+            baseSlug("palavra ".repeat(40), 2020),
+            "movie",
+            12345678,
+            taken,
+        );
+        expect(isSlug(slug)).toBe(true);
+        expect(isSlug(collided)).toBe(true);
+        expect(collided).toMatch(/-12345678$/);
     });
 });
 

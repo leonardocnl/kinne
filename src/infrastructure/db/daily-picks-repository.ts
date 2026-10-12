@@ -1,9 +1,10 @@
 import type { DailyPickTitle, DailyPicksRepository } from "@/application/daily-picks";
 import type { TitleType } from "@/domain/catalog";
+import { ADULT_CERTIFICATION } from "@/domain/catalog-sync";
 import type { DailyPick } from "@/domain/daily-picks";
 import type { Day } from "@/domain/day";
 import type { KinneGenre } from "@/domain/genre";
-import { and, eq, gte, isNotNull, sql } from "drizzle-orm";
+import { and, eq, gte, isNotNull, ne, sql } from "drizzle-orm";
 import type { Db } from "./client";
 import {
     catalogTitleGenres,
@@ -47,7 +48,7 @@ export class DrizzleDailyPicksRepository implements DailyPicksRepository {
                 streamingServices,
                 eq(streamingServices.id, streamingAvailability.streamingServiceId),
             )
-            .where(eq(dailyPicks.pickDate, day))
+            .where(and(eq(dailyPicks.pickDate, day), eq(catalogTitles.isBlocked, false)))
             .groupBy(dailyPicks.kinneGenre, catalogTitles.id);
         return rows.map((r) => ({
             ...r,
@@ -71,7 +72,14 @@ export class DrizzleDailyPicksRepository implements DailyPicksRepository {
             .from(catalogTitles)
             .innerJoin(catalogTitleGenres, eq(catalogTitleGenres.catalogTitleId, catalogTitles.id))
             .innerJoin(genres, eq(genres.id, catalogTitleGenres.genreId))
-            .where(isNotNull(genres.kinneGenre))
+            // Recomendável (C7); 18 nunca nas indicações do dia (A7).
+            .where(
+                and(
+                    isNotNull(genres.kinneGenre),
+                    eq(catalogTitles.isRecommendable, true),
+                    ne(catalogTitles.certificationBr, ADULT_CERTIFICATION),
+                ),
+            )
             .groupBy(catalogTitles.id);
         return rows.map((r) => ({
             ...r,

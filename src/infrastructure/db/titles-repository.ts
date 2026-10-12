@@ -1,7 +1,8 @@
 import type { CatalogEntry, TitlesRepository } from "@/application/titles";
 import type { TitleType } from "@/domain/catalog";
+import { ADULT_CERTIFICATION } from "@/domain/catalog-sync";
 import { isKinneGenre } from "@/domain/genre";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 import type { Db } from "./client";
 import {
     catalogTitleGenres,
@@ -51,7 +52,7 @@ export class DrizzleTitlesRepository implements TitlesRepository {
                 streamingServices,
                 eq(streamingServices.id, streamingAvailability.streamingServiceId),
             )
-            .where(eq(catalogTitles.slug, slug))
+            .where(and(eq(catalogTitles.slug, slug), eq(catalogTitles.isBlocked, false)))
             .groupBy(catalogTitles.id);
         if (!row) return null;
         return {
@@ -88,6 +89,13 @@ export class DrizzleTitlesRepository implements TitlesRepository {
             .innerJoin(
                 streamingServices,
                 eq(streamingServices.id, streamingAvailability.streamingServiceId),
+            )
+            // Recomendável (C7); 18 só pelo chip 18+, que ainda não existe (A7).
+            .where(
+                and(
+                    eq(catalogTitles.isRecommendable, true),
+                    ne(catalogTitles.certificationBr, ADULT_CERTIFICATION),
+                ),
             )
             .groupBy(catalogTitles.id);
         return rows.map((r) => ({

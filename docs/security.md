@@ -26,7 +26,7 @@ Security by design: every feature is specified, built and reviewed against these
 ## 3. Attack surface
 
 - Only routes defined in `src/app` exist. No catch-all route that echoes the requested path.
-- No `/api/*` route handlers unless a feature requires one; prefer server actions. Every route handler declares its allowed methods; others return 405.
+- No `/api/*` route handlers unless a feature requires one; prefer server actions. Every route handler declares its allowed methods; unsupported methods return 404, not 405, so a route that must stay hidden (`/api/revalidate`) is not confirmed to exist.
 - Unknown paths return the standard 404 page. Probes such as `/.env`, `/.git/config`, `/wp-admin`, `/server-status` must return 404 with no detail.
 - `public/` contains only static assets meant to be public. Nothing generated from environment variables.
 - `poweredByHeader: false` (no `X-Powered-By`).
@@ -170,3 +170,7 @@ AI-assisted code follows these rules because the process checks them, not becaus
 | Team capability path (US006) works for anyone who learns it     | Simplest exclusion without accounts                                               | Long random path, rotated if leaked; impact limited to excluding that browser from metrics                          |
 | Missing titles return 200 with `noindex` (soft 404)             | Next.js cacheComponents behaviour; real 404 would need a database query per visit | Documented in requirements doc 04                                                                                   |
 | `braces` <=3.0.3 (GHSA-vfj7-8cjw-p6xm) via `eslint-config-next` | Dev-only lint tooling; no patched release exists                                  | Never reaches the production bundle; lint only processes repo-controlled paths; revisit when Dependabot opens a fix |
+
+### Temporary
+
+- `/api/revalidate` counts failed attempts in memory, per instance (only attempts that carry the right secret, so an anonymous flood cannot lock out the sync). This is a stopgap, replaced in step 2 (rate limiting decision) by a shared limiter (§7). Until then the 32-byte random secret and the identical 404 for every failure carry the protection.
