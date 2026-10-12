@@ -1,10 +1,11 @@
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import type { CatalogEntry } from "@/application/titles";
 import { formatRuntime, isSlug } from "@/domain/catalog";
 import { GENRE_LABELS, mainGenre } from "@/domain/genre";
 import { primaryStreaming, type StreamingService } from "@/domain/streaming";
 import { createDb } from "@/infrastructure/db/client";
 import { DrizzleTitlesRepository } from "@/infrastructure/db/titles-repository";
+import { CATALOG_TAG, titleTag } from "@/infrastructure/revalidation";
 
 // Um título já pronto para a tela do título (US004 C1).
 export type TitleScreen = {
@@ -33,6 +34,7 @@ export async function titleScreen(slug: string): Promise<TitleScreen | null> {
 async function cachedTitleScreen(slug: string): Promise<TitleScreen | null> {
     "use cache: remote";
     cacheLife("days");
+    cacheTag(CATALOG_TAG, titleTag(slug));
     const entry = await new DrizzleTitlesRepository(createDb()).bySlug(slug);
     return entry && toTitleScreen(entry);
 }

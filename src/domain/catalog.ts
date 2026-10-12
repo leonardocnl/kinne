@@ -8,10 +8,16 @@ export function meetsQualityFloor(rating: number, votes: number): boolean {
     return rating >= MIN_RATING && votes >= MIN_VOTES;
 }
 
-// Tira espaços e caracteres invisíveis de formatação (BOM, zero-width, marcas de direção como o
-// U+200E que o TMDB deixa em algumas taglines) do começo e do fim. Texto vazio vira null.
-export function cleanText(text: string | null | undefined): string | null {
-    return text?.replace(/^[\s\p{Cf}]+|[\s\p{Cf}]+$/gu, "") || null;
+// Texto vindo do TMDB (A4/A5): NFC, sem caracteres de controle nem invisíveis de formatação
+// (zero-width, marcas de direção, BOM), espaços colapsados. Vazio ou acima do limite vira null:
+// o campo é recusado, não o título.
+export function sanitizeText(text: string | null | undefined, maxLength: number): string | null {
+    const clean = text
+        ?.normalize("NFC")
+        .replace(/[\p{Cc}\p{Cf}]/gu, (c) => (/\s/.test(c) ? " " : ""))
+        .replace(/\s+/g, " ")
+        .trim();
+    return clean && clean.length <= maxLength ? clean : null;
 }
 
 // "Corra!" de 2017 → "corra-2017".
@@ -21,7 +27,10 @@ export function baseSlug(title: string, year: number | null): string {
         .replace(/\p{M}/gu, "")
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "");
+        .replace(/^-+|-+$/g, "")
+        // cabe com o ano e o sufixo de colisão dentro de MAX_SLUG_LENGTH
+        .slice(0, 100)
+        .replace(/-+$/, "");
     return [words, year].filter(Boolean).join("-");
 }
 

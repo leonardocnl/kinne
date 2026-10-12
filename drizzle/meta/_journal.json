@@ -15,6 +15,20 @@
       "when": 1791655869396,
       "tag": "0001_daily_picks_kinne_genre_check",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791816045068,
+      "tag": "0002_full_catalog_sync",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791816045762,
+      "tag": "0003_kinne_sync_role",
+      "breakpoints": true
     }
   ]
 }

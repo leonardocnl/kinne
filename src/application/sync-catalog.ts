@@ -1,158 +1,307 @@
+import { baseSlug, uniqueSlug, type TitleType } from "@/domain/catalog";
 import {
-    baseSlug,
-    meetsQualityFloor,
-    pickTrailer,
-    uniqueSlug,
-    type TitleType,
-    type Video,
-} from "@/domain/catalog";
-import { KINNE_GENRES, kinneGenreFor, type KinneGenre } from "@/domain/genre";
+    exceedsRejectThreshold,
+    exceedsSafetyValve,
+    isRecommendable,
+    planRemovals,
+    type BrCertification,
+    type CertificationSource,
+} from "@/domain/catalog-sync";
 import { STREAMING_SERVICES } from "@/domain/streaming";
 
 export type Tag = { tmdbId: number; name: string };
+export type Credit = {
+    tmdbPersonId: number;
+    name: string;
+    role: "director" | "cast";
+    order: number;
+};
 
 export type TitleDetails = {
     tmdbId: number;
     type: TitleType;
     displayTitle: string;
     originalTitle: string;
-    originalLanguage: string;
     tagline: string | null;
     synopsis: string | null;
     posterImagePath: string | null;
-    backdropImagePath: string | null;
+    backdrop: { path: string; width: number } | null;
+    trailerYoutubeKey: string | null;
+    trailerLanguageCode: string | null;
     releaseYear: number | null;
     runtimeMinutes: number | null;
     rating: number;
     voteCount: number;
+    certification: BrCertification | null;
+    certificationSource: CertificationSource;
     genres: Tag[];
     keywords: Tag[];
-    videos: Video[];
+    credits: Credit[];
 };
 
-export type CatalogTitle = Omit<TitleDetails, "videos" | "originalLanguage"> & {
-    slug: string;
-    trailerYoutubeKey: string | null;
-    trailerLanguageCode: string | null;
-    streamingTmdbIds: number[];
-};
+export type CatalogTitle = TitleDetails & { slug: string };
+
+// "gone": o TMDB respondeu 404 entre a listagem e os detalhes.
+export type DetailsResult = { status: "ok"; title: TitleDetails } | { status: "rejected" | "gone" };
 
 export interface CatalogSource {
     readonly requestCount: number;
-    // tmdb_ids dos títulos de um tipo disponíveis por assinatura num streaming (BR, já com o piso).
+    // tmdb_ids de um tipo disponíveis por assinatura num streaming (BR). Falha se a listagem não
+    // couber inteira (B3).
     discover(type: TitleType, streamingTmdbId: number): Promise<number[]>;
-    details(type: TitleType, tmdbId: number): Promise<TitleDetails>;
+    changedIds(type: TitleType, from: Date, to: Date): Promise<Set<number>>;
+    details(type: TitleType, tmdbId: number): Promise<DetailsResult>;
 }
 
-export interface CatalogRepository {
-    // slug atual de cada título já gravado, por chave `${type}:${tmdbId}`.
-    existingSlugs(): Promise<Map<string, string>>;
-    // Upsert dos títulos; gêneros, palavras-chave e disponibilidade de cada um são substituídos.
-    save(titles: CatalogTitle[], syncedAt: Date): Promise<void>;
-    countNotSyncedSince(syncedAt: Date): Promise<number>;
-}
-
-export type SyncSummary = {
-    byType: Record<TitleType, number>;
-    byStreaming: Record<string, number>;
-    byKinneGenre: Record<KinneGenre, number>;
-    belowFloor: number;
-    withoutTagline: number;
-    withoutTrailer: number;
-    withoutBackdrop: number;
-    notInThisSync: number;
-    requests: number;
-    elapsedMs: number;
+export type ExistingTitle = {
+    id: number;
+    tmdbId: number;
+    type: TitleType;
+    slug: string;
+    isActive: boolean;
+    isBlocked: boolean;
+    isRecommendable: boolean;
+    // algum evento de uso ou indicação do dia aponta para ele (B6)
+    referenced: boolean;
+    hasSynopsis: boolean;
+    hasBackdrop: boolean;
+    voteCount: number;
+    certification: BrCertification | null;
 };
 
+export type FinalizePlan = {
+    availabilityToAdd: { titleId: number; streamingTmdbId: number }[];
+    availabilityToRemove: { titleId: number; streamingTmdbId: number }[];
+    reactivateIds: number[];
+    inactivateIds: number[];
+    deleteIds: number[];
+    recommendableIds: number[];
+    notRecommendableIds: number[];
+};
+
+export interface CatalogRepository {
+    existingTitles(): Promise<ExistingTitle[]>;
+    availability(): Promise<{ titleId: number; streamingTmdbId: number }[]>;
+    // Uma transação por lote (B4). Devolve só o que mudou de fato.
+    saveBatch(
+        titles: CatalogTitle[],
+        syncedAt: Date,
+    ): Promise<{ inserted: string[]; updated: string[] }>;
+    // Remoções, disponibilidade e recomendabilidade numa transação só, no fim (B11).
+    finalize(plan: FinalizePlan): Promise<void>;
+}
+
+export type SyncCounts = {
+    fetched: number;
+    inserted: number;
+    updated: number;
+    inactivated: number;
+    deleted: number;
+    rejected: number;
+    recommendable: number;
+    total: number;
+    active: number;
+};
+
+export type SyncResult = {
+    status: "ok" | "aborted";
+    abortReason: string | null;
+    counts: SyncCounts;
+    // Slugs cujas páginas precisam sair do cache (C4).
+    changedSlugs: string[];
+};
+
+export type ChangesWindow = { start: Date | null; end: Date };
+
+const BATCH = 200;
+const DAY_MS = 86_400_000;
+// O /changes do TMDB aceita no máximo 14 dias; janela maior vira carga completa.
+const MAX_CHANGES_WINDOW_MS = 14 * DAY_MS;
+
 const key = (type: TitleType, tmdbId: number) => `${type}:${tmdbId}`;
+
+// Cada janela começa um dia antes do fim da última carga boa (B12). Sem carga anterior, null:
+// todos os detalhes são buscados.
+export function changesWindow(lastOkWindowEnd: Date | null, now: Date): ChangesWindow {
+    return { start: lastOkWindowEnd && new Date(lastOkWindowEnd.getTime() - DAY_MS), end: now };
+}
 
 export async function syncCatalog(
     source: CatalogSource,
     repository: CatalogRepository,
-): Promise<SyncSummary> {
+    window: ChangesWindow,
+    log: (line: string) => void = () => {},
+): Promise<SyncResult> {
     const startedAt = new Date();
-
-    // 1. Disponibilidade título × streaming.
-    const availability = new Map<string, { type: TitleType; tmdbId: number; streams: number[] }>();
-    const discovered = await Promise.all(
-        (["movie", "series"] as const).flatMap((type) =>
-            STREAMING_SERVICES.map(async (s) => ({
-                type,
-                streamingTmdbId: s.tmdbId,
-                ids: await source.discover(type, s.tmdbId),
-            })),
-        ),
-    );
-    for (const { type, streamingTmdbId, ids } of discovered) {
-        for (const tmdbId of ids) {
-            const entry = availability.get(key(type, tmdbId)) ?? { type, tmdbId, streams: [] };
-            entry.streams.push(streamingTmdbId);
-            availability.set(key(type, tmdbId), entry);
-        }
-    }
-
-    // 2. Detalhes de cada título único. Filmes antes de séries, para a série levar o "-serie".
-    const entries = [...availability.values()].sort((a, b) =>
-        a.type === b.type ? a.tmdbId - b.tmdbId : a.type === "movie" ? -1 : 1,
-    );
-    const details = await Promise.all(entries.map((e) => source.details(e.type, e.tmdbId)));
-
-    const existing = await repository.existingSlugs();
-    const taken = new Set(existing.values());
-    const titles: CatalogTitle[] = [];
-    let belowFloor = 0;
-    details.forEach((d, i) => {
-        if (!meetsQualityFloor(d.rating, d.voteCount)) {
-            belowFloor++;
-            return;
-        }
-        const { videos, originalLanguage, ...rest } = d;
-        // Quem já está no banco mantém o slug (URL estável).
-        const slug =
-            existing.get(key(d.type, d.tmdbId)) ??
-            uniqueSlug(baseSlug(d.displayTitle, d.releaseYear), d.type, d.tmdbId, taken);
-        taken.add(slug);
-        const trailer = pickTrailer(videos, originalLanguage);
-        titles.push({
-            ...rest,
-            slug,
-            trailerYoutubeKey: trailer?.youtubeKey ?? null,
-            trailerLanguageCode: trailer?.languageCode ?? null,
-            streamingTmdbIds: entries[i].streams,
-        });
+    const counts: SyncCounts = {
+        fetched: 0,
+        inserted: 0,
+        updated: 0,
+        inactivated: 0,
+        deleted: 0,
+        rejected: 0,
+        recommendable: 0,
+        total: 0,
+        active: 0,
+    };
+    const changedSlugs = new Set<string>();
+    const abort = (abortReason: string): SyncResult => ({
+        status: "aborted",
+        abortReason,
+        counts,
+        changedSlugs: [...changedSlugs],
     });
 
-    // 3. Gravação.
-    await repository.save(titles, startedAt);
+    // 1. Disponibilidade completa, todo dia (B12).
+    const available = new Map<string, { type: TitleType; tmdbId: number; streams: number[] }>();
+    for (const type of ["movie", "series"] as const) {
+        for (const s of STREAMING_SERVICES) {
+            for (const tmdbId of await source.discover(type, s.tmdbId)) {
+                const entry = available.get(key(type, tmdbId)) ?? { type, tmdbId, streams: [] };
+                entry.streams.push(s.tmdbId);
+                available.set(key(type, tmdbId), entry);
+            }
+        }
+    }
+    log(`Listagem: ${available.size} títulos`);
 
-    // 4. Títulos que ficaram de fora desta carga não são apagados (US007 RNE003); só contados.
-    const notInThisSync = await repository.countNotSyncedSince(startedAt);
-
-    // 5. Resumo.
-    const count = <K extends string>(keys: K[], pick: (t: CatalogTitle) => K[]) => {
-        const out = Object.fromEntries(keys.map((k) => [k, 0])) as Record<K, number>;
-        for (const t of titles) for (const k of new Set(pick(t))) out[k]++;
-        return out;
-    };
-    const streamingName = new Map<number, string>(
-        STREAMING_SERVICES.map((s) => [s.tmdbId, s.name]),
+    // 2. Quem precisa de detalhes: novos e alterados no TMDB dentro da janela.
+    const fullRefresh =
+        !window.start || window.end.getTime() - window.start.getTime() > MAX_CHANGES_WINDOW_MS;
+    const changed = new Map<TitleType, Set<number>>();
+    if (!fullRefresh) {
+        for (const type of ["movie", "series"] as const) {
+            changed.set(type, await source.changedIds(type, window.start!, window.end));
+        }
+    }
+    const before = new Map(
+        (await repository.existingTitles()).map((t) => [key(t.type, t.tmdbId), t]),
     );
-    return {
-        byType: count(["movie", "series"], (t) => [t.type]),
-        byStreaming: count(
-            STREAMING_SERVICES.map((s) => s.name),
-            (t) => t.streamingTmdbIds.map((id) => streamingName.get(id)!),
+    const toFetch = [...available.values()]
+        .filter(
+            (e) =>
+                fullRefresh ||
+                !before.has(key(e.type, e.tmdbId)) ||
+                changed.get(e.type)!.has(e.tmdbId),
+        )
+        // Filmes antes de séries, para a série levar o "-serie" numa colisão.
+        .sort((a, b) => (a.type === b.type ? a.tmdbId - b.tmdbId : a.type === "movie" ? -1 : 1));
+    log(`Detalhes a buscar: ${toFetch.length}${fullRefresh ? " (carga completa)" : ""}`);
+
+    // 3. Detalhes em lotes; cada lote é gravado na hora, então uma carga interrompida retoma de
+    // onde parou: o que já foi gravado deixa de ser "novo" (B4).
+    const taken = new Set([...before.values()].map((t) => t.slug));
+    const rejected = new Set<string>();
+    for (let i = 0; i < toFetch.length; i += BATCH) {
+        const batch = toFetch.slice(i, i + BATCH);
+        const results = await Promise.all(batch.map((e) => source.details(e.type, e.tmdbId)));
+        counts.fetched += batch.length;
+        const titles: CatalogTitle[] = [];
+        results.forEach((r, j) => {
+            if (r.status !== "ok") {
+                rejected.add(key(batch[j].type, batch[j].tmdbId));
+                return;
+            }
+            const d = r.title;
+            // Slug fixo na criação (B9): quem já existe mantém o seu.
+            const slug =
+                before.get(key(d.type, d.tmdbId))?.slug ??
+                uniqueSlug(baseSlug(d.displayTitle, d.releaseYear), d.type, d.tmdbId, taken);
+            taken.add(slug);
+            titles.push({ ...d, slug });
+        });
+        counts.rejected = rejected.size;
+        // Cedo demais a proporção engana; a partir de 1.000 respostas já dá para abortar (B2).
+        if (counts.fetched >= 1000 && exceedsRejectThreshold(counts.fetched, counts.rejected)) {
+            return abort(`recusas acima de 2% (${counts.rejected}/${counts.fetched})`);
+        }
+        const saved = await repository.saveBatch(titles, startedAt);
+        counts.inserted += saved.inserted.length;
+        counts.updated += saved.updated.length;
+        for (const slug of [...saved.inserted, ...saved.updated]) changedSlugs.add(slug);
+        log(`  ${Math.min(i + BATCH, toFetch.length)}/${toFetch.length}`);
+    }
+    if (exceedsRejectThreshold(counts.fetched, counts.rejected)) {
+        return abort(`recusas acima de 2% (${counts.rejected}/${counts.fetched})`);
+    }
+
+    // 4. Só agora, com todas as buscas concluídas, remoções e recomendabilidade (B11).
+    const titles = await repository.existingTitles();
+    // Título recusado fica intocado: nem some, nem muda de disponibilidade (B2).
+    const touchable = titles.filter((t) => !rejected.has(key(t.type, t.tmdbId)));
+    const missing = touchable.filter((t) => t.isActive && !available.has(key(t.type, t.tmdbId)));
+    const activeCount = titles.filter((t) => t.isActive).length;
+    if (exceedsSafetyValve(activeCount, missing.length)) {
+        return abort(`válvula: ${missing.length} de ${activeCount} títulos ativos sairiam`);
+    }
+
+    const current = await repository.availability();
+    const pair = (titleId: number, streamingTmdbId: number) => `${titleId}:${streamingTmdbId}`;
+    const currentSet = new Set(current.map((a) => pair(a.titleId, a.streamingTmdbId)));
+    const desired = touchable.flatMap((t) =>
+        (available.get(key(t.type, t.tmdbId))?.streams ?? []).map((s) => ({
+            titleId: t.id,
+            streamingTmdbId: s,
+        })),
+    );
+    const desiredSet = new Set(desired.map((a) => pair(a.titleId, a.streamingTmdbId)));
+    const touchableIds = new Set(touchable.map((t) => t.id));
+    const availabilityToRemove = current.filter(
+        (a) => touchableIds.has(a.titleId) && !desiredSet.has(pair(a.titleId, a.streamingTmdbId)),
+    );
+    if (exceedsSafetyValve(current.length, availabilityToRemove.length)) {
+        return abort(
+            `válvula: ${availabilityToRemove.length} de ${current.length} disponibilidades sairiam`,
+        );
+    }
+
+    const { deleteIds, inactivateIds } = planRemovals(missing);
+    const deleted = new Set(deleteIds);
+    const reactivateIds = touchable
+        .filter((t) => !t.isActive && available.has(key(t.type, t.tmdbId)))
+        .map((t) => t.id);
+    const activeAfter = (t: ExistingTitle) =>
+        inactivateIds.includes(t.id) ? false : reactivateIds.includes(t.id) ? true : t.isActive;
+
+    const remaining = titles.filter((t) => !deleted.has(t.id));
+    const recommendable = remaining.map((t) => ({
+        t,
+        on: isRecommendable({ ...t, isActive: activeAfter(t) }),
+    }));
+    const plan: FinalizePlan = {
+        availabilityToAdd: desired.filter(
+            (a) => !currentSet.has(pair(a.titleId, a.streamingTmdbId)),
         ),
-        byKinneGenre: count([...KINNE_GENRES], (t) =>
-            t.genres.map((g) => kinneGenreFor(g.tmdbId)).filter((g) => g !== null),
-        ),
-        belowFloor,
-        withoutTagline: titles.filter((t) => !t.tagline).length,
-        withoutTrailer: titles.filter((t) => !t.trailerYoutubeKey).length,
-        withoutBackdrop: titles.filter((t) => !t.backdropImagePath).length,
-        notInThisSync,
-        requests: source.requestCount,
-        elapsedMs: Date.now() - startedAt.getTime(),
+        availabilityToRemove,
+        reactivateIds,
+        inactivateIds,
+        deleteIds,
+        recommendableIds: recommendable
+            .filter((r) => r.on && !r.t.isRecommendable)
+            .map((r) => r.t.id),
+        notRecommendableIds: recommendable
+            .filter((r) => !r.on && r.t.isRecommendable)
+            .map((r) => r.t.id),
     };
+    await repository.finalize(plan);
+
+    const byId = new Map(titles.map((t) => [t.id, t]));
+    for (const id of [
+        ...reactivateIds,
+        ...inactivateIds,
+        ...deleteIds,
+        ...plan.recommendableIds,
+        ...plan.notRecommendableIds,
+    ]) {
+        changedSlugs.add(byId.get(id)!.slug);
+    }
+    // Bloqueio é manual; a carga diária garante que a página bloqueada saia do cache (C5).
+    for (const t of remaining) if (t.isBlocked) changedSlugs.add(t.slug);
+
+    counts.inactivated = inactivateIds.length;
+    counts.deleted = deleteIds.length;
+    counts.total = remaining.length;
+    counts.active = remaining.filter(activeAfter).length;
+    counts.recommendable = recommendable.filter((r) => r.on).length;
+    return { status: "ok", abortReason: null, counts, changedSlugs: [...changedSlugs] };
 }

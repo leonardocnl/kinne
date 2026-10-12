@@ -21,8 +21,8 @@ async function main() {
         });
 
     const lists = await Promise.all(
-        ["movie", "tv"].map((type) =>
-            tmdb.get<GenreList>(`/genre/${type}/list`, { language: "pt-BR" }),
+        ["movie", "tv"].map(
+            (type) => tmdb.get(`/genre/${type}/list`, { language: "pt-BR" }) as Promise<GenreList>,
         ),
     );
     const byId = new Map(lists.flatMap((l) => l.genres).map((g) => [g.id, g.name]));
