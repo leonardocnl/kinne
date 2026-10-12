@@ -106,7 +106,7 @@ export function endOfOptionsHeading(total: number): string {
     return `Você viu as ${total} melhores para esses filtros`;
 }
 
-const TYPES: readonly TypeChoice[] = ["movie", "series", "both"];
+export const TYPES: readonly TypeChoice[] = ["movie", "series", "both"];
 
 const listOf = <T extends string>(value: unknown, max: number, is: (v: string) => v is T) =>
     Array.isArray(value) &&

@@ -25,6 +25,12 @@ export function baseSlug(title: string, year: number | null): string {
     return [words, year].filter(Boolean).join("-");
 }
 
+export const MAX_SLUG_LENGTH = 120;
+
+/** O endereço vem de fora: só o que `baseSlug` gera chega ao banco. */
+export const isSlug = (value: string): boolean =>
+    value.length <= MAX_SLUG_LENGTH && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(value);
+
 // Em colisão: série ganha "-serie"; se ainda colidir (ou for filme), ganha o tmdb_id.
 export function uniqueSlug(
     base: string,
