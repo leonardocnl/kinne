@@ -17,7 +17,8 @@
         "catalog:sync": "tsx --env-file-if-exists=.env.local scripts/sync-catalog.ts",
         "daily:pick": "tsx --env-file-if-exists=.env.local scripts/daily-pick.ts",
         "events:delete": "tsx --env-file-if-exists=.env.local scripts/delete-test-events.ts",
-        "smoke:title": "tsx scripts/smoke-title.ts"
+        "smoke:title": "tsx scripts/smoke-title.ts",
+        "search:check-normalization": "tsx --env-file-if-exists=.env.local scripts/check-search-normalization.ts"
     },
     "dependencies": {
         "@neondatabase/serverless": "^1.2.0",

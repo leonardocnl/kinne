@@ -6,8 +6,10 @@ import {
     char,
     check,
     date,
+    doublePrecision,
     index,
     integer,
+    jsonb,
     numeric,
     pgTable,
     primaryKey,
@@ -180,7 +182,7 @@ export const anonymousUsageEvents = pgTable(
         ),
         check(
             "anonymous_usage_events_recommendation_source_check",
-            sql`${t.recommendationSource} in ('daily_pick', 'filtered', 'surprise_me')`,
+            sql`${t.recommendationSource} in ('daily_pick', 'filtered', 'surprise_me', 'search')`,
         ),
         index("anonymous_usage_events_occurred_at_idx").on(t.occurredAt),
         index("anonymous_usage_events_browser_occurred_at_idx").on(
@@ -239,6 +241,8 @@ export const syncRuns = pgTable(
         totalCount: integer("total_count").notNull().default(0),
         activeCount: integer("active_count").notNull().default(0),
         databaseSizeBytes: bigint("database_size_bytes", { mode: "number" }),
+        // Linhas do cache da busca no TMDB depois da limpeza (busca B5).
+        searchCacheRows: integer("search_cache_rows"),
         abortReason: text("abort_reason"),
     },
     (t) => [
@@ -253,3 +257,48 @@ export const meta = pgTable("meta", {
     key: text("key").primaryKey(),
     value: text("value").notNull(),
 });
+
+// Respostas da busca no TMDB (busca G5, C2): a chave é o hash do termo normalizado, nunca o termo.
+// "pending" marca quem já está perguntando ao TMDB (G4). Só ids e tipos: nada vai para a tela.
+export const searchCache = pgTable(
+    "search_cache",
+    {
+        termHash: text("term_hash").primaryKey(),
+        status: text("status").notNull(),
+        hits: jsonb("hits").$type<{ tmdbId: number; type: "movie" | "series" }[]>(),
+        createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+        expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    },
+    (t) => [
+        check("search_cache_status_check", sql`${t.status} in ('pending', 'done')`),
+        index("search_cache_created_at_idx").on(t.createdAt),
+    ],
+);
+
+// Token bucket (busca B1, G15). A chave do visitante é um HMAC do IP com sal diário (E2, G16).
+export const rateLimitBuckets = pgTable(
+    "rate_limit_buckets",
+    {
+        key: text("key").primaryKey(),
+        tokens: doublePrecision("tokens").notNull(),
+        updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+    },
+    (t) => [index("rate_limit_buckets_updated_at_idx").on(t.updatedAt)],
+);
+
+// Disjuntor da busca no TMDB (B2): aberto até open_until depois de um 429.
+export const circuitBreakers = pgTable("circuit_breakers", {
+    name: text("name").primaryKey(),
+    openUntil: timestamp("open_until", { withTimezone: true }).notNull(),
+});
+
+// Contadores diários da busca (F1): sem termos, sem identificadores.
+export const searchCounters = pgTable(
+    "search_counters",
+    {
+        day: date("day").notNull(),
+        name: text("name").notNull(),
+        count: integer("count").notNull(),
+    },
+    (t) => [primaryKey({ columns: [t.day, t.name] })],
+);

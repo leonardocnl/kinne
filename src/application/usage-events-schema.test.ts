@@ -36,3 +36,20 @@ describe("parseUsageEvent", () => {
         expect(parseUsageEvent(value)).toBeNull();
     });
 });
+
+describe("parseUsageEvent: origem search (busca D3)", () => {
+    const search = { ...ok, source: "search" };
+
+    it("aceita search em recommendation_shown com um título", () => {
+        expect(parseUsageEvent(search)).toEqual(search);
+    });
+
+    it.each([
+        ["sem título", { ...search, titleId: null }],
+        ["em outro evento", { ...search, name: "will_watch_clicked" }],
+        ["título inválido", { ...search, titleId: -3 }],
+        ["com o termo da busca junto", { ...search, term: "matrix" }],
+    ])("recusa search %s", (_, value) => {
+        expect(parseUsageEvent(value)).toBeNull();
+    });
+});

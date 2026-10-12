@@ -72,6 +72,12 @@ async function main() {
             if (r.failed) exitCode = 1;
         }
 
+        // Falha na limpeza da busca não desfaz a carga, mas falha o job (E2).
+        const search = await repository.cleanSearchState(runId).catch(() => {
+            exitCode = 1;
+            return null;
+        });
+
         const c = result.counts;
         const sizeRatio = size / NEON_FREE_BYTES;
         summary([
@@ -87,6 +93,16 @@ async function main() {
             `| tamanho do banco (MB) | ${(size / 1024 / 1024).toFixed(1)} |`,
             "",
             `Invalidação do cache: ${revalidation}.`,
+            "",
+            ...(search
+                ? [
+                      `Busca: ${search.cacheRows} respostas do TMDB em cache.`,
+                      "",
+                      "| Dia | Contador da busca | Valor |",
+                      "| --- | --- | --- |",
+                      ...search.counters.map((r) => `| ${r.day} | ${r.name} | ${r.count} |`),
+                  ]
+                : ["**Aviso:** limpeza da busca falhou."]),
             ...(sizeRatio > SIZE_WARNING_RATIO
                 ? [`**Aviso:** banco em ${(sizeRatio * 100).toFixed(0)}% do limite do Neon.`]
                 : []),

@@ -11,7 +11,7 @@ export const EVENT_NAMES = [
 
 export type EventName = (typeof EVENT_NAMES)[number];
 
-export const RECOMMENDATION_SOURCES = ["daily_pick", "filtered", "surprise_me"] as const;
+export const RECOMMENDATION_SOURCES = ["daily_pick", "filtered", "surprise_me", "search"] as const;
 
 export type RecommendationSource = (typeof RECOMMENDATION_SOURCES)[number];
 

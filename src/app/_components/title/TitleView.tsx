@@ -74,7 +74,8 @@ export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
     function markSeen() {
         watchedTitles.add(title.id);
         showToast(`Anotado: você já viu ${title.title}.`);
-        next("seen");
+        // fora das recomendações não há próxima opção: a tela fica onde está
+        if (title.recommendable) next("seen");
         track("already_watched_clicked", { titleId: title.id });
     }
 
@@ -190,20 +191,22 @@ export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
                             >
                                 Já vi
                             </Button>
-                            <Button
-                                ref={anotherRef}
-                                variant="round"
-                                spinIcon
-                                aria-label={anotherLabel}
-                                title={anotherLabel}
-                                onClick={() => {
-                                    next("another");
-                                    // depois do sorteio: as server actions saem uma por vez
-                                    track("another_option_clicked", { titleId: title.id });
-                                }}
-                            >
-                                <DiceIcon />
-                            </Button>
+                            {title.recommendable && (
+                                <Button
+                                    ref={anotherRef}
+                                    variant="round"
+                                    spinIcon
+                                    aria-label={anotherLabel}
+                                    title={anotherLabel}
+                                    onClick={() => {
+                                        next("another");
+                                        // depois do sorteio: as server actions saem uma por vez
+                                        track("another_option_clicked", { titleId: title.id });
+                                    }}
+                                >
+                                    <DiceIcon />
+                                </Button>
+                            )}
                         </div>
                     )}
                 </Dock>

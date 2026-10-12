@@ -12,7 +12,10 @@ import { titleScreen } from "../../_data/title";
 export async function generateMetadata({ params }: PageProps<"/titulo/[slug]">): Promise<Metadata> {
     const title = await titleScreen((await params).slug);
     if (!title) notFound();
-    return { title: `${title.title} · Kinne` };
+    return {
+        title: `${title.title} · Kinne`,
+        ...(!title.recommendable && { robots: { index: false } }),
+    };
 }
 
 export default function TitlePage(props: PageProps<"/titulo/[slug]">) {
