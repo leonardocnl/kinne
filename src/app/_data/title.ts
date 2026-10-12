@@ -2,6 +2,7 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import type { CatalogEntry } from "@/application/titles";
 import { formatRuntime, isSlug } from "@/domain/catalog";
+import { castLine, directionLine } from "@/domain/credits";
 import { GENRE_LABELS, mainGenre } from "@/domain/genre";
 import { primaryStreaming, type StreamingService } from "@/domain/streaming";
 import { createDb } from "@/infrastructure/db/client";
@@ -26,6 +27,9 @@ export type TitleScreen = {
     backdropWidth: number | null;
     // não recomendável: sem dado, sem "Outra opção" e fora dos buscadores (busca H6)
     recommendable: boolean;
+    // "Direção de X" e "Com A, B e C"; null quando não há crédito
+    direction: string | null;
+    cast: string | null;
 };
 
 /** O título do endereço, ou null se não existe. Em cache por slug: o catálogo muda uma vez por dia. */
@@ -67,5 +71,7 @@ function toTitleScreen(t: CatalogEntry): TitleScreen {
         backdropImagePath: t.backdropImagePath,
         backdropWidth: t.backdropWidth,
         recommendable: t.recommendable,
+        direction: directionLine(t.directors),
+        cast: castLine(t.cast),
     };
 }

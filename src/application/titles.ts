@@ -24,6 +24,9 @@ export type CatalogEntry = {
     streamingTmdbIds: number[];
     // fora disso o título só chega pela busca: sem sorteio na tela (US007)
     recommendable: boolean;
+    // todos os diretores e o começo do elenco, cada um na ordem dos créditos
+    directors: string[];
+    cast: string[];
 };
 
 // Um título que a surpresa (US003) e os filtros (US002) podem sortear.
