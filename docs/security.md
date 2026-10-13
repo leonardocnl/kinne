@@ -42,7 +42,7 @@ Security by design: every feature is specified, built and reviewed against these
 - **Database roles:**
   - `kinne_app` (used by the site, created by migration 0006): `SELECT` on catalog tables, `INSERT` on events and on `daily_picks` (the home page writes a missing day), `SELECT`/`INSERT`/`UPDATE` on `search_cache` and `search_counters`, and `EXECUTE` on `kinne_take_tokens` and `kinne_trip_breaker` (`SECURITY DEFINER`, migration 0007: the site never writes the limiter tables directly). No DDL, no `DELETE` anywhere, no `UPDATE` on catalog or events.
   - `kinne_sync` (used by the daily job): read/write on catalog tables, plus `SELECT`/`DELETE` on the search state (`search_cache`, `rate_limit_buckets`, `search_counters`) for the daily purge and run summary.
-  - Owner role: migrations only, used from a developer machine, never stored in Vercel.
+  - Owner role: migrations and the RNF10 deletion of test events (the only role with `DELETE` on events), used from a developer machine, never stored in Vercel or in a file; see docs/release-checklist.md.
 - Preview deployments never receive production credentials.
 - Rotation: on any suspected leak, rotate the key first and investigate after. Rotation steps are documented per secret.
 - CI runs secret scanning (gitleaks) on every PR; GitHub secret scanning and push protection are enabled.
@@ -102,7 +102,7 @@ Target: grade A+ on securityheaders.com and Mozilla Observatory.
 ## 11. Supply chain and CI/CD
 
 - `package-lock.json` committed; installs use `npm ci`.
-- CI runs `npm audit --omit=dev --audit-level=high` and fails on findings: the blocking audit covers production dependencies. Dev dependencies are audited by a second, non-blocking job (`npm audit --audit-level=high`) so their findings stay visible in every run.
+- CI runs `npm audit --omit=dev --audit-level=high` and fails on findings: the blocking audit covers production dependencies. Dev dependencies are audited by a second job (`npm-audit-dev`) that never fails and writes its findings as a table in the run summary (`scripts/audit-summary.mjs`), so they stay visible in every run.
 - Dependabot enabled for npm and GitHub Actions.
 - GitHub Actions pinned to commit SHAs; each workflow declares `permissions:` with the minimum (default `contents: read`).
 - CodeQL analysis on PRs.

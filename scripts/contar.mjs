@@ -240,6 +240,11 @@ async function main() {
 }
 
 main().catch((e) => {
-    console.error("Deu erro:", e.message);
+    // a mensagem pode trazer URL ou detalhes da conexão; só o status do TMDB é seguro (security §6)
+    console.error(
+        /^TMDB respondeu \d+ em /.test(e?.message)
+            ? e.message
+            : "Deu erro (detalhe omitido por segurança)",
+    );
     process.exit(1);
 });

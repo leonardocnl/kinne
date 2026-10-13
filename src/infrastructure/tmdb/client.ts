@@ -16,10 +16,11 @@ export class TmdbHttpError extends Error {
     }
 }
 
-// Mensagem de erro que pode ir para o log do Actions (D1): só a do TMDB, que traz status e
-// caminho. Qualquer outra (banco, rede, zod) pode carregar host, URL ou valores.
-export const publicErrorMessage = (e: unknown): string =>
-    e instanceof TmdbHttpError ? e.message : "Erro na carga (detalhe omitido por segurança)";
+// Mensagem de erro que pode ir para o log do Actions ou do terminal (D1): só a do TMDB, que traz
+// status e caminho. Qualquer outra (banco, rede, zod) pode carregar host, URL ou valores. `label`
+// diz qual script falhou; o padrão é o da carga.
+export const publicErrorMessage = (e: unknown, label = "Erro na carga"): string =>
+    e instanceof TmdbHttpError ? e.message : `${label} (detalhe omitido por segurança)`;
 
 export class TmdbClient {
     requestCount = 0;

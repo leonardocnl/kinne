@@ -1,6 +1,6 @@
 # US001 – Ver as indicações do dia
 
-Kinne · Requisitos da semana 0 · versão de 09/10/2026
+Kinne · Requisitos da semana 0 · versão de 12/10/2026
 
 |                |                                                                      |
 | -------------- | -------------------------------------------------------------------- |
@@ -85,3 +85,4 @@ Eu, como visitante, quero ver ao abrir o app cinco indicações do dia, uma por 
 - **RNE003 – Frase.** Sem tagline, o sistema usa a primeira frase da sinopse. Na contagem de 09/10/2026, de 40% a 100% dos títulos tinham tagline em português, conforme o grupo, e 100% tinham sinopse.
 - **RNE004 – Imagem.** Proporção 2,39:1 no computador e 16:9 no celular, corte mirando 25% da altura, com grão.
 - **RNE005 – Cópia diária.** A tela é servida de uma cópia gerada uma vez por dia, sem consultar o banco a cada visita (RNF07).
+- **RNE006 – Sem 18.** Títulos de classificação 18 nunca são indicação do dia (RNG008).

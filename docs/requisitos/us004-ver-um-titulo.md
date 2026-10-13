@@ -1,6 +1,6 @@
 # US004 – Ver um título
 
-Kinne · Requisitos da semana 0 · versão de 10/10/2026
+Kinne · Requisitos da semana 0 · versão de 12/10/2026
 
 |                |                                                                                     |
 | -------------- | ----------------------------------------------------------------------------------- |
@@ -21,17 +21,19 @@ Eu, como visitante, quero ver um título por vez com as informações que me aju
 **Dado** que cheguei à tela do título pela indicação do dia, pelos filtros, por "Me surpreenda" ou por um link  
 **Então** o sistema exibe os seguintes campos:
 
-| Campo         | Tipo   | Descrição                                                                                                       | Exemplo                                            |
-| ------------- | ------ | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| Imagem        | Imagem | Imagem larga, cantos retos                                                                                      | Cena de "Corra!"                                   |
-| Nota TMDB     | Número | Sobre a imagem, no canto inferior direito, oposto ao trailer; grande, em branco, sem a cor de destaque (RNE006) | "7,6 TMDB"                                         |
-| Título        | Texto  | Nome em português                                                                                               | "Corra!"                                           |
-| Chamada       | Texto  | Tagline em português, em branco; sem tagline, a linha não aparece (RNE004)                                      | "Um fim de semana que esconde algo errado."        |
-| Sinopse       | Texto  | Sinopse completa em português (RNE004, C9)                                                                      | "Chris, um fotógrafo, vai passar o fim de semana…" |
-| Gênero        | Texto  | Gênero principal                                                                                                | "Suspense"                                         |
-| Ano           | Número | Lançamento ou estreia                                                                                           | "2017"                                             |
-| Duração       | Texto  | Total; por episódio em séries                                                                                   | "1h 44min"                                         |
-| Disponível em | Texto  | Streaming do título                                                                                             | "Prime Video"                                      |
+| Campo         | Tipo   | Descrição                                                                                                       | Exemplo                                                   |
+| ------------- | ------ | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Imagem        | Imagem | Imagem larga, cantos retos                                                                                      | Cena de "Corra!"                                          |
+| Nota TMDB     | Número | Sobre a imagem, no canto inferior direito, oposto ao trailer; grande, em branco, sem a cor de destaque (RNE006) | "7,6 TMDB"                                                |
+| Título        | Texto  | Nome em português                                                                                               | "Corra!"                                                  |
+| Chamada       | Texto  | Tagline em português, em branco; sem tagline, a linha não aparece (RNE004)                                      | "Um fim de semana que esconde algo errado."               |
+| Sinopse       | Texto  | Sinopse completa em português (RNE004, C9)                                                                      | "Chris, um fotógrafo, vai passar o fim de semana…"        |
+| Gênero        | Texto  | Gênero principal                                                                                                | "Suspense"                                                |
+| Ano           | Número | Lançamento ou estreia                                                                                           | "2017"                                                    |
+| Duração       | Texto  | Total; por episódio em séries                                                                                   | "1h 44min"                                                |
+| Disponível em | Texto  | Streaming do título                                                                                             | "Prime Video"                                             |
+| Direção       | Texto  | "Direção de X", "X e Y" ou "X, Y e Z"; some sem dado                                                            | "Direção de Jordan Peele"                                 |
+| Elenco        | Texto  | "Com A, B e C": os três primeiros, na ordem dos créditos; some sem dado                                         | "Com Daniel Kaluuya, Allison Williams e Bradley Whitford" |
 
 **E** exibe, numa mesma linha e nesta ordem, três botões em forma de pílula: "Vou assistir" (principal, com a cor de destaque), "Já vi" (secundário, com ícone de visto) e "Outra opção" (só com ícone de dado, em círculo)  
 **E** o botão do dado tem o nome "Outra opção" para leitores de tela e na dica ao passar o mouse  
@@ -41,18 +43,21 @@ Eu, como visitante, quero ver um título por vez com as informações que me aju
 
 **Dado** que cheguei pelos filtros  
 **Quando** aciono "Outra opção"  
-**Então** o sistema mostra outro dos 10 títulos sorteáveis, sem repetir (US002, RNE003)
+**Então** o sistema mostra outro título da mesma rodada de 10, sem repetir (US002, RNE003)
 
-### C3: Acabaram as opções
+### C3: Acabou a rodada
 
-**Dado** que cheguei pelos filtros e já vi os 10 títulos sorteáveis  
+**Dado** que cheguei pelos filtros e já vi os títulos da rodada  
 **Quando** aciono "Outra opção"  
-**Então** o sistema exibe "Você viu as 10 melhores para esses filtros"  
-**E** exibe as ações "Mudar filtros" (principal) e "Ver de novo"  
+**Então** o sistema exibe "Você viu as 10 melhores para esses filtros" (depois da primeira rodada) ou "Você viu mais 10 para esses filtros"  
+**E** exibe as ações "Sortear entre os próximos 10" (principal), ou "Sortear entre os últimos N" quando a rodada seguinte é a última e menor, e "Mudar filtros"  
+**Quando** já vi todas as rodadas  
+**Então** o sistema exibe "Você viu todos os N títulos", com N os que combinam  
+**E** exibe as ações "Mudar filtros" (principal) e "Recomeçar"  
 **Quando** aciono "Mudar filtros"  
 **Então** o sistema reabre os filtros  
-**Quando** aciono "Ver de novo"  
-**Então** o sistema recomeça pelos mesmos 10 títulos
+**Quando** aciono "Recomeçar"  
+**Então** o sistema volta à primeira rodada, do começo
 
 ### C4: Outra opção, vindo da surpresa ou de um link
 
@@ -101,7 +106,7 @@ Eu, como visitante, quero ver um título por vez com as informações que me aju
 
 **Dado** que a tela tem mais de 860px de largura  
 **Então** título, chamada e sinopse usam a largura toda, sem quebra forçada; a sinopse tem no máximo 80 caracteres por linha (critério AAA 1.4.8)  
-**E** os botões ficam no canto inferior direito, na altura de gênero, ano e duração  
+**E** os botões ficam à direita, alinhados à primeira linha do título, e não mudam de lugar com o tamanho da sinopse; o texto vai até eles  
 **E** a confirmação de "Vou assistir" ocupa o lugar e a altura da fileira de botões, sem deslocar o resto da página
 
 ### C11: Disposição no celular

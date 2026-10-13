@@ -1,6 +1,6 @@
 # US007 – Manter o catálogo atualizado
 
-Kinne · Requisitos da semana 0 · versão de 09/10/2026
+Kinne · Requisitos da semana 0 · versão de 12/10/2026
 
 |                |                                                                                            |
 | -------------- | ------------------------------------------------------------------------------------------ |
@@ -21,12 +21,13 @@ Eu, como equipe, quero que o catálogo seja atualizado todos os dias a partir do
 **Quando** chega o horário diário  
 **Então** o GitHub Actions executa a atualização a partir do TMDB
 
-### C2: Gravar só o que passa no piso
+### C2: Gravar o catálogo inteiro e marcar o recomendável
 
 **Dado** que a atualização está em execução  
 **Quando** um título vindo do TMDB é avaliado  
-**Então** o sistema grava apenas os títulos que passam no piso (RNG001) nos streamings participantes (RNG002)  
-**E** grava os gêneros, as palavras-chave de tema e a disponibilidade por streaming de cada título
+**Então** o sistema grava todos os títulos por assinatura nos streamings participantes (RNG002), validados  
+**E** grava os gêneros, as palavras-chave de tema, a disponibilidade por streaming, a classificação indicativa e os créditos (diretores e até 10 do elenco, na ordem; só id do TMDB e nome)  
+**E** recalcula `is_recommendable`, a camada que as recomendações usam (RNG001)
 
 ### C3: Registrar a atualização
 
