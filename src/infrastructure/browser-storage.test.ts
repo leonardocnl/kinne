@@ -87,16 +87,41 @@ describe("browser storage", () => {
         filteredRun.see(1);
         filteredRun.see(2);
         filteredRun.see(1);
-        expect(filteredRun.read()).toEqual({ filters, watched: [9], seen: [1, 2] });
+        expect(filteredRun.read()).toEqual({ filters, watched: [9], seen: [1, 2], round: 0 });
+        // "Sortear entre os próximos 10": rodada seguinte, sem esquecer os já mostrados
+        filteredRun.advance();
+        expect(filteredRun.read()).toEqual({ filters, watched: [9], seen: [1, 2], round: 1 });
+        // "Recomeçar": primeira rodada, sem os mostrados
         filteredRun.restart();
-        expect(filteredRun.read()).toEqual({ filters, watched: [9], seen: [] });
+        expect(filteredRun.read()).toEqual({ filters, watched: [9], seen: [], round: 0 });
+    });
+
+    it("rodada adulterada no navegador começa uma sequência nova (recommendation-rounds A5)", () => {
+        const sessionStorage = memoryStorage();
+        vi.stubGlobal("window", { localStorage: memoryStorage(), sessionStorage });
+        filteredRun.start({ ...DEFAULT_FILTERS, type: "movie" }, []);
+        for (const round of [-1, 1000, 1.5, "2", null]) {
+            const run = JSON.parse(sessionStorage.getItem("kinne:filtered-run")!);
+            sessionStorage.setItem("kinne:filtered-run", JSON.stringify({ ...run, round }));
+            expect(filteredRun.read()).toEqual({
+                filters: DEFAULT_FILTERS,
+                watched: [],
+                seen: [],
+                round: 0,
+            });
+        }
     });
 
     it("sem rodada salva, começa uma com os filtros e os marcados de agora", () => {
         const localStorage = memoryStorage();
         localStorage.setItem("kinne:watched", "[4]");
         vi.stubGlobal("window", { localStorage, sessionStorage: memoryStorage() });
-        expect(filteredRun.read()).toEqual({ filters: DEFAULT_FILTERS, watched: [4], seen: [] });
+        expect(filteredRun.read()).toEqual({
+            filters: DEFAULT_FILTERS,
+            watched: [4],
+            seen: [],
+            round: 0,
+        });
     });
 
     it("o código do navegador é criado uma vez e fica entre visitas (RNG005)", () => {

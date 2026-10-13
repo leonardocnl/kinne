@@ -74,14 +74,7 @@ export class DrizzleDailyPicksRepository implements DailyPicksRepository {
             .from(catalogTitles)
             .innerJoin(catalogTitleGenres, eq(catalogTitleGenres.catalogTitleId, catalogTitles.id))
             .innerJoin(genres, eq(genres.id, catalogTitleGenres.genreId))
-            // Recomendável (C7); 18 nunca nas indicações do dia (A7).
-            .where(
-                and(
-                    isNotNull(genres.kinneGenre),
-                    eq(catalogTitles.isRecommendable, true),
-                    ne(catalogTitles.certificationBr, ADULT_CERTIFICATION),
-                ),
-            )
+            .where(and(isNotNull(genres.kinneGenre), dailyPickTitle))
             .groupBy(catalogTitles.id);
         return rows.map((r) => ({
             ...r,
@@ -113,3 +106,13 @@ export class DrizzleDailyPicksRepository implements DailyPicksRepository {
             .onConflictDoNothing();
     }
 }
+
+/**
+ * Quem pode ser indicação do dia: recomendável (C7), não bloqueado e nunca 18 (A7,
+ * recommendation-rounds A2), seja qual for o chip 18+ de quem visita.
+ */
+export const dailyPickTitle = and(
+    eq(catalogTitles.isRecommendable, true),
+    eq(catalogTitles.isBlocked, false),
+    ne(catalogTitles.certificationBr, ADULT_CERTIFICATION),
+);

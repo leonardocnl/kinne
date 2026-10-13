@@ -7,6 +7,7 @@ const title = (id: number, extra: Partial<SurpriseCandidate> = {}): SurpriseCand
     rating: 8,
     votes: 1000,
     streamingTmdbIds: [8],
+    adult: false,
     ...extra,
 });
 
@@ -48,5 +49,12 @@ describe("drawSurprise", () => {
         const pool = [title(1), title(2), title(3)];
         expect(drawn(pool, { ...none, shown: [1, 3] })).toEqual(new Set([2]));
         expect(drawn(pool, { ...none, shown: [1, 2, 3], watched: [3] })).toEqual(new Set([1, 2]));
+    });
+});
+
+describe("surpresa sem títulos 18 (recommendation-rounds A2)", () => {
+    it("nunca sorteia um título 18, nem quando é o único", () => {
+        expect(drawSurprise([title(1, { adult: true })], none)).toBeNull();
+        expect(drawSurprise([title(1, { adult: true }), title(2)], none, () => 0)?.id).toBe(2);
     });
 });

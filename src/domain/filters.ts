@@ -18,6 +18,8 @@ export type Filters = {
     maxRuntime: number | null;
     // ator ou diretor escolhido na busca do painel; null é ninguém (fase 3)
     person: PersonPick | null;
+    // chip 18+: só com ele os títulos de classificação 18 entram (fase 4)
+    adult: boolean;
 };
 
 /**
@@ -48,10 +50,8 @@ export const DEFAULT_FILTERS: Filters = {
     minRating: MIN_RATING,
     maxRuntime: null,
     person: null,
+    adult: false,
 };
-
-// Quantos títulos entram no sorteio (RNE003).
-export const DRAWABLE = 10;
 
 // Sem o slug: a lista vai inteira ao navegador para o contador, e o slug dobraria o tamanho.
 export type FilterCandidate = Omit<SurpriseCandidate, "slug"> & {
@@ -68,21 +68,22 @@ export function withType(filters: Filters, type: TypeChoice): Filters {
 }
 
 /**
- * Quantos títulos combinam (C3) e os 10 de maior nota entre eles (RNE003): empate vai para mais
- * votos e depois para o menor id, para os 10 serem sempre os mesmos. `personTitles` são os títulos
- * da pessoa escolhida; null quando não há pessoa no filtro.
+ * Os títulos que combinam com os filtros (C3), sem os marcados (RNG004). `personTitles` são os
+ * títulos da pessoa escolhida; null quando não há pessoa no filtro. Títulos 18 só com o chip 18+
+ * (recommendation-rounds). A ordem e as rodadas ficam com buildRounds (rounds.ts).
  */
-export function filterTitles<T extends FilterCandidate>(
+export function matchTitles<T extends FilterCandidate>(
     candidates: readonly T[],
     filters: Omit<Filters, "person">,
     watched: readonly number[],
     personTitles: ReadonlySet<number> | null = null,
-): { count: number; top: T[] } {
+): T[] {
     const wanted = streamingTmdbIds(filters.streamings);
     const seen = new Set(watched);
     const limit = filters.type === "movie" ? filters.maxRuntime : null;
-    const matching = candidates.filter(
+    return candidates.filter(
         (c) =>
+            (filters.adult || !c.adult) &&
             c.rating >= filters.minRating &&
             meetsQualityFloor(c.rating, c.votes) &&
             c.streamingTmdbIds.some((id) => wanted.includes(id)) &&
@@ -97,10 +98,6 @@ export function filterTitles<T extends FilterCandidate>(
             (personTitles === null || personTitles.has(c.id)) &&
             !seen.has(c.id),
     );
-    const top = matching
-        .toSorted((a, b) => b.rating - a.rating || b.votes - a.votes || a.id - b.id)
-        .slice(0, DRAWABLE);
-    return { count: matching.length, top };
 }
 
 /**
@@ -114,13 +111,6 @@ export function drawUnseen<T extends { id: number }>(
 ): T | null {
     const pool = top.filter((t) => !seen.includes(t.id));
     return pool.length > 0 ? pool[Math.floor(random() * pool.length)] : null;
-}
-
-/** Título do estado de fim (US004 C3): menos de 10 quando poucos combinam. */
-export function endOfOptionsHeading(total: number): string {
-    if (total === 0) return "Nenhum título combina mais com esses filtros";
-    if (total === 1) return "Você viu a melhor opção para esses filtros";
-    return `Você viu as ${total} melhores para esses filtros`;
 }
 
 export const TYPES: readonly TypeChoice[] = ["movie", "series", "both"];
@@ -137,7 +127,7 @@ const listOf = <T extends string>(value: unknown, max: number, is: (v: string) =
  */
 export function parseFilters(value: unknown): Filters | null {
     if (typeof value !== "object" || value === null) return null;
-    const { streamings, type, genres, minRating, maxRuntime, person } = value as Record<
+    const { streamings, type, genres, minRating, maxRuntime, person, adult } = value as Record<
         string,
         unknown
     >;
@@ -159,5 +149,7 @@ export function parseFilters(value: unknown): Filters | null {
         maxRuntime: maxRuntime as number | null,
         // pessoa ausente ou adulterada vale como ninguém, sem perder os outros campos (A9)
         person: parsePersonPick(person),
+        // só true liga o 18+; ausente ou qualquer outra coisa é desligado (recommendation-rounds A5)
+        adult: adult === true,
     };
 }

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
-import { endOfOptionsHeading } from "@/domain/filters";
+import { nextRoundLabel, roundEndHeading } from "@/domain/rounds";
 import {
     filteredRun,
     filtersOnArrival,
@@ -53,10 +53,12 @@ export function TitleView({ title, daily }: TitleViewProps) {
     const anotherRef = useRef<HTMLButtonElement>(null);
     const homeRef = useRef<HTMLAnchorElement>(null);
     const changeRef = useRef<HTMLAnchorElement>(null);
+    const nextRoundRef = useRef<HTMLButtonElement>(null);
 
-    // "Ver de novo" pode voltar ao mesmo título sem trocar de endereço: ele conta como mostrado
+    // "Recomeçar" pode voltar ao mesmo título sem trocar de endereço: ele conta como mostrado
     useEffect(() => {
-        if (ended) return changeRef.current?.focus();
+        // no fim da rodada, o foco vai para a ação principal (recommendation-rounds F2)
+        if (ended) return (nextRoundRef.current ?? changeRef.current)?.focus();
         // o evento sai uma vez, com a origem certa, e não com a do servidor
         if (knownOrigin === null) return;
         const origin = knownOrigin;
@@ -100,25 +102,46 @@ export function TitleView({ title, daily }: TitleViewProps) {
     const anotherLabel = origin === "dia" ? "Próxima de hoje" : "Outra opção";
     const where = title.streaming && `${title.streaming.preposition} ${title.streaming.name}`;
 
-    if (ended) {
-        // US004 C3: acabaram os 10 da rodada
+    if (filtered.end) {
+        // US004 C3: acabou a rodada de 10; há a seguinte ou acabaram todas
+        const end = filtered.end;
+        const changeFilters = (variant: "primary" | "quiet") => (
+            <ButtonLink
+                ref={changeRef}
+                variant={variant}
+                href="/"
+                replace
+                onClick={filtersOnArrival.request}
+            >
+                Mudar filtros
+            </ButtonLink>
+        );
         return (
             <StateScreen
-                heading={endOfOptionsHeading(filtered.end ?? 0)}
+                heading={roundEndHeading(end)}
                 action={
-                    <div className="flex gap-2.5" aria-busy={pending}>
-                        <ButtonLink
-                            ref={changeRef}
-                            variant="primary"
-                            href="/"
-                            replace
-                            onClick={filtersOnArrival.request}
-                        >
-                            Mudar filtros
-                        </ButtonLink>
-                        <Button variant="quiet" onClick={filtered.again}>
-                            Ver de novo
-                        </Button>
+                    <div className="flex flex-wrap gap-2.5" aria-busy={pending}>
+                        {end.kind === "next" ? (
+                            <>
+                                <Button
+                                    ref={nextRoundRef}
+                                    variant="primary"
+                                    onClick={filtered.nextRound}
+                                >
+                                    {nextRoundLabel(end.size)}
+                                </Button>
+                                {changeFilters("quiet")}
+                            </>
+                        ) : (
+                            <>
+                                {changeFilters("primary")}
+                                {end.total > 0 && (
+                                    <Button variant="quiet" onClick={filtered.again}>
+                                        Recomeçar
+                                    </Button>
+                                )}
+                            </>
+                        )}
                     </div>
                 }
             />

@@ -2,8 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
     DEFAULT_FILTERS,
     drawUnseen,
-    endOfOptionsHeading,
-    filterTitles,
+    matchTitles,
     parseFilters,
     wireFilters,
     withType,
@@ -19,16 +18,17 @@ const title = (id: number, extra: Partial<FilterCandidate> = {}): FilterCandidat
     runtimeMinutes: 100,
     kinneGenres: ["drama"],
     streamingTmdbIds: [8],
+    adult: false,
     ...extra,
 });
 
 const ids = (pool: FilterCandidate[], filters: Partial<Filters> = {}, watched: number[] = []) =>
-    filterTitles(pool, { ...DEFAULT_FILTERS, ...filters }, watched).top.map((t) => t.id);
+    matchTitles(pool, { ...DEFAULT_FILTERS, ...filters }, watched).map((t) => t.id);
 
 const count = (pool: FilterCandidate[], filters: Partial<Filters> = {}, watched: number[] = []) =>
-    filterTitles(pool, { ...DEFAULT_FILTERS, ...filters }, watched).count;
+    matchTitles(pool, { ...DEFAULT_FILTERS, ...filters }, watched).length;
 
-describe("filterTitles", () => {
+describe("matchTitles", () => {
     it("começa em Os dois, sem gênero, nota 6,4 e duração Qualquer (US002 C1)", () => {
         expect(DEFAULT_FILTERS).toEqual({
             streamings: [],
@@ -37,18 +37,24 @@ describe("filterTitles", () => {
             minRating: 6.4,
             maxRuntime: null,
             person: null,
+            adult: false,
         });
+    });
+
+    it("títulos 18 só com o chip 18+ (recommendation-rounds A1)", () => {
+        const pool = [title(1), title(2, { adult: true })];
+        expect(ids(pool)).toEqual([1]);
+        expect(ids(pool, { adult: true })).toEqual([1, 2]);
     });
 
     it("com uma pessoa, conta só os títulos dela, junto com os outros filtros (fase 3)", () => {
         const pool = [title(1), title(2), title(3)];
-        const all = filterTitles(pool, DEFAULT_FILTERS, []);
-        const person = filterTitles(pool, DEFAULT_FILTERS, [], new Set([2, 3, 99]));
-        expect(all.count).toBe(3);
-        expect(person.count).toBe(2);
-        expect(person.top.map((t) => t.id).sort()).toEqual([2, 3]);
+        const all = matchTitles(pool, DEFAULT_FILTERS, []);
+        const person = matchTitles(pool, DEFAULT_FILTERS, [], new Set([2, 3, 99]));
+        expect(all).toHaveLength(3);
+        expect(person.map((t) => t.id).sort()).toEqual([2, 3]);
         // sem nenhum título da pessoa entre os candidatos, nada combina
-        expect(filterTitles(pool, DEFAULT_FILTERS, [], new Set()).count).toBe(0);
+        expect(matchTitles(pool, DEFAULT_FILTERS, [], new Set())).toHaveLength(0);
     });
 
     it("conta o que passa no piso e nos filtros, sem os marcados (US002 C3, RNG004)", () => {
@@ -116,19 +122,6 @@ describe("filterTitles", () => {
         expect(ids(pool, { genres: ["romance"] })).toEqual([1]);
         expect(ids(pool, { genres: ["romance", "drama"] }).sort()).toEqual([1, 3]);
     });
-
-    it("guarda os 10 de maior nota; empate vai para mais votos e depois menor id (RNE003)", () => {
-        const pool = [
-            ...Array.from({ length: 9 }, (_, i) => title(i + 1, { rating: 9 })),
-            title(20, { rating: 8, votes: 1000 }),
-            title(11, { rating: 8, votes: 2000 }),
-            title(10, { rating: 8, votes: 2000 }),
-            title(30, { rating: 6.5 }),
-        ];
-        const { count: n, top } = filterTitles(pool, DEFAULT_FILTERS, []);
-        expect(n).toBe(13);
-        expect(top.map((t) => t.id)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-    });
 });
 
 describe("withType", () => {
@@ -154,18 +147,6 @@ describe("drawUnseen", () => {
     });
 });
 
-describe("endOfOptionsHeading", () => {
-    it("diz quantos foram vistos, com menos de 10 quando poucos combinam (US004 C3)", () => {
-        expect(endOfOptionsHeading(10)).toBe("Você viu as 10 melhores para esses filtros");
-        expect(endOfOptionsHeading(3)).toBe("Você viu as 3 melhores para esses filtros");
-        expect(endOfOptionsHeading(1)).toBe("Você viu a melhor opção para esses filtros");
-    });
-
-    it("sem nenhum título, diz que nada combina mais", () => {
-        expect(endOfOptionsHeading(0)).toBe("Nenhum título combina mais com esses filtros");
-    });
-});
-
 describe("parseFilters", () => {
     const ok = {
         streamings: ["netflix"],
@@ -174,6 +155,7 @@ describe("parseFilters", () => {
         minRating: 7.2,
         maxRuntime: 105,
         person: { id: 1056, name: "Tom Hanks", role: "cast" },
+        adult: true,
     };
 
     it("aceita filtros no formato e nos limites de cada campo", () => {
@@ -188,6 +170,13 @@ describe("parseFilters", () => {
             ...ok,
             person: null,
         });
+    });
+
+    it("18+ só liga com true; ausente ou adulterado é desligado (recommendation-rounds A5)", () => {
+        expect(parseFilters({ ...ok, adult: undefined })?.adult).toBe(false);
+        expect(parseFilters({ ...ok, adult: "true" })?.adult).toBe(false);
+        expect(parseFilters({ ...ok, adult: 1 })?.adult).toBe(false);
+        expect(parseFilters(ok)?.adult).toBe(true);
     });
 
     it("manda ao servidor só o id da pessoa (A7)", () => {

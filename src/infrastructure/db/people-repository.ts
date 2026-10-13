@@ -14,16 +14,22 @@ import { likeNeedle } from "./search-repository";
 const STATEMENT_TIMEOUT = "2s"; // person-search B2
 
 /**
- * C3: só os títulos que os filtros sorteiam, o mesmo critério de DrizzleTitlesRepository
- * .candidates(): recomendável, fora do 18 e disponível em algum streaming no Brasil.
+ * Os títulos que os filtros sorteiam, o mesmo critério de DrizzleTitlesRepository.candidates():
+ * recomendável, não bloqueado e disponível em algum streaming no Brasil. Inclui os 18, que só
+ * aparecem com o chip 18+ (recommendation-rounds C2).
  */
-export const candidateTitle = and(
+export const drawableTitle = and(
     eq(catalogTitles.isRecommendable, true),
     eq(catalogTitles.isBlocked, false),
-    ne(catalogTitles.certificationBr, ADULT_CERTIFICATION),
     sql`exists (select 1 from ${streamingAvailability}
         where ${streamingAvailability.catalogTitleId} = ${catalogTitles.id}
         and ${streamingAvailability.countryCode} = 'BR')`,
+);
+
+/** C3: sugestões e contagens só pelos sorteáveis fora do 18, para não expor filmografias adultas. */
+export const candidateTitle = and(
+    drawableTitle,
+    ne(catalogTitles.certificationBr, ADULT_CERTIFICATION),
 );
 
 const name = sql`kinne_normalize(${people.name})`;
@@ -46,15 +52,18 @@ export function suggestionsQuery(db: Db, term: string) {
         .limit(MAX_PERSON_RESULTS);
 }
 
-/** Os títulos sorteáveis de uma pessoa, com teto (A6, B6, C3). */
+/** Os títulos sorteáveis de uma pessoa, com teto (A6, B6), inclusive os 18. */
 export function titleIdsQuery(db: Db, personId: number) {
-    return db
-        .selectDistinct({ id: titleCredits.catalogTitleId })
-        .from(titleCredits)
-        .innerJoin(catalogTitles, eq(catalogTitles.id, titleCredits.catalogTitleId))
-        .where(and(eq(titleCredits.personId, personId), candidateTitle))
-        .orderBy(asc(titleCredits.catalogTitleId))
-        .limit(MAX_PERSON_TITLES);
+    return (
+        db
+            .selectDistinct({ id: titleCredits.catalogTitleId })
+            .from(titleCredits)
+            .innerJoin(catalogTitles, eq(catalogTitles.id, titleCredits.catalogTitleId))
+            // com os 18: o chip 18+ decide no navegador e no sorteio (recommendation-rounds C2)
+            .where(and(eq(titleCredits.personId, personId), drawableTitle))
+            .orderBy(asc(titleCredits.catalogTitleId))
+            .limit(MAX_PERSON_TITLES)
+    );
 }
 
 export class DrizzlePeopleRepository {

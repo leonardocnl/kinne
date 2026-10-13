@@ -2,6 +2,7 @@ import { z } from "zod";
 import { KINNE_GENRES, isKinneGenre } from "@/domain/genre";
 import { MIN_RATING } from "@/domain/catalog";
 import { MAX_PERSON_ID } from "@/domain/person-search";
+import { MAX_ROUND } from "@/domain/rounds";
 import { isStreaming, STREAMING_SERVICES } from "@/domain/streaming";
 import { MAX_RATING, RUNTIME_LIMITS, TYPES, type Filters } from "@/domain/filters";
 import { idListSchema } from "./surprise";
@@ -25,6 +26,8 @@ const filtersSchema = z.strictObject({
     maxRuntime: z.custom<number | null>((v) => RUNTIME_LIMITS.some((l) => l.minutes === v)),
     // person-search A6, A7: só o id; os títulos da pessoa o servidor deriva
     personId: z.int().min(1).max(MAX_PERSON_ID).nullable(),
+    // chip 18+ (recommendation-rounds A1)
+    adult: z.boolean(),
 });
 
 // marcados quando os filtros abriram: o marcado depois conta como uma das 10 (US005 RNE001);
@@ -33,6 +36,8 @@ export const filterRequestSchema = z.strictObject({
     filters: filtersSchema,
     watched: idListSchema,
     seen: idListSchema,
+    // a rodada de 10 em que se sorteia (recommendation-rounds A3)
+    round: z.int().min(0).max(MAX_ROUND),
 });
 
 export type FilterRequest = z.infer<typeof filterRequestSchema>;

@@ -1,4 +1,5 @@
 import { DEFAULT_FILTERS, parseFilters, type Filters } from "@/domain/filters";
+import { MAX_ROUND } from "@/domain/rounds";
 import { isStoredOrigin, type Origin, type StoredOrigin } from "@/domain/origin";
 import { isStreaming, type Streaming } from "@/domain/streaming";
 import { isBrowserId } from "@/domain/usage-events";
@@ -75,33 +76,49 @@ export function saveFilters({ streamings, ...rest }: Filters) {
     write("sessionStorage", "kinne:filters", rest);
 }
 
-type FilteredRun = { filters: Filters; watched: number[]; seen: number[] };
+type FilteredRun = { filters: Filters; watched: number[]; seen: number[]; round: number };
+
+const isRound = (value: unknown): value is number =>
+    Number.isSafeInteger(value) && (value as number) >= 0 && (value as number) <= MAX_ROUND;
 
 /**
- * A rodada aberta por "Ver recomendação" (US004 C2 e C3): os filtros e os marcados de quando ela
- * começou, para os 10 não mudarem (US005 RNE001), e os títulos já mostrados. Sem rodada salva
- * (outra aba, endereço copiado), vale uma nova com os filtros atuais.
+ * A sequência aberta por "Sortear um título" (US004 C2 e C3): os filtros e os marcados de quando
+ * ela começou, para as rodadas não mudarem (US005 RNE001), os títulos já mostrados e a rodada de
+ * 10 em que se sorteia (fase 4). Sem sequência salva (outra aba, endereço copiado) ou com algo fora
+ * do formato, vale uma nova com os filtros atuais (recommendation-rounds A5).
  */
 export const filteredRun = {
     read(): FilteredRun {
         const value = read("sessionStorage", "kinne:filtered-run");
         const run = typeof value === "object" && value !== null ? (value as FilteredRun) : null;
         const filters = run && parseFilters(run.filters);
-        if (!run || !filters)
-            return { filters: savedFilters(), watched: watchedTitles.read(), seen: [] };
-        return { filters, watched: ids(run.watched), seen: ids(run.seen) };
+        if (!run || !filters || !isRound(run.round))
+            return { filters: savedFilters(), watched: watchedTitles.read(), seen: [], round: 0 };
+        return { filters, watched: ids(run.watched), seen: ids(run.seen), round: run.round };
     },
     start(filters: Filters, watched: number[]) {
-        write("sessionStorage", "kinne:filtered-run", { filters, watched, seen: [] });
+        write("sessionStorage", "kinne:filtered-run", { filters, watched, seen: [], round: 0 });
     },
     see(id: number) {
         const run = filteredRun.read();
         if (!run.seen.includes(id)) run.seen.push(id);
         write("sessionStorage", "kinne:filtered-run", run);
     },
-    /** "Ver de novo" (US004 C3): os mesmos 10, do começo */
+    /** "Sortear entre os próximos 10" (C3): a rodada seguinte, sem repetir os já mostrados */
+    advance() {
+        const run = filteredRun.read();
+        write("sessionStorage", "kinne:filtered-run", {
+            ...run,
+            round: Math.min(run.round + 1, MAX_ROUND),
+        });
+    },
+    /** "Recomeçar" (C3): a primeira rodada de novo, do começo */
     restart() {
-        write("sessionStorage", "kinne:filtered-run", { ...filteredRun.read(), seen: [] });
+        write("sessionStorage", "kinne:filtered-run", {
+            ...filteredRun.read(),
+            seen: [],
+            round: 0,
+        });
     },
 };
 

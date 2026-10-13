@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { CAST_SHOWN, MAX_DIRECTORS } from "@/domain/credits";
 import { createDb } from "./client";
-import { creditsQuery, DrizzleTitlesRepository } from "./titles-repository";
+import { PgDialect } from "drizzle-orm/pg-core";
+import { adultTitle, creditsQuery, DrizzleTitlesRepository } from "./titles-repository";
 import type { Db } from "./client";
 
 // Só monta a consulta: nada vai ao banco.
@@ -47,5 +48,13 @@ describe("bySlug (title-credits C2)", () => {
             new DrizzleTitlesRepository(fake).bySlug("bloqueado-2020"),
         ).resolves.toBeNull();
         expect(selects).toBe(1);
+    });
+});
+
+describe("marca de 18 dos candidatos (recommendation-rounds A2)", () => {
+    it("18 é adulto, e sem classificação também (falha fechada)", () => {
+        const query = new PgDialect().sqlToQuery(adultTitle);
+        expect(query.sql).toBe('coalesce("catalog_titles"."certification_br" = $1, true)');
+        expect(query.params).toEqual(["18"]);
     });
 });
