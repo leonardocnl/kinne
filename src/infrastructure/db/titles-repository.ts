@@ -2,15 +2,18 @@ import "server-only";
 import type { CatalogEntry, TitlesRepository } from "@/application/titles";
 import type { TitleType } from "@/domain/catalog";
 import { ADULT_CERTIFICATION } from "@/domain/catalog-sync";
+import { CAST_SHOWN, MAX_DIRECTORS } from "@/domain/credits";
 import { isKinneGenre } from "@/domain/genre";
-import { and, eq, ne, sql } from "drizzle-orm";
+import { and, asc, eq, lt, ne, or, sql } from "drizzle-orm";
 import type { Db } from "./client";
 import {
     catalogTitleGenres,
     catalogTitles,
     genres,
+    people,
     streamingAvailability,
     streamingServices,
+    titleCredits,
 } from "./schema";
 
 const COUNTRY = "BR";
@@ -58,12 +61,23 @@ export class DrizzleTitlesRepository implements TitlesRepository {
             .where(and(eq(catalogTitles.slug, slug), eq(catalogTitles.isBlocked, false)))
             .groupBy(catalogTitles.id);
         if (!row) return null;
+        const credits = await this.credits(row.id);
         return {
             ...row,
+            ...credits,
             type: row.type as TitleType,
             rating: Number(row.rating),
             kinneGenres: row.kinneGenres.filter((g) => g !== null && isKinneGenre(g)),
             genreNames: row.genreNames.filter((n) => n !== null),
+        };
+    }
+
+    /** Diretores (até MAX_DIRECTORS) e o começo do elenco, na ordem dos créditos (fase 2). */
+    private async credits(titleId: number): Promise<{ directors: string[]; cast: string[] }> {
+        const rows = await creditsQuery(this.db, titleId);
+        return {
+            directors: rows.filter((r) => r.role === "director").map((r) => r.name),
+            cast: rows.filter((r) => r.role === "cast").map((r) => r.name),
         };
     }
 
@@ -108,4 +122,24 @@ export class DrizzleTitlesRepository implements TitlesRepository {
             kinneGenres: r.kinneGenres.filter((g) => g !== null && isKinneGenre(g)),
         }));
     }
+}
+
+/**
+ * Créditos de um título para a tela do título: todos os diretores (até MAX_DIRECTORS) e os
+ * CAST_SHOWN primeiros do elenco. Elenco ("cast") antes de direção ("director"), cada um na
+ * ordem; o teto limita a leitura mesmo com dados inesperados (title-credits D1).
+ */
+export function creditsQuery(db: Db, titleId: number) {
+    return db
+        .select({ role: titleCredits.role, name: people.name })
+        .from(titleCredits)
+        .innerJoin(people, eq(people.id, titleCredits.personId))
+        .where(
+            and(
+                eq(titleCredits.catalogTitleId, titleId),
+                or(eq(titleCredits.role, "director"), lt(titleCredits.creditOrder, CAST_SHOWN)),
+            ),
+        )
+        .orderBy(asc(titleCredits.role), asc(titleCredits.creditOrder))
+        .limit(CAST_SHOWN + MAX_DIRECTORS);
 }

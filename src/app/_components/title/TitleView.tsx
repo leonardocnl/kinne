@@ -184,6 +184,13 @@ export function TitleView({ title, daily }: TitleViewProps) {
                             <b className="font-medium text-paper">{title.streaming.name}</b>
                         </p>
                     )}
+                    {/* direção e elenco: só texto; sem crédito, a linha não aparece */}
+                    {(title.direction || title.cast) && (
+                        <div className="flex max-w-measure flex-col text-data text-soft max-desktop:mt-2">
+                            {title.direction && <p>{title.direction}</p>}
+                            {title.cast && <p>{title.cast}</p>}
+                        </div>
+                    )}
                 </div>
 
                 <Dock
