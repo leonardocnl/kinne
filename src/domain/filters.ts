@@ -1,5 +1,6 @@
 import { meetsQualityFloor, MIN_RATING, type TitleType } from "./catalog";
 import { isKinneGenre, KINNE_GENRES, type KinneGenre } from "./genre";
+import { parsePersonPick, type PersonPick } from "./person-search";
 import { isStreaming, STREAMING_SERVICES, streamingTmdbIds, type Streaming } from "./streaming";
 import type { SurpriseCandidate } from "./surprise";
 
@@ -15,7 +16,19 @@ export type Filters = {
     minRating: number;
     // teto em minutos; null é "Qualquer". Só vale com Filmes (C2)
     maxRuntime: number | null;
+    // ator ou diretor escolhido na busca do painel; null é ninguém (fase 3)
+    person: PersonPick | null;
 };
+
+/**
+ * Os filtros como vão ao servidor: da pessoa, só o id (person-search A7). O servidor deriva os
+ * títulos dela; o nome e o papel servem só à pílula do painel.
+ */
+export type FilterCriteria = Omit<Filters, "person"> & { personId: number | null };
+
+export function wireFilters({ person, ...rest }: Filters): FilterCriteria {
+    return { ...rest, personId: person?.id ?? null };
+}
 
 // O slider começa no piso: o catálogo não tem títulos abaixo dele (RNE002).
 export const MAX_RATING = 9;
@@ -34,6 +47,7 @@ export const DEFAULT_FILTERS: Filters = {
     genres: [],
     minRating: MIN_RATING,
     maxRuntime: null,
+    person: null,
 };
 
 // Quantos títulos entram no sorteio (RNE003).
@@ -55,12 +69,14 @@ export function withType(filters: Filters, type: TypeChoice): Filters {
 
 /**
  * Quantos títulos combinam (C3) e os 10 de maior nota entre eles (RNE003): empate vai para mais
- * votos e depois para o menor id, para os 10 serem sempre os mesmos.
+ * votos e depois para o menor id, para os 10 serem sempre os mesmos. `personTitles` são os títulos
+ * da pessoa escolhida; null quando não há pessoa no filtro.
  */
 export function filterTitles<T extends FilterCandidate>(
     candidates: readonly T[],
-    filters: Filters,
+    filters: Omit<Filters, "person">,
     watched: readonly number[],
+    personTitles: ReadonlySet<number> | null = null,
 ): { count: number; top: T[] } {
     const wanted = streamingTmdbIds(filters.streamings);
     const seen = new Set(watched);
@@ -78,6 +94,7 @@ export function filterTitles<T extends FilterCandidate>(
                 )) &&
             // sem duração conhecida, não dá para garantir o teto
             (limit === null || (c.runtimeMinutes !== null && c.runtimeMinutes <= limit)) &&
+            (personTitles === null || personTitles.has(c.id)) &&
             !seen.has(c.id),
     );
     const top = matching
@@ -120,7 +137,10 @@ const listOf = <T extends string>(value: unknown, max: number, is: (v: string) =
  */
 export function parseFilters(value: unknown): Filters | null {
     if (typeof value !== "object" || value === null) return null;
-    const { streamings, type, genres, minRating, maxRuntime } = value as Record<string, unknown>;
+    const { streamings, type, genres, minRating, maxRuntime, person } = value as Record<
+        string,
+        unknown
+    >;
     const ok =
         listOf(streamings, STREAMING_SERVICES.length, isStreaming) &&
         TYPES.includes(type as TypeChoice) &&
@@ -137,5 +157,7 @@ export function parseFilters(value: unknown): Filters | null {
         // o slider anda de 0,1 em 0,1; o arredondamento tira o 7,199999… do ponto flutuante
         minRating: Math.round(minRating * 10) / 10,
         maxRuntime: maxRuntime as number | null,
+        // pessoa ausente ou adulterada vale como ninguém, sem perder os outros campos (A9)
+        person: parsePersonPick(person),
     };
 }

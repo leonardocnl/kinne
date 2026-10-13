@@ -1,5 +1,6 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { wireFilters } from "@/domain/filters";
 import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
 import { filteredRun, watchedTitles } from "@/infrastructure/browser-storage";
 import { drawFiltered } from "../../_actions/filters";
@@ -25,7 +26,8 @@ export function useFilteredDraw(currentSlug: string) {
                 // o marcado depois de abrir os filtros continua entre os 10, mas não volta (RNG004)
                 const seen = [...new Set([...watchedTitles.read(), ...run.seen])];
                 const { slug, total } = await drawFiltered({
-                    ...run,
+                    filters: wireFilters(run.filters),
+                    watched: run.watched,
                     seen: seen.slice(-SURPRISE_MAX_EXCLUDED),
                 });
                 // "Ver de novo" pode sortear o título que já está no endereço: só sai do fim

@@ -7,6 +7,7 @@ import {
     filterTitles,
     MAX_RATING,
     RUNTIME_LIMITS,
+    wireFilters,
     withType,
     type FilterCandidate,
     type Filters,
@@ -22,7 +23,9 @@ import {
     watchedTitles,
 } from "@/infrastructure/browser-storage";
 import { drawFiltered, filterCandidates } from "../../_actions/filters";
+import { personTitles } from "../../_actions/people";
 import { loadError } from "../StateScreen";
+import { PersonField } from "./PersonField";
 import { goToTitle } from "../title/origin";
 import { Button } from "../ui/Button";
 import { Chip, RadioChip } from "../ui/Chip";
@@ -52,6 +55,21 @@ function loadCandidates() {
     return candidatesRequest;
 }
 
+// Os títulos de cada pessoa escolhida, uma vez por aba (person-search B3); falha não fica guardada.
+const personRequests = new Map<number, Promise<number[]>>();
+function loadPersonTitles(personId: number) {
+    let request = personRequests.get(personId);
+    if (!request) {
+        request = personTitles({ personId }).then((ids) => {
+            if (!ids) throw new Error("Títulos da pessoa indisponíveis");
+            return ids;
+        });
+        request.catch(() => personRequests.delete(personId));
+        personRequests.set(personId, request);
+    }
+    return request;
+}
+
 type FiltersPanelProps = {
     /** o endereço já fechou o painel; ele sai animado e avisa em onLeft */
     leaving: boolean;
@@ -75,6 +93,11 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
     const [watched] = useState(() => watchedTitles.read());
     const [candidates, setCandidates] = useState<FilterCandidate[] | "error" | null>(null);
     const [attempt, setAttempt] = useState(0);
+    // os títulos da pessoa do filtro, para o contador; o sorteio deriva os seus no servidor (A7)
+    const [personIds, setPersonIds] = useState<{
+        id: number;
+        titles: Set<number> | "error";
+    } | null>(null);
     const [drawFailed, setDrawFailed] = useState(false);
     const [pending, startTransition] = useTransition();
     const close = useEffectEvent(() => !leaving && onClose());
@@ -93,7 +116,9 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
             if (!dialog.matches(":modal")) panel?.scrollIntoView({ block: "nearest" });
         });
         if (panel) fit.observe(panel);
-        const onKey = (event: KeyboardEvent) => event.key === "Escape" && close();
+        // a Esc que um campo já usou (a lista da busca de pessoas fechando) não fecha o painel
+        const onKey = (event: KeyboardEvent) =>
+            event.key === "Escape" && !event.defaultPrevented && close();
         document.addEventListener("keydown", onKey);
         return () => {
             fit.disconnect();
@@ -119,10 +144,29 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
         };
     }, [attempt]);
 
-    const count = useMemo(
-        () => (Array.isArray(candidates) ? filterTitles(candidates, filters, watched).count : null),
-        [candidates, filters, watched],
-    );
+    const personId = filters.person?.id ?? null;
+    useEffect(() => {
+        if (personId === null) return;
+        let live = true;
+        loadPersonTitles(personId).then(
+            (ids) => live && setPersonIds({ id: personId, titles: new Set(ids) }),
+            () => live && setPersonIds({ id: personId, titles: "error" }),
+        );
+        return () => {
+            live = false;
+        };
+    }, [personId, attempt]);
+    const personTitleSet =
+        personId !== null && personIds?.id === personId ? personIds.titles : null;
+    const failed = candidates === "error" || personTitleSet === "error";
+
+    const count = useMemo(() => {
+        if (!Array.isArray(candidates)) return null;
+        if (personId === null) return filterTitles(candidates, filters, watched).count;
+        // a pessoa escolhida ainda sem os títulos: o contador espera
+        if (!(personTitleSet instanceof Set)) return null;
+        return filterTitles(candidates, filters, watched, personTitleSet).count;
+    }, [candidates, filters, watched, personId, personTitleSet]);
 
     // sobra campo abaixo da área visível? A folga de 1 cobre o arredondamento do zoom
     function measureScroll() {
@@ -147,7 +191,8 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
     }
 
     function retry() {
-        setCandidates(null);
+        if (candidates === "error") setCandidates(null);
+        setPersonIds(null);
         setAttempt((n) => n + 1);
     }
 
@@ -156,7 +201,11 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
         startTransition(async () => {
             try {
                 const request = { filters, watched: watched.slice(-SURPRISE_MAX_EXCLUDED) };
-                const { slug } = await drawFiltered({ ...request, seen: [] });
+                const { slug } = await drawFiltered({
+                    filters: wireFilters(filters),
+                    watched: request.watched,
+                    seen: [],
+                });
                 if (slug) {
                     // a rodada de "Outra opção" (US004 C2) começa aqui
                     filteredRun.start(request.filters, request.watched);
@@ -171,7 +220,7 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
 
     const runtime = RUNTIME_LIMITS.findIndex((l) => l.minutes === filters.maxRuntime);
     const hint =
-        candidates === "error" || drawFailed
+        failed || drawFailed
             ? `${loadError.heading}. Tente de novo.`
             : count === 0 && "Tente baixar a nota ou marcar mais um streaming.";
 
@@ -303,6 +352,17 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
                             </div>
                         </div>
 
+                        <div className={section}>
+                            <span id={`${titleId}-person`} className="text-data text-soft">
+                                Buscar ator ou diretor
+                            </span>
+                            <PersonField
+                                labelId={`${titleId}-person`}
+                                value={filters.person}
+                                onChange={(person) => update({ ...filters, person })}
+                            />
+                        </div>
+
                         <Slider
                             className={section}
                             label="Nota TMDB mínima"
@@ -363,7 +423,7 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
                             </b>
                             <span>{count === 1 ? "título combina" : "títulos combinam"}</span>
                         </p>
-                        {candidates === "error" ? (
+                        {failed ? (
                             <Button variant="primary" className="flex-1 px-2.5" onClick={retry}>
                                 Tentar de novo
                             </Button>
