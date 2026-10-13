@@ -10,6 +10,7 @@ import { cx } from "../ui/cx";
 import { GlassPanel } from "../ui/GlassPanel";
 import { CloseIcon } from "../ui/icons";
 import { TmdbImage } from "../ui/TmdbImage";
+import { posterSources } from "../ui/tmdb-sources";
 
 const DEBOUNCE_MS = 300; // B3
 
@@ -50,6 +51,13 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
     const results = outcome?.kind === "results" ? outcome.results : [];
     const listId = `${id}-list`;
     const optionId = (i: number) => `${id}-option-${i}`;
+
+    // a lista rola dentro do painel: a opção escolhida pelas setas fica sempre visível
+    useEffect(() => {
+        if (active >= 0)
+            document.getElementById(optionId(active))?.scrollIntoView({ block: "nearest" });
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- optionId deriva de id, estável
+    }, [active]);
 
     useEffect(() => {
         if (!ready) return;
@@ -119,9 +127,10 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
                 event.preventDefault();
                 onClose(true);
             }}
-            className="z-20 max-desktop:fixed max-desktop:inset-x-0 max-desktop:top-0 desktop:absolute desktop:top-full desktop:right-0 desktop:mt-2 desktop:w-96"
+            className="z-20 max-desktop:fixed max-desktop:inset-x-0 max-desktop:top-0 desktop:absolute desktop:top-full desktop:right-0 desktop:mt-2 desktop:w-104"
         >
-            <GlassPanel className="max-desktop:pb-5">
+            {/* no computador o pé do painel nunca passa do pé da imagem; a lista rola por dentro */}
+            <GlassPanel className="max-desktop:max-h-dvh max-desktop:pb-5 desktop:max-h-search-panel">
                 <div className="flex items-center gap-2.5">
                     <input
                         // abre já com o cursor no campo: foi para isso que a pessoa tocou na lupa
@@ -158,7 +167,10 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
                     id={listId}
                     role="listbox"
                     aria-label="Títulos encontrados"
-                    className={cx("flex flex-col gap-1", results.length === 0 && "hidden")}
+                    className={cx(
+                        "-mx-2 flex min-h-0 flex-col gap-1 overflow-y-auto overscroll-contain px-2",
+                        results.length === 0 && "hidden",
+                    )}
                 >
                     {results.map((result, i) => (
                         <li
@@ -169,18 +181,20 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
                             onClick={() => open(result)}
                             onPointerMove={() => setActive(i)}
                             className={cx(
-                                "flex h-control cursor-pointer items-center gap-3 rounded-pill pr-5 pl-4 transition duration-hover motion-reduce:transition-none",
+                                "flex h-result shrink-0 cursor-pointer items-center gap-3.5 rounded-control pr-5 pl-3 transition duration-hover motion-reduce:transition-none",
                                 i === active && "bg-hover outline outline-line-strong",
                             )}
                         >
                             {result.posterPath ? (
                                 <TmdbImage
-                                    path={result.posterPath}
-                                    widths={["w92"]}
-                                    className="h-10 w-6.5 shrink-0"
+                                    sources={posterSources(result.posterPath)}
+                                    className="h-poster w-poster-width shrink-0"
                                 />
                             ) : (
-                                <span aria-hidden="true" className="h-10 w-6.5 shrink-0 bg-frame" />
+                                <span
+                                    aria-hidden="true"
+                                    className="h-poster w-poster-width shrink-0 bg-frame"
+                                />
                             )}
                             <span className="flex min-w-0 flex-col">
                                 <span className="truncate text-body text-paper">

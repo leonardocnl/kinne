@@ -23,3 +23,18 @@ describe("design tokens", () => {
         }
     });
 });
+
+// No Tailwind v4, w-<nome> e max-w-<nome> acham --spacing-<nome> antes de --container-<nome>: um
+// container com o nome de um espaçamento vira, sem aviso, a largura errada (o painel de filtros
+// ficou com 1.25rem assim).
+describe("nomes de container", () => {
+    it("nenhum --container-* tem o nome de um --spacing-*", () => {
+        const css = readFileSync(join(appDir, "globals.css"), "utf8");
+        const names = (prefix: string) =>
+            new Set(
+                [...css.matchAll(new RegExp(`--${prefix}-([a-z0-9-]+):`, "g"))].map((m) => m[1]),
+            );
+        const spacing = names("spacing");
+        expect([...names("container")].filter((n) => spacing.has(n))).toEqual([]);
+    });
+});

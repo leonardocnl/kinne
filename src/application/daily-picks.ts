@@ -21,6 +21,7 @@ export type DailyPickTitle = {
     releaseYear: number | null;
     runtimeMinutes: number | null;
     backdropImagePath: string | null;
+    backdropWidth: number | null;
     streamingTmdbIds: number[];
 };
 

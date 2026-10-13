@@ -23,6 +23,7 @@ export type TitleScreen = {
     streaming: StreamingService | null;
     trailerUrl: string | null;
     backdropImagePath: string | null;
+    backdropWidth: number | null;
     // não recomendável: sem dado, sem "Outra opção" e fora dos buscadores (busca H6)
     recommendable: boolean;
 };
@@ -64,6 +65,7 @@ function toTitleScreen(t: CatalogEntry): TitleScreen {
             ? `https://www.youtube.com/watch?v=${encodeURIComponent(t.trailerYoutubeKey)}`
             : null,
         backdropImagePath: t.backdropImagePath,
+        backdropWidth: t.backdropWidth,
         recommendable: t.recommendable,
     };
 }

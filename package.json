@@ -17,6 +17,7 @@
         "catalog:sync": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/sync-catalog.ts",
         "daily:pick": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/daily-pick.ts",
         "events:delete": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/delete-test-events.ts",
+        "bundle:check": "node scripts/check-bundle-size.mjs",
         "smoke:title": "tsx --conditions=react-server scripts/smoke-title.ts",
         "search:check-normalization": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/check-search-normalization.ts"
     },

@@ -15,8 +15,8 @@ export function Media() {
                 name="Frame · FrameImage · TmdbImage · Score"
                 props={[
                     "Frame: bottomShade?, children",
-                    "FrameImage: path, visible?, priority?",
-                    "TmdbImage: path, widths, priority?",
+                    "FrameImage: path, width, visible?, priority?",
+                    "TmdbImage: sources, sizes?, priority?",
                     "Score: value",
                 ]}
                 does="O quadro mostra a imagem do título com gradiente e grão; a nota do TMDB fica por cima, como texto. As imagens vêm direto do TMDB, com os tamanhos dele no srcset, sem a otimização da hospedagem (RNF08)."

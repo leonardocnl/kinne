@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useReducer, useRef, useState, useSyncExternalStore } from "react";
+import {
+    lazy,
+    Suspense,
+    useEffect,
+    useReducer,
+    useRef,
+    useState,
+    useSyncExternalStore,
+} from "react";
 import type { HomePick } from "../../_data/home";
 import { Button } from "../ui/Button";
 import { cx } from "../ui/cx";
@@ -12,8 +20,14 @@ import { billingRow, screenMain } from "../layout";
 import { titleOrigin } from "@/infrastructure/browser-storage";
 import { titleHref } from "../title/origin";
 import { useSurprise } from "../title/useSurprise";
-import { FiltersPanel, useFiltersRoute } from "./FiltersPanel";
+import { useFiltersRoute } from "./filtersRoute";
 import { initialRotation, rotate } from "./rotation";
+
+// O painel dos filtros só é baixado quando a pessoa chega perto de "Escolher agora" (orçamento de
+// JS da tela inicial); o hook que diz se ele está aberto fica fora dele.
+const loadFiltersPanel = () => import("./FiltersPanel");
+const FiltersPanel = lazy(loadFiltersPanel);
+const preloadFiltersPanel = () => void loadFiltersPanel();
 import { TodayReel } from "./TodayReel";
 
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
@@ -47,6 +61,14 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
     // o painel fica montado enquanto sai, depois que o endereço já o fechou
     const [panelMounted, setPanelMounted] = useState(filters.open);
     if (filters.open && !panelMounted) setPanelMounted(true);
+    // ao fechar, o foco volta a "Escolher agora" (C5). Só depois que o painel desmonta: no
+    // celular ele é modal, e enquanto existe o resto da página é inerte e não aceita o foco
+    const returnFocus = useRef(false);
+    useEffect(() => {
+        if (panelMounted || !returnFocus.current) return;
+        returnFocus.current = false;
+        chooseRef.current?.focus();
+    }, [panelMounted]);
 
     const { current, playing } = rotation;
     const rotating = playing && !reducedMotion;
@@ -85,6 +107,7 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
                                 <FrameImage
                                     key={p.slug}
                                     path={p.backdropImagePath}
+                                    width={p.backdropWidth}
                                     visible={i === current}
                                     priority={i === 0}
                                 />
@@ -132,7 +155,7 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
                 <div className={billingRow}>
                     <div
                         className={cx(
-                            "flex min-w-0 flex-col gap-3.5 transition-opacity duration-fade motion-reduce:transition-none max-desktop:gap-3",
+                            "flex min-w-0 flex-col gap-3.5 transition-opacity duration-fade motion-reduce:transition-none max-desktop:gap-3 desktop:flex-1",
                             filters.open && "opacity-35",
                         )}
                     >
@@ -156,7 +179,7 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
                         </h1>
                         <p
                             className={cx(
-                                "max-w-measure text-tagline text-soft transition-opacity duration-fade motion-reduce:transition-none",
+                                "max-w-measure text-tagline text-balance text-soft transition-opacity duration-fade motion-reduce:transition-none",
                                 swap === "out" && "opacity-0",
                             )}
                         >
@@ -198,6 +221,8 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
                             ref={chooseRef}
                             variant="primary"
                             onClick={filters.show}
+                            onPointerEnter={preloadFiltersPanel}
+                            onFocus={preloadFiltersPanel}
                             className="max-desktop:min-w-0 max-desktop:flex-1 max-desktop:px-2.5 desktop:min-w-42"
                         >
                             Escolher agora
@@ -213,15 +238,16 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
                     </div>
                 </div>
                 {panelMounted && (
-                    <FiltersPanel
-                        leaving={!filters.open}
-                        onClose={filters.hide}
-                        onLeft={() => {
-                            setPanelMounted(false);
-                            // ao fechar, o foco volta a "Escolher agora" (C5)
-                            chooseRef.current?.focus();
-                        }}
-                    />
+                    <Suspense>
+                        <FiltersPanel
+                            leaving={!filters.open}
+                            onClose={filters.hide}
+                            onLeft={() => {
+                                returnFocus.current = true;
+                                setPanelMounted(false);
+                            }}
+                        />
+                    </Suspense>
                 )}
             </div>
 
