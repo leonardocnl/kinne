@@ -13,7 +13,7 @@ O banco tem 14 tabelas em três grupos: catálogo (8), pessoas (5) e medição (
 | Chave estrangeira com o nome da tabela de origem | catalog_title_id → catalog_titles   |
 | Unidade no nome                                  | runtime_minutes                     |
 | Origem no nome quando vem de fora                | tmdb_average_rating                 |
-| Datas terminam em _at ou _date                   | created_at, pick_date               |
+| Datas terminam em \_at ou \_date                 | created_at, pick_date               |
 | Valores fixos por extenso                        | 'already_watched', e não 1          |
 
 ## Catálogo (cópia do TMDB, atualizada diariamente — US007)

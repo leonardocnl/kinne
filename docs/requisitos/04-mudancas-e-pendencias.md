@@ -19,6 +19,14 @@ Kinne · Requisitos da semana 0 · versão de 12/10/2026
 - [ ] Definir o tratamento de um título que deixa de passar no piso ou sai de todos os streamings (US007, RNE003).
 - [ ] Definir o prazo definitivo de retenção de eventos no texto de privacidade completo (LGPD).
 
+### Grafo de gosto (23/10/2026)
+
+- [ ] Aprovar US008 a US011 e os modelos de ameaças `feelings-and-taste-ui.md` e `group-room.md`.
+- [ ] Decidir se entra um botão "Não me interessa" na tela do título. O modelo já tem o sinal (−0,4), mas hoje não há botão; sem ele, US009 usa só curti, não curti e vou assistir.
+- [ ] Sala de grupo: confirmar que "o que cada um topa" é só streamings e gêneros (US011 C5), sem veto de título, e que pessoas aparecem sem nome ("Pessoa 1").
+- [ ] Sala de grupo: confirmar a união dos streamings (basta um membro ter) em vez da interseção.
+- [ ] Levar US008 a US011 ao Drive.
+
 ### Design
 
 - [ ] Revisar a responsividade das demais telas no celular; a tela do título já foi revisada em 10/10/2026.
