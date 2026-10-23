@@ -86,7 +86,8 @@ const NEVER = [G.documentary, G.reality, G.kids];
 export const FEELING_RECIPES: Record<Feeling, FeelingRecipe> = {
     laugh: {
         requireGenres: [G.comedy],
-        excludeGenres: [...NEVER, G.horror],
+        // pesos negativos não bastaram (3ª calibração): One-Punch Man e Gavião Arqueiro seguiam
+        excludeGenres: [...NEVER, G.horror, G.action, G.actionAdventure],
         genres: { [G.comedy]: 3 },
         keywords: {
             "buddy comedy": 2,
@@ -160,9 +161,19 @@ export const FEELING_RECIPES: Record<Feeling, FeelingRecipe> = {
         avoidKeywords: { death: 1, grief: 1.5, murder: 1.5 },
     },
     "mind-bending": {
-        requireGenres: [G.mystery, G.sciFi, G.sciFiFantasy],
-        // romance tirava Outlander; ação pesa contra para não virar lista de blockbusters
-        excludeGenres: [...NEVER, G.family, G.animation, G.comedy, G.romance],
+        // sci-fi & fantasia de série sozinho é amplo demais (Outlander); exige mistério ou sci-fi
+        requireGenres: [G.mystery, G.sciFi],
+        // pesos negativos não bastaram (3ª calibração): Ultimato e Exterminador seguiam no topo
+        excludeGenres: [
+            ...NEVER,
+            G.family,
+            G.animation,
+            G.comedy,
+            G.romance,
+            G.action,
+            G.actionAdventure,
+            G.horror,
+        ],
         genres: { [G.mystery]: 1.5, [G.sciFi]: 1, [G.sciFiFantasy]: 1, [G.thriller]: 0.5 },
         keywords: {
             "time travel": 2,
