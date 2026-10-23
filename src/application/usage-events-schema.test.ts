@@ -27,6 +27,13 @@ describe("parseUsageEvent", () => {
         ["título que não é inteiro positivo", { ...ok, titleId: 0 }],
         ["campo faltando", { ...ok, titleId: undefined }],
         ["chave desconhecida", { ...ok, ip: "1.2.3.4" }],
+        // feelings-and-taste-ui B1: o sinal de gosto nunca vira evento
+        [
+            "sinais de gosto no evento (B1)",
+            { ...ok, taste: { liked: [1], willWatch: [], disliked: [] } },
+        ],
+        ["resposta do Curtiu? no evento (B1)", { ...ok, liked: true }],
+        ["sentimento no evento (B1)", { ...ok, feeling: "cry" }],
         ["código com tipo errado", { ...ok, browserId: 7 }],
         ["código longo demais", { ...ok, browserId: `${ok.browserId}${"0".repeat(5000)}` }],
         ["título não inteiro", { ...ok, titleId: 1.5 }],

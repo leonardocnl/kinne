@@ -7,6 +7,7 @@ import { MAX_ROUND } from "@/domain/rounds";
 import { isStreaming, STREAMING_SERVICES } from "@/domain/streaming";
 import { MAX_RATING, RUNTIME_LIMITS, TYPES, type Filters } from "@/domain/filters";
 import { idListSchema } from "./surprise";
+import { tasteSchema } from "./taste";
 
 const unique = (list: readonly string[]) => new Set(list).size === list.length;
 
@@ -39,6 +40,8 @@ export const filterRequestSchema = z.strictObject({
     filters: filtersSchema,
     watched: idListSchema,
     seen: idListSchema,
+    // os sinais de gosto do navegador (US009)
+    taste: tasteSchema,
     // a rodada de 10 em que se sorteia (recommendation-rounds A3)
     round: z.int().min(0).max(MAX_ROUND),
 });

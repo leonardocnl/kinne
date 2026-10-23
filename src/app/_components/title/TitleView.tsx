@@ -7,6 +7,7 @@ import {
     filteredRun,
     filtersOnArrival,
     shownTitles,
+    tasteSignals,
     watchedTitles,
 } from "@/infrastructure/browser-storage";
 import type { TitleScreen } from "../../_data/title";
@@ -94,6 +95,8 @@ export function TitleView({ title, daily }: TitleViewProps) {
     }
 
     function watch() {
+        // "Vou assistir" também é sinal de gosto (US009 RNE001)
+        tasteSignals.record(title.id, "will_watch");
         showToast("");
         setDone(true);
         track("will_watch_clicked", { titleId: title.id });

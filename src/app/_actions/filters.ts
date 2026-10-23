@@ -4,8 +4,10 @@ import "server-only";
 import { planFilteredRounds } from "@/application/filtered-draw";
 import { drawUnseen, type FilterCandidate } from "@/domain/filters";
 import { roundEnd, type RoundEnd } from "@/domain/rounds";
+import { hasPositiveSignal } from "@/domain/taste-signals";
 import { candidates } from "../_data/candidates";
 import { loadFeelingKit } from "../_data/feelings";
+import { neighborGraphOrNull } from "../_data/taste-graph";
 import { parseFilterRequest } from "../_data/filters";
 import { personTitleIds } from "../_data/people";
 import { admitPersonQuery } from "../_data/person-limit";
@@ -34,7 +36,7 @@ export type FilteredDraw = { slug: string | null; end: RoundEnd };
  * (US004 C3): a rodada seguinte ou que não sobrou nenhuma.
  */
 export async function drawFiltered(input: unknown): Promise<FilteredDraw> {
-    const { filters, watched, seen, round } = parseFilterRequest(input);
+    const { filters, watched, seen, taste, round } = parseFilterRequest(input);
     // person-search B4: com pessoa, o sorteio consulta o banco e entra no mesmo limite
     if (filters.personId !== null && !(await admitPersonQuery())) {
         throw new Error("Pedido recusado");
@@ -45,10 +47,13 @@ export async function drawFiltered(input: unknown): Promise<FilteredDraw> {
     const all = await candidates();
     // a ordem do sentimento só carrega quando há sentimento (US008 RNE002)
     const feeling = filters.feeling === null ? null : await loadFeelingKit(filters.feeling);
+    // o grafo só carrega quando há sinal positivo; personalizado, nunca vai para cache (B2)
+    const graph = hasPositiveSignal(taste) ? await neighborGraphOrNull() : null;
     const { matching, rounds } = planFilteredRounds(
-        { candidates: all, person, feeling },
+        { candidates: all, person, feeling, graph },
         filters,
         watched,
+        taste,
     );
     const pick = drawUnseen(rounds[round] ?? [], seen);
     return { slug: pick?.slug ?? null, end: roundEnd(rounds, round, matching.length) };

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_FILTERS, wireFilters } from "@/domain/filters";
 import { feelingKit, FEELINGS, type FeelingData } from "@/domain/feelings";
+import { EMPTY_TASTE } from "@/domain/taste-signals";
 import { KINNE_GENRES, type KinneGenre } from "@/domain/genre";
 import { planFilteredRounds } from "./filtered-draw";
 import type { Candidate } from "./titles";
@@ -23,7 +24,12 @@ const title = (id: number, extra: Partial<Candidate> = {}): Candidate => ({
 
 const criteria = (extra: object = {}) => ({ ...wireFilters(DEFAULT_FILTERS), ...extra });
 const plan = (candidates: Candidate[], filters: object = {}, feeling = null as never) =>
-    planFilteredRounds({ candidates, person: null, feeling }, criteria(filters), []);
+    planFilteredRounds(
+        { candidates, person: null, feeling, graph: null },
+        criteria(filters),
+        [],
+        EMPTY_TASTE,
+    );
 
 describe("planFilteredRounds com sentimento (US008)", () => {
     // 40 títulos, 8 de cada gênero; só os pares aceitam "Pra chorar"

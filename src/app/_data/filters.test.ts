@@ -5,7 +5,8 @@ import { parseFilterRequest } from "./filters";
 
 // os filtros como saem do navegador: da pessoa, só o id (person-search A7)
 const WIRE = wireFilters(DEFAULT_FILTERS);
-const ok = { filters: WIRE, watched: [1, 2], seen: [3], round: 0 };
+const NO_TASTE = { liked: [], willWatch: [], disliked: [] };
+const ok = { filters: WIRE, watched: [1, 2], seen: [3], taste: NO_TASTE, round: 0 };
 
 describe("parseFilterRequest", () => {
     it("aceita o pedido no formato esperado", () => {
@@ -48,6 +49,12 @@ describe("parseFilterRequest", () => {
         ["sentimento como chave de objeto (A4)", { ...ok, filters: { ...WIRE, feeling: {} } }],
         ["sem o sentimento", { ...ok, filters: { ...WIRE, feeling: undefined } }],
         ["peso de sentimento vindo do navegador (A6)", { ...ok, filters: { ...WIRE, weight: 2 } }],
+        ["sem os sinais de gosto", { ...ok, taste: undefined }],
+        ["sinais de gosto com chave desconhecida", { ...ok, taste: { ...NO_TASTE, x: [1] } }],
+        [
+            "sinais de gosto com lista enorme",
+            { ...ok, taste: { ...NO_TASTE, liked: Array(500).fill(1) } },
+        ],
         ["pessoa com id texto", { ...ok, filters: { ...WIRE, personId: "1056" } }],
         ["pessoa com id grande demais", { ...ok, filters: { ...WIRE, personId: 2 ** 31 } }],
         [

@@ -26,6 +26,7 @@ const request = (extra: object = {}) => ({
     filters: WIRE,
     watched: [],
     seen: [],
+    taste: { liked: [], willWatch: [], disliked: [] },
     round: 0,
     ...extra,
 });

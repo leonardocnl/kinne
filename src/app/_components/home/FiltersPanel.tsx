@@ -21,6 +21,7 @@ import {
     filteredRun,
     saveFilters,
     savedFilters,
+    tasteSignals,
     watchedTitles,
 } from "@/infrastructure/browser-storage";
 import { drawFiltered, filterCandidates } from "../../_actions/filters";
@@ -206,6 +207,7 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
                     filters: wireFilters(filters),
                     watched: request.watched,
                     seen: [],
+                    taste: tasteSignals.read(),
                     round: 0,
                 });
                 if (slug) {

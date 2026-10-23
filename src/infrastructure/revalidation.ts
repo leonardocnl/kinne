@@ -40,9 +40,28 @@ export async function requestRevalidation(
     secret: string,
     changedSlugs: readonly string[],
 ): Promise<{ sent: number; failed: number }> {
+    return postTagBatches(origin, secret, tagsFor(changedSlugs));
+}
+
+/**
+ * Chamado pelo `graph:build` (feelings-and-taste-ui C1): o grafo novo invalida o cache do
+ * catálogo, onde o servidor guarda o grafo, pelo mesmo endpoint da carga.
+ */
+export async function requestGraphRevalidation(
+    origin: string,
+    secret: string,
+): Promise<{ sent: number; failed: number }> {
+    return postTagBatches(origin, secret, [[LISTS_TAG]]);
+}
+
+async function postTagBatches(
+    origin: string,
+    secret: string,
+    batches: readonly (readonly string[])[],
+): Promise<{ sent: number; failed: number }> {
     let sent = 0;
     let failed = 0;
-    for (const tags of tagsFor(changedSlugs)) {
+    for (const tags of batches) {
         const res = await fetch(origin + REVALIDATE_PATH, {
             method: "POST",
             headers: { "content-type": "application/json", [REVALIDATE_SECRET_HEADER]: secret },

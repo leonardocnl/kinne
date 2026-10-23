@@ -45,3 +45,5 @@ jobs:
         env:
           SYNC_TARGET: production
           SYNC_DATABASE_URL: ${{ secrets.SYNC_DATABASE_URL }}
+          REVALIDATE_ORIGIN: ${{ secrets.REVALIDATE_ORIGIN }}
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
