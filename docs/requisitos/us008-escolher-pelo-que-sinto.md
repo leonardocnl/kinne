@@ -68,4 +68,4 @@ Eu, como visitante, quero escolher o que quero sentir, para que eu receba um tí
 - **RNE003 – Gênero junto.** Sentimento e gênero se somam ("e"). As cotas por gênero sem gênero marcado (US002 RNE005) não valem quando há sentimento: o sentimento já escolhe o tipo de título.
 - **RNE004 – Só no servidor.** O navegador recebe, por título, só quais sentimentos o aceitam (um número com nove bits, um por sentimento), para o contador. Receitas, pesos, temas e afinidade ficam no servidor.
 - **RNE005 – Fora do Me surpreenda e das indicações do dia.** Sentimento é só filtro do "Escolher agora".
-- **RNE006 – Exclusivo do perfil, depois.** Quando as contas existirem, o sentimento passa a ser exclusivo de quem tem perfil (decisão de 23/10/2026). Até lá, vale para todos.
+- **RNE006 – Exclusivo de quem tem conta.** Com as contas (US012 a US015), o sentimento passa a ser exclusivo de quem tem conta, com convite para o visitante (US015 C3, RNE005; decisão de 23/10/2026).
