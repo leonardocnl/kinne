@@ -1,4 +1,5 @@
-import { meetsQualityFloor, MIN_RATING, type TitleType } from "./catalog";
+import { meetsQualityFloor, meetsTasteFloor, MIN_RATING, type TitleType } from "./catalog";
+import { isFeeling, maskAllows, type Feeling } from "./feelings";
 import { isKinneGenre, KINNE_GENRES, type KinneGenre } from "./genre";
 import { parsePersonPick, type PersonPick } from "./person-search";
 import { isStreaming, STREAMING_SERVICES, streamingTmdbIds, type Streaming } from "./streaming";
@@ -20,6 +21,8 @@ export type Filters = {
     person: PersonPick | null;
     // chip 18+: só com ele os títulos de classificação 18 entram (fase 4)
     adult: boolean;
+    // "O que você quer sentir hoje?" (US008); null é nenhum
+    feeling: Feeling | null;
 };
 
 /**
@@ -51,11 +54,14 @@ export const DEFAULT_FILTERS: Filters = {
     maxRuntime: null,
     person: null,
     adult: false,
+    feeling: null,
 };
 
 // Sem o slug: a lista vai inteira ao navegador para o contador, e o slug dobraria o tamanho.
 export type FilterCandidate = Omit<SurpriseCandidate, "slug"> & {
     type: TitleType;
+    // quais sentimentos aceitam o título, um bit por sentimento (US008 RNE004)
+    feelings: number;
     runtimeMinutes: number | null;
     kinneGenres: readonly KinneGenre[];
 };
@@ -67,16 +73,32 @@ export function withType(filters: Filters, type: TypeChoice): Filters {
     return { ...filters, type, genres };
 }
 
+function passesRating(
+    c: Pick<FilterCandidate, "id" | "rating" | "votes">,
+    minRating: number,
+    reached: ReadonlySet<number> | null,
+): boolean {
+    // o gosto afrouxa o piso, não o slider: quem subiu a nota quer aquela nota
+    if (reached?.has(c.id) && minRating <= MIN_RATING) return meetsTasteFloor(c.votes);
+    return c.rating >= minRating && meetsQualityFloor(c.rating, c.votes);
+}
+
 /**
  * Os títulos que combinam com os filtros (C3), sem os marcados (RNG004). `personTitles` são os
  * títulos da pessoa escolhida; null quando não há pessoa no filtro. Títulos 18 só com o chip 18+
  * (recommendation-rounds). A ordem e as rodadas ficam com buildRounds (rounds.ts).
+ *
+ * `reached` são os títulos que o gosto da pessoa alcança (US009 RNE003): eles dispensam a nota
+ * mínima de 6,4 e só precisam de 100 votos. Se a pessoa subiu o slider, o que ela pediu vale para
+ * todos. 18+, streamings, sentimento e marcados valem sempre, e `reached` nunca acrescenta um
+ * título: só afrouxa a nota de quem já passou nas demais regras (feelings-and-taste-ui A1, A2).
  */
 export function matchTitles<T extends FilterCandidate>(
     candidates: readonly T[],
     filters: Omit<Filters, "person">,
     watched: readonly number[],
     personTitles: ReadonlySet<number> | null = null,
+    reached: ReadonlySet<number> | null = null,
 ): T[] {
     const wanted = streamingTmdbIds(filters.streamings);
     const seen = new Set(watched);
@@ -84,10 +106,10 @@ export function matchTitles<T extends FilterCandidate>(
     return candidates.filter(
         (c) =>
             (filters.adult || !c.adult) &&
-            c.rating >= filters.minRating &&
-            meetsQualityFloor(c.rating, c.votes) &&
+            passesRating(c, filters.minRating, reached) &&
             c.streamingTmdbIds.some((id) => wanted.includes(id)) &&
             (filters.type === "both" || c.type === filters.type) &&
+            (filters.feeling === null || maskAllows(c.feelings, filters.feeling)) &&
             (filters.genres.length === 0 ||
                 // com Os dois, Romance só traz filmes (C8)
                 filters.genres.some(
@@ -127,10 +149,8 @@ const listOf = <T extends string>(value: unknown, max: number, is: (v: string) =
  */
 export function parseFilters(value: unknown): Filters | null {
     if (typeof value !== "object" || value === null) return null;
-    const { streamings, type, genres, minRating, maxRuntime, person, adult } = value as Record<
-        string,
-        unknown
-    >;
+    const { streamings, type, genres, minRating, maxRuntime, person, adult, feeling } =
+        value as Record<string, unknown>;
     const ok =
         listOf(streamings, STREAMING_SERVICES.length, isStreaming) &&
         TYPES.includes(type as TypeChoice) &&
@@ -151,5 +171,7 @@ export function parseFilters(value: unknown): Filters | null {
         person: parsePersonPick(person),
         // só true liga o 18+; ausente ou qualquer outra coisa é desligado (recommendation-rounds A5)
         adult: adult === true,
+        // sentimento ausente (aba antiga) ou fora da lista vale como nenhum (A4)
+        feeling: typeof feeling === "string" && isFeeling(feeling) ? feeling : null,
     };
 }

@@ -18,6 +18,7 @@ const title = (id: number, adult = false) => ({
     kinneGenres: ["drama" as const],
     streamingTmdbIds: [8],
     adult,
+    feelings: 0b111111111,
 });
 
 const WIRE = wireFilters(DEFAULT_FILTERS);
@@ -25,6 +26,7 @@ const request = (extra: object = {}) => ({
     filters: WIRE,
     watched: [],
     seen: [],
+    taste: { liked: [], willWatch: [], disliked: [] },
     round: 0,
     ...extra,
 });
@@ -127,6 +129,7 @@ describe("filterCandidates (recommendation-rounds C1)", () => {
         expect(Object.keys(c).sort()).toEqual(
             [
                 "adult",
+                "feelings",
                 "id",
                 "kinneGenres",
                 "rating",

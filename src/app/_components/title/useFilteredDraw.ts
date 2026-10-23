@@ -3,7 +3,7 @@ import { useState, useTransition } from "react";
 import { wireFilters } from "@/domain/filters";
 import type { RoundEnd } from "@/domain/rounds";
 import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
-import { filteredRun, watchedTitles } from "@/infrastructure/browser-storage";
+import { filteredRun, tasteSignals, watchedTitles } from "@/infrastructure/browser-storage";
 import { drawFiltered } from "../../_actions/filters";
 import { loadError } from "../StateScreen";
 import { showToast } from "../toast";
@@ -31,6 +31,8 @@ export function useFilteredDraw(currentSlug: string) {
                     filters: wireFilters(run.filters),
                     watched: run.watched,
                     seen: seen.slice(-SURPRISE_MAX_EXCLUDED),
+                    // o gosto de agora, não o de quando a sequência começou (US009 C2)
+                    taste: tasteSignals.read(),
                     round: run.round,
                 });
                 const slug = answer.slug;

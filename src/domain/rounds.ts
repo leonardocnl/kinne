@@ -50,6 +50,22 @@ export function genreQuotas(type: TypeChoice): [KinneGenre, number][] {
 
 type Title = Ranked & { type: "movie" | "series"; kinneGenres: readonly KinneGenre[] };
 
+/** A lista em rodadas de 10, só a última pode ser menor. */
+export function sliceRounds<T>(ranked: readonly T[]): T[][] {
+    const rounds: T[][] = [];
+    for (let i = 0; i < ranked.length; i += ROUND_SIZE) {
+        rounds.push(ranked.slice(i, i + ROUND_SIZE));
+    }
+    return rounds;
+}
+
+/**
+ * Uma ordem que não é a da nota ponderada (a do sentimento, a do gosto): `ranked` tem os mesmos
+ * títulos de `matching`, já na ordem. Com `plain`, as rodadas são fatias da lista, sem as cotas
+ * por gênero (US008 RNE003: o sentimento já escolhe o tipo de título).
+ */
+export type CustomOrder<T> = { ranked: readonly T[]; plain: boolean };
+
 /**
  * As rodadas de 10, na ordem, para os títulos que combinam com os filtros. Com gênero escolhido,
  * os 10 melhores, os 10 seguintes e assim por diante. Sem gênero, cada rodada pega os melhores de
@@ -60,15 +76,11 @@ export function buildRounds<T extends Title>(
     matching: readonly T[],
     filters: { genres: readonly KinneGenre[]; type: TypeChoice },
     mean: number,
+    order?: CustomOrder<T>,
 ): T[][] {
-    const ranked = rankTitles(matching, mean);
+    const ranked = order ? order.ranked : rankTitles(matching, mean);
+    if (filters.genres.length > 0 || order?.plain) return sliceRounds(ranked);
     const rounds: T[][] = [];
-    if (filters.genres.length > 0) {
-        for (let i = 0; i < ranked.length; i += ROUND_SIZE) {
-            rounds.push(ranked.slice(i, i + ROUND_SIZE));
-        }
-        return rounds;
-    }
 
     const quotas = genreQuotas(filters.type);
     // Romance só traz filmes (RNG007)

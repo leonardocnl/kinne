@@ -7,6 +7,7 @@ import {
     filteredRun,
     filtersOnArrival,
     shownTitles,
+    tasteSignals,
     watchedTitles,
 } from "@/infrastructure/browser-storage";
 import type { TitleScreen } from "../../_data/title";
@@ -87,13 +88,15 @@ export function TitleView({ title, daily }: TitleViewProps) {
 
     function markSeen() {
         watchedTitles.add(title.id);
-        showToast(`Anotado: você já viu ${title.title}.`);
+        showToast(`Anotado: você já viu ${title.title}.`, { asking: title.id });
         // fora das recomendações não há próxima opção: a tela fica onde está
         if (title.recommendable) next("seen");
         track("already_watched_clicked", { titleId: title.id });
     }
 
     function watch() {
+        // "Vou assistir" também é sinal de gosto (US009 RNE001)
+        tasteSignals.record(title.id, "will_watch");
         showToast("");
         setDone(true);
         track("will_watch_clicked", { titleId: title.id });

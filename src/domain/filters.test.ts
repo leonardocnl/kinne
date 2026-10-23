@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { FEELINGS, type Feeling } from "./feelings";
 import {
     DEFAULT_FILTERS,
     drawUnseen,
@@ -19,6 +20,8 @@ const title = (id: number, extra: Partial<FilterCandidate> = {}): FilterCandidat
     kinneGenres: ["drama"],
     streamingTmdbIds: [8],
     adult: false,
+    // todos os sentimentos aceitam, salvo quando o teste diz o contrário
+    feelings: 0b111111111,
     ...extra,
 });
 
@@ -38,6 +41,7 @@ describe("matchTitles", () => {
             maxRuntime: null,
             person: null,
             adult: false,
+            feeling: null,
         });
     });
 
@@ -156,6 +160,7 @@ describe("parseFilters", () => {
         maxRuntime: 105,
         person: { id: 1056, name: "Tom Hanks", role: "cast" },
         adult: true,
+        feeling: "cry",
     };
 
     it("aceita filtros no formato e nos limites de cada campo", () => {
@@ -199,5 +204,82 @@ describe("parseFilters", () => {
         ["campo faltando", { ...ok, maxRuntime: undefined }],
     ])("recusa %s", (_, value) => {
         expect(parseFilters(value)).toBeNull();
+    });
+});
+
+describe("sentimento nos filtros (US008)", () => {
+    const bit = (feeling: Feeling) => 1 << FEELINGS.indexOf(feeling);
+    const pool = [
+        title(1, { feelings: bit("laugh") }),
+        title(2, { feelings: bit("cry") }),
+        title(3, { feelings: bit("laugh") | bit("cry") }),
+        title(4, { feelings: 0 }),
+    ];
+
+    it("C3: o contador conta só os títulos que o sentimento aceita", () => {
+        expect(ids(pool, { feeling: "laugh" })).toEqual([1, 3]);
+        expect(ids(pool, { feeling: "cry" })).toEqual([2, 3]);
+        expect(ids(pool, { feeling: null })).toEqual([1, 2, 3, 4]);
+    });
+
+    it("C4: sentimento e gênero se somam", () => {
+        const withGenres = [
+            title(1, { feelings: bit("laugh"), kinneGenres: ["comedy"] }),
+            title(2, { feelings: bit("laugh"), kinneGenres: ["drama"] }),
+            title(3, { feelings: bit("cry"), kinneGenres: ["comedy"] }),
+        ];
+        expect(ids(withGenres, { feeling: "laugh", genres: ["comedy"] })).toEqual([1]);
+    });
+
+    it("C5: sem título que combine, a contagem é zero", () => {
+        expect(count(pool, { feeling: "scare" })).toBe(0);
+    });
+
+    it("C6/A4: o sentimento guardado na aba só vale se for um dos nove", () => {
+        const stored = wireFilters(DEFAULT_FILTERS);
+        expect(parseFilters({ ...stored, feeling: "cry" })?.feeling).toBe("cry");
+        expect(parseFilters({ ...stored, feeling: "tristeza" })?.feeling).toBeNull();
+        expect(parseFilters({ ...stored, feeling: 3 })?.feeling).toBeNull();
+        // aba antiga, sem o campo
+        const { feeling, ...old } = stored;
+        void feeling;
+        expect(parseFilters(old)?.feeling).toBeNull();
+    });
+});
+
+describe("piso com gosto (US009 RNE003, feelings-and-taste-ui A2)", () => {
+    const low = title(1, { rating: 5.5, votes: 150 });
+    const fewVotes = title(2, { rating: 5.5, votes: 80 });
+    const normal = title(3);
+    const pool = [low, fewVotes, normal];
+    const run = (reached: number[], filters: Partial<Filters> = {}) =>
+        matchTitles(pool, { ...DEFAULT_FILTERS, ...filters }, [], null, new Set(reached)).map(
+            (t) => t.id,
+        );
+
+    it("sem gosto, o piso de sempre", () => {
+        expect(run([])).toEqual([3]);
+    });
+
+    it("o título que o gosto alcança dispensa a nota, mas precisa de 100 votos", () => {
+        expect(run([1, 2])).toEqual([1, 3]);
+    });
+
+    it("quem subiu o slider mantém o que pediu, para todos", () => {
+        expect(run([1], { minRating: 7.5 })).toEqual([]);
+    });
+
+    it("18+, streaming e marcados continuam valendo", () => {
+        const adult = title(4, { rating: 5.5, votes: 150, adult: true });
+        const other = title(5, { rating: 5.5, votes: 150, streamingTmdbIds: [999] });
+        const both = [adult, other, low];
+        const out = matchTitles(
+            both,
+            { ...DEFAULT_FILTERS, streamings: ["netflix"] },
+            [1],
+            null,
+            new Set([1, 4, 5]),
+        );
+        expect(out).toEqual([]);
     });
 });

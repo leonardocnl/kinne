@@ -13,6 +13,7 @@ import {
     type Filters,
     type TypeChoice,
 } from "@/domain/filters";
+import { FEELING_LABELS, FEELINGS } from "@/domain/feelings";
 import { GENRE_LABELS, KINNE_GENRES } from "@/domain/genre";
 import { STREAMING_SERVICES } from "@/domain/streaming";
 import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
@@ -20,6 +21,7 @@ import {
     filteredRun,
     saveFilters,
     savedFilters,
+    tasteSignals,
     watchedTitles,
 } from "@/infrastructure/browser-storage";
 import { drawFiltered, filterCandidates } from "../../_actions/filters";
@@ -205,6 +207,7 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
                     filters: wireFilters(filters),
                     watched: request.watched,
                     seen: [],
+                    taste: tasteSignals.read(),
                     round: 0,
                 });
                 if (slug) {
@@ -223,7 +226,11 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
     const hint =
         failed || drawFailed
             ? `${loadError.heading}. Tente de novo.`
-            : count === 0 && "Tente baixar a nota ou marcar mais um streaming.";
+            : count === 0 &&
+              (filters.feeling === null
+                  ? "Tente baixar a nota ou marcar mais um streaming."
+                  : // US008 C5
+                    "Tente outro sentimento ou marque mais um streaming.");
 
     return (
         <dialog
@@ -263,6 +270,33 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
                         onScroll={measureScroll}
                         className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto px-5 pb-1 max-desktop:px-4"
                     >
+                        <div className={section}>
+                            <span id={`${titleId}-feeling`} className="text-data text-soft">
+                                O que você quer sentir hoje?
+                            </span>
+                            <div
+                                role="group"
+                                aria-labelledby={`${titleId}-feeling`}
+                                className="flex flex-wrap gap-1.5"
+                            >
+                                {FEELINGS.map((f) => {
+                                    const on = filters.feeling === f;
+                                    return (
+                                        <Chip
+                                            key={f}
+                                            pressed={on}
+                                            // um só por vez; tocar no marcado volta a "nenhum" (C2)
+                                            onClick={() =>
+                                                update({ ...filters, feeling: on ? null : f })
+                                            }
+                                        >
+                                            {FEELING_LABELS[f]}
+                                        </Chip>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
                         <div className={section}>
                             <span id={`${titleId}-streamings`} className="text-data text-soft">
                                 Streamings

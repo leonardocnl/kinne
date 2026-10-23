@@ -58,3 +58,50 @@ describe("surpresa sem títulos 18 (recommendation-rounds A2)", () => {
         expect(drawSurprise([title(1, { adult: true }), title(2)], none, () => 0)?.id).toBe(2);
     });
 });
+
+describe("drawSurprise com gosto (US009 C3)", () => {
+    // 60 títulos de nota 8; o gosto alcança 40 deles, em ordem decrescente de id
+    const pool = Array.from({ length: 60 }, (_, i) => title(i + 1));
+    const scores = new Map(Array.from({ length: 40 }, (_, i) => [i + 1, 40 - i] as const));
+    const drawnWithTaste = (candidates: SurpriseCandidate[], request = none) =>
+        new Set(
+            Array.from(
+                { length: 400 },
+                (_, i) => drawSurprise(candidates, request, () => i / 400, scores)?.id,
+            ),
+        );
+
+    it("sorteia só entre os 30 primeiros na ordem do gosto", () => {
+        const ids = drawnWithTaste(pool);
+        expect(ids.size).toBe(30);
+        expect([...ids].every((id) => id !== undefined && id <= 30)).toBe(true);
+    });
+
+    it("sem pontuação positiva, é o sorteio de sempre", () => {
+        const noReach = new Map([[1, -1]]);
+        const ids = new Set(
+            Array.from(
+                { length: 400 },
+                (_, i) => drawSurprise(pool, none, () => i / 400, noReach)?.id,
+            ),
+        );
+        expect(ids.size).toBe(60);
+    });
+
+    it("o piso não muda: o alcançado com nota abaixo de 7,5 não sai", () => {
+        const low = [
+            title(1, { rating: 7.4 }),
+            ...Array.from({ length: 5 }, (_, i) => title(i + 2)),
+        ];
+        const ids = drawnWithTaste(low);
+        expect(ids.has(1)).toBe(false);
+    });
+
+    it("marcados e 18+ continuam de fora, e os já mostrados só voltam se não sobrar nada", () => {
+        const mixed = [title(1), title(2, { adult: true }), title(3), title(4)];
+        const request = { ...none, watched: [1], shown: [3] };
+        expect(drawnWithTaste(mixed, request)).toEqual(new Set([4]));
+        const onlyShown = { ...none, shown: [1, 3, 4] };
+        expect(drawnWithTaste(mixed, onlyShown).has(2)).toBe(false);
+    });
+});

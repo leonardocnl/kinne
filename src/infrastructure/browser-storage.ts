@@ -2,6 +2,7 @@ import { DEFAULT_FILTERS, parseFilters, type Filters } from "@/domain/filters";
 import { MAX_ROUND } from "@/domain/rounds";
 import { isStoredOrigin, type Origin, type StoredOrigin } from "@/domain/origin";
 import { isStreaming, type Streaming } from "@/domain/streaming";
+import { normalizeTaste, recordSignal, type RecordedSignal } from "@/domain/taste-signals";
 import { isBrowserId } from "@/domain/usage-events";
 
 // Memória do navegador (RNG005). Navegação privada, cota cheia ou armazenamento bloqueado fazem
@@ -48,6 +49,17 @@ function idList(area: Area, key: string) {
 
 /** Títulos marcados como "Já vi": ficam entre visitas (RNG004). */
 export const watchedTitles = idList("localStorage", "kinne:watched");
+
+/**
+ * Os sinais de gosto (US009 RNE001): curti, não curti e vou assistir, numa chave só. Só saem do
+ * navegador dentro de um pedido de sorteio (US010 RNE002). Lidos como não confiáveis.
+ */
+export const tasteSignals = {
+    read: () => normalizeTaste(read("localStorage", "kinne:taste")),
+    record(id: number, signal: RecordedSignal) {
+        write("localStorage", "kinne:taste", recordSignal(tasteSignals.read(), id, signal));
+    },
+};
 
 /** Títulos mostrados nesta aba, para a surpresa não repetir (US003 C3). */
 export const shownTitles = idList("sessionStorage", "kinne:shown");

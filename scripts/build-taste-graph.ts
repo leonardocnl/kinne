@@ -5,6 +5,7 @@ import { appendFileSync } from "node:fs";
 
 import { buildNeighborEdges } from "@/domain/taste-graph";
 import { connectSyncDb, DrizzleCatalogRepository } from "@/infrastructure/db/catalog-repository";
+import { requestGraphRevalidation } from "@/infrastructure/revalidation";
 import { DrizzleTasteGraphRepository } from "@/infrastructure/db/taste-graph-repository";
 import { publicErrorMessage } from "@/infrastructure/tmdb/client";
 
@@ -37,6 +38,16 @@ async function main() {
         const t2 = performance.now();
         const written = await repository.replaceNeighbors(edges);
         const t3 = performance.now();
+        // o servidor guarda o grafo em cache: depois de gravado, pede que ele leia o novo.
+        // Falha aqui não desfaz a gravação, mas falha o job (o grafo de ontem ficaria no ar).
+        let revalidation = "não configurada";
+        const origin = process.env.REVALIDATE_ORIGIN;
+        const secret = process.env.REVALIDATE_SECRET;
+        if (origin && secret) {
+            const r = await requestGraphRevalidation(origin, secret);
+            revalidation = `${r.sent} pedidos ok, ${r.failed} falharam`;
+            if (r.failed) process.exitCode = 1;
+        }
         const seconds = (ms: number) => `${(ms / 1000).toFixed(1)} s`;
         summary([
             "## Grafo de gosto",
@@ -45,6 +56,7 @@ async function main() {
             `- Arestas: ${edges.length} (${written} linhas, nos dois sentidos)`,
             `- Tempo: carga ${seconds(t1 - t0)}, cálculo ${seconds(t2 - t1)}, ` +
                 `gravação ${seconds(t3 - t2)}`,
+            `- Invalidação do cache: ${revalidation}`,
         ]);
     } finally {
         await close();
