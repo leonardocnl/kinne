@@ -69,10 +69,16 @@ select jsonb_build_object(
     'room', jsonb_build_object(
         'id', r.id, 'phase', r.phase, 'round', r.round, 'typeChoice', r.type_choice,
         'maxRuntime', r.max_runtime_minutes, 'expiresAt', r.expires_at,
-        'resultAt', r.result_at, 'creatorMemberId', r.creator_member_id),
+        'resultAt', r.result_at, 'creatorMemberId', r.creator_member_id,
+        -- o código só aparece no saguão, para quem já está na sala mostrá-lo a outras pessoas
+        'code', case when r.phase = 'lobby' then r.code end),
     'me', jsonb_build_object(
         'id', me.id, 'position', me.position, 'ready', me.ready,
         'streamings', me.streamings, 'genres', me.genres),
+    'marked', (
+        select coalesce(jsonb_agg(distinct s), '[]'::jsonb)
+        from group_room_members m, unnest(m.streamings) as s
+        where m.room_id = r.id and m.left_at is null),
     'members', (
         select coalesce(jsonb_agg(jsonb_build_object(
             'id', m.id, 'position', m.position, 'ready', m.ready,
