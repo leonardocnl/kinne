@@ -32,6 +32,13 @@ import {
     tmdbRecommendations,
 } from "./schema";
 
+// O drizzle não qualifica ${t.id} numa select de uma tabela só, e dentro do exists "id" viraria
+// o da tabela de eventos: o id do título vai escrito à mão.
+export const titleReferenced = sql<boolean>`exists (select 1 from ${anonymousUsageEvents}
+    where ${anonymousUsageEvents.catalogTitleId} = "catalog_titles"."id")
+    or exists (select 1 from ${dailyPicks}
+    where ${dailyPicks.catalogTitleId} = "catalog_titles"."id")`;
+
 const COUNTRY = "BR";
 const CHUNK = 2000;
 // Qualquer número fixo serve; só a carga usa este lock.
@@ -208,12 +215,7 @@ export class DrizzleCatalogRepository implements CatalogRepository {
                 isActive: t.isActive,
                 isBlocked: t.isBlocked,
                 isRecommendable: t.isRecommendable,
-                // O drizzle não qualifica ${t.id} numa select de uma tabela só, e dentro do exists
-                // "id" viraria o da tabela de eventos: o id do título vai escrito à mão.
-                referenced: sql<boolean>`exists (select 1 from ${anonymousUsageEvents}
-                    where ${anonymousUsageEvents.catalogTitleId} = "catalog_titles"."id")
-                    or exists (select 1 from ${dailyPicks}
-                    where ${dailyPicks.catalogTitleId} = "catalog_titles"."id")`,
+                referenced: titleReferenced,
                 hasSynopsis: sql<boolean>`${t.synopsis} is not null`,
                 hasBackdrop: sql<boolean>`${t.backdropImagePath} is not null`,
                 voteCount: t.tmdbVoteCount,
