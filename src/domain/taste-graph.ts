@@ -87,6 +87,10 @@ export const CONTENT_WEIGHTS = {
 
 export const CONTENT_SHARE = 0.77;
 export const RECOMMENDATION_SHARE = 0.23;
+// A recomendação do TMDB só vale inteira quando a obra a confirma (§4.2, decisão de 2026-10-23):
+// abaixo deste tanto de obra em comum, vale em proporção. Na 3ª calibração, o TMDB ligava
+// Chernobyl a Off Campus com obra 0,15: popularidade, não semelhança.
+export const RECOMMENDATION_CONFIRMATION = 0.3;
 export const RECOMMENDATION_POSITIONS = 20;
 
 /** Cosseno entre dois conjuntos, cada elemento valendo o quadrado da sua raridade. */
@@ -150,9 +154,11 @@ export type Proximity = { proximity: number; content: number; recommendation: nu
 export function proximity(a: TitleProfile, b: TitleProfile, rarity: FeatureRarity): Proximity {
     const content = contentScore(a, b, rarity);
     const recommendation = recommendationScore(a, b);
+    const confirmed = recommendation * Math.min(1, content / RECOMMENDATION_CONFIRMATION);
     return {
-        proximity: CONTENT_SHARE * content + RECOMMENDATION_SHARE * recommendation,
+        proximity: CONTENT_SHARE * content + RECOMMENDATION_SHARE * confirmed,
         content,
+        // o valor do TMDB como veio, antes da confirmação, para a calibração mostrar os dois
         recommendation,
     };
 }

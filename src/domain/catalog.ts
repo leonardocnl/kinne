@@ -8,6 +8,16 @@ export function meetsQualityFloor(rating: number, votes: number): boolean {
     return rating >= MIN_RATING && votes >= MIN_VOTES;
 }
 
+// Quando o Kinne já conhece o gosto da pessoa (tem sinais), a nota mínima deixa de valer nos
+// títulos que o gosto alcança: perto do que ela curtiu, a nota geral importa menos (decisão de
+// 2026-10-23, docs/requisitos/04). Fica um mínimo de votos, porque com poucos votos a nota e os
+// temas do TMDB não são confiáveis. O Me surpreenda e o visitante sem sinais seguem com o piso.
+export const TASTE_MIN_VOTES = 100;
+
+export function meetsTasteFloor(votes: number): boolean {
+    return votes >= TASTE_MIN_VOTES;
+}
+
 // Texto vindo do TMDB (A4/A5): NFC, sem caracteres de controle nem invisíveis de formatação
 // (zero-width, marcas de direção, BOM), espaços colapsados. Vazio ou acima do limite vira null:
 // o campo é recusado, não o título.

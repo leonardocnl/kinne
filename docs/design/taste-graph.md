@@ -63,6 +63,7 @@ Ficam de fora da proximidade, por não dizerem nada sobre gosto: ano, duração,
 - B na posição *p* (1 a 20) das recomendações de A vale `1 − (p − 1) / 20`.
 - Se o TMDB recomenda nos dois sentidos, vale o maior dos dois mais metade do menor, limitado a 1.
 - Recomendações para títulos fora do catálogo são descartadas.
+- **A recomendação só vale inteira quando a obra a confirma** (decisão de 2026-10-23): com dados da obra a partir de **0,30**, vale 100%; abaixo disso, em proporção (0,15 de obra → metade). Na 3ª calibração, o TMDB ligava Chernobyl a Off Campus com obra 0,15, por popularidade.
 
 ### 4.3 Portão mínimo
 
@@ -113,7 +114,9 @@ A pontuação da seção 6, uma vez por membro, convertida em percentil. Para ca
 
 ## 8. Composição com o que já existe
 
-**Filtros duros** (streaming, nota mínima, 18+, bloqueados, já vistos) → **elegibilidade do sentimento**, se houver → **ordenação** pelo gosto. O gosto só reordena o que os filtros deixaram; nunca acrescenta (modelo de ameaças, item A1).
+**Piso de qualidade** (decisão de 2026-10-23): quando a pessoa tem sinais de gosto, os títulos que o gosto alcança não precisam da nota mínima de 6,4, só de **100 votos** (com menos, a nota e os temas do TMDB não são confiáveis). O Me surpreenda e o visitante sem sinais seguem com o piso de sempre. Quando as contas existirem, a mesma regra vale para o perfil.
+
+**Filtros duros** (streaming, piso conforme acima, 18+, bloqueados, já vistos) → **elegibilidade do sentimento**, se houver → **ordenação** pelo gosto. O gosto só reordena o que os filtros deixaram; nunca acrescenta (modelo de ameaças, item A1).
 
 ## 9. Onde cada coisa vive
 

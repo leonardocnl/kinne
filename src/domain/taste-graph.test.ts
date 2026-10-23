@@ -127,6 +127,18 @@ describe("proximity (design §4)", () => {
     });
 });
 
+describe("TMDB recommendation confirmed by content (§4.2)", () => {
+    it("counts in full from 0.30 of content and in proportion below", () => {
+        const rarity = featureRarity(CATALOG);
+        // same genres, so content is the genre share only (0.15); TMDB says 1.0
+        const a = title(70, { genreIds: [18], recommendedIds: [71] });
+        const b = title(71, { genreIds: [18] });
+        const p = proximity(a, b, rarity);
+        expect(p.content).toBeCloseTo(0.15, 10);
+        expect(p.proximity).toBeCloseTo(0.77 * 0.15 + 0.23 * 0.5, 10);
+    });
+});
+
 describe("buildNeighborEdges", () => {
     it("keeps each edge once, undirected, never to itself", () => {
         const edges = buildNeighborEdges(CATALOG);

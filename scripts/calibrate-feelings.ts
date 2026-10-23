@@ -2,7 +2,7 @@
 // monta o grafo em memória, sem gravar nada.
 // Uso: npm run feelings:calibrate            (resumo: notas do gabarito)
 //      npm run feelings:calibrate -- --list  (também os 12 primeiros de cada lista)
-import { meetsQualityFloor } from "@/domain/catalog";
+import { meetsQualityFloor, meetsTasteFloor } from "@/domain/catalog";
 import { FEELING_LABELS, FEELINGS, rankByFeeling, resolveRecipe } from "@/domain/feelings";
 import { weightedRating } from "@/domain/rounds";
 import {
@@ -133,17 +133,29 @@ async function main() {
         }
 
         console.log("# Gosto\n");
-        const tasteCandidates = eligible.map((r) => ({ id: r.profile.id, quality: quality(r) }));
         for (const golden of TASTE_GOLDEN) {
             const signals = golden.signals.flatMap((s) => {
                 const titleId = resolve(s.title);
                 return titleId === undefined ? [] : [{ titleId, signal: s.signal }];
             });
             const scores = spreadTaste(graph, signals);
+            // §8: o que o gosto alcança dispensa a nota mínima e precisa de 100 votos; o resto,
+            // do piso de sempre
+            const pool = rows.filter((r) =>
+                (scores.get(r.profile.id) ?? 0) > 0
+                    ? meetsTasteFloor(r.votes)
+                    : meetsQualityFloor(r.rating, r.votes),
+            );
+            const poolIds = new Set(pool.map((r) => r.profile.id));
+            const tasteCandidates = pool.map((r) => ({ id: r.profile.id, quality: quality(r) }));
             const ranked = (rankByTaste(scores, tasteCandidates) ?? []).filter(
                 (id) => !signals.some((s) => s.titleId === id),
             );
-            const result = evaluateGolden(ranked, golden, resolveEligible);
+            const resolveInPool = (ref: TitleRef) => {
+                const id = resolve(ref);
+                return id !== undefined && poolIds.has(id) ? id : undefined;
+            };
+            const result = evaluateGolden(ranked, golden, resolveInPool);
             tally(result);
             // o caminho mais forte até cada indicação, para achar a aresta que trouxe um intruso
             const liked = signals.filter((x) => x.signal === "liked").map((x) => x.titleId);

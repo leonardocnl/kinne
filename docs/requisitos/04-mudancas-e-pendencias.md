@@ -75,3 +75,10 @@ Kinne · Requisitos da semana 0 · versão de 12/10/2026
 | Tela do título                        | Sem créditos                    | "Direção de X" e "Com A, B e C" (US004 C1)                                                                      |
 | Botões da tela do título (computador) | No canto inferior direito       | Alinhados à primeira linha do título (US004 C10)                                                                |
 | Imagens                               | w780 e w1280, sizes 100vw       | w780, w1280 e original com a largura real; sizes do quadro; preconnect ao image.tmdb.org                        |
+
+## Mudanças de 23/10/2026 (grafo de gosto)
+
+| Ponto                              | Antes                                     | Agora                                                                                                                                                            |
+| ---------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Piso para quem tem sinais de gosto | Nota ≥ 6,4 e ≥ 500 votos em tudo (RNG001) | Nos títulos que o gosto alcança, sem nota mínima e com ≥ 100 votos; o Me surpreenda e o visitante sem sinais seguem com o piso (`docs/design/taste-graph.md` §8) |
+| Recomendação do TMDB no grafo      | Não existia                               | Vale 23% da proximidade, inteira só com obra em comum ≥ 0,30; abaixo disso, em proporção (§4.2)                                                                  |
