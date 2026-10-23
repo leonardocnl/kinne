@@ -15,6 +15,8 @@ const toTag = (t: { id: number; name: string }): Tag => ({ tmdbId: t.id, name: t
 
 // O discover do TMDB para em 500 páginas (10.000 resultados).
 const RESULT_CAP = 10_000;
+// O /changes também só serve até a página 500.
+const MAX_CHANGES_PAGES = 500;
 const MIN_YEAR = 1870;
 const MAX_CAST = 10; // C2
 // Trailer em pt ou no idioma original (pickTrailer): pedimos os idiomas originais mais comuns
@@ -74,7 +76,7 @@ export class TmdbCatalogSource implements CatalogSource {
         return [...ids];
     }
 
-    async changedIds(type: TitleType, from: Date, to: Date): Promise<Set<number>> {
+    async changedIds(type: TitleType, from: Date, to: Date): Promise<Set<number> | null> {
         const query = (page: number) =>
             this.client
                 .get(`/${tmdbPath(type)}/changes`, {
@@ -84,6 +86,7 @@ export class TmdbCatalogSource implements CatalogSource {
                 })
                 .then((r) => changesPageSchema.parse(r));
         const first = await query(1);
+        if (first.total_pages > MAX_CHANGES_PAGES) return null;
         const rest = await Promise.all(
             Array.from({ length: first.total_pages - 1 }, (_, i) => query(i + 2)),
         );

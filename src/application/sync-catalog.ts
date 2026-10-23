@@ -49,7 +49,8 @@ export interface CatalogSource {
     // tmdb_ids de um tipo disponíveis por assinatura num streaming (BR). Falha se a listagem não
     // couber inteira (B3).
     discover(type: TitleType, streamingTmdbId: number): Promise<number[]>;
-    changedIds(type: TitleType, from: Date, to: Date): Promise<Set<number>>;
+    // null: a janela tem mais páginas do que o TMDB serve (500); o chamador faz carga completa.
+    changedIds(type: TitleType, from: Date, to: Date): Promise<Set<number> | null>;
     details(type: TitleType, tmdbId: number): Promise<DetailsResult>;
 }
 
@@ -173,13 +174,14 @@ export async function syncCatalog(
     log(`Listagem: ${available.size} títulos`);
 
     // 2. Quem precisa de detalhes: novos e alterados no TMDB dentro da janela.
-    const fullRefresh =
+    let fullRefresh =
         !window.start || window.end.getTime() - window.start.getTime() > MAX_CHANGES_WINDOW_MS;
     const changed = new Map<TitleType, Set<number>>();
-    if (!fullRefresh) {
-        for (const type of ["movie", "series"] as const) {
-            changed.set(type, await source.changedIds(type, window.start!, window.end));
-        }
+    for (const type of ["movie", "series"] as const) {
+        if (fullRefresh) break;
+        const ids = await source.changedIds(type, window.start!, window.end);
+        if (ids) changed.set(type, ids);
+        else fullRefresh = true; // janela grande demais para o limite de páginas do TMDB
     }
     const before = new Map(
         (await repository.existingTitles()).map((t) => [key(t.type, t.tmdbId), t]),
