@@ -1,287 +1,363 @@
-// Grafo de gosto do Kinne: um grafo bipartido entre títulos e características (gêneros, temas e
-// pessoas). Uma única operação, o PageRank personalizado, serve às três funcionalidades: escolha
-// por sentimento, gosto invisível e finalistas da sala de grupo.
+// Grafo de gosto do Kinne (docs/design/taste-graph.md): cada vértice é um título recomendável
+// (TitleProfile) e cada aresta é a proximidade entre dois títulos. Cada título guarda só os seus
+// vizinhos mais próximos. O gosto invisível e a sala de grupo andam por essas arestas; os
+// sentimentos não (feelings.ts).
 //
-// Funções puras: recebem os dados já carregados e devolvem pontuações. Nada de banco nem rede.
+// Funções puras: recebem os dados já carregados e devolvem números. Nada de banco nem rede.
 
-export type FeatureKind = "genre" | "keyword" | "person";
+import type { TitleType } from "./catalog";
 
-/** Identificador de uma característica, ex.: "genre:35", "keyword:9672", "person:1234". */
-export type FeatureKey = `${FeatureKind}:${number}`;
-
-export function featureKey(kind: FeatureKind, id: number): FeatureKey {
-    return `${kind}:${id}`;
-}
-
-export type GraphTitle = {
+/** O vértice: o que importa de um título para "quem gostou deste gosta daquele?" (§3). */
+export type TitleProfile = {
     id: number;
-    genreTmdbIds: readonly number[];
-    keywordTmdbIds: readonly number[];
-    directorIds: readonly number[];
-    // elenco principal, já cortado pela ordem de crédito (ver CAST_LIMIT)
-    castIds: readonly number[];
+    type: TitleType;
+    themeIds: readonly number[];
+    genreIds: readonly number[];
+    // direção (filmes e séries) e criação (séries) contam juntas como "autoria" (§4.1)
+    authorIds: readonly number[];
+    writerIds: readonly number[];
+    companyIds: readonly number[];
+    seriesType: string | null;
+    collectionId: number | null;
+    // recomendações do TMDB já resolvidas para ids do catálogo, na ordem do TMDB
+    recommendedIds: readonly number[];
 };
 
-// Só o elenco principal liga títulos: o 30º nome do crédito não diz nada sobre o gosto.
-export const CAST_LIMIT = 5;
+// ---------------------------------------------------------------------------------------------
+// Raridade (§4.1): característica presente em poucos títulos aproxima muito; em muitos, pouco.
 
-// Peso base de cada tipo de aresta, antes do ajuste por raridade. Gênero é amplo e diz pouco;
-// tema e direção dizem muito sobre o tom de um título.
-const KIND_WEIGHT: Record<FeatureKind, number> = {
-    genre: 0.6,
-    keyword: 1,
-    person: 1,
-};
-const DIRECTOR_WEIGHT = 1.2;
-const CAST_WEIGHT = 0.7;
+type FeatureKind = "theme" | "author" | "writer" | "company";
 
-// Uma característica presente em um só título não liga nada a nada e só gasta memória.
+// Temas em mais que esta fração do catálogo são metadado, não assunto ("woman director").
+export const THEME_HUB_FRACTION = 0.05;
+// Uma característica de um título só não liga nada a nada.
 const MIN_FEATURE_TITLES = 2;
 
-export type TasteGraph = {
-    titleIds: readonly number[];
-    // índice do título no vetor de nós, pelo id do catálogo
-    titleIndex: ReadonlyMap<number, number>;
-    featureIndex: ReadonlyMap<FeatureKey, number>;
-    nodeCount: number;
-    // lista de adjacência compacta (CSR): vizinhos do nó i em offsets[i]..offsets[i + 1]
-    offsets: Int32Array;
-    neighbors: Int32Array;
-    weights: Float64Array;
-    // soma dos pesos das arestas de cada nó
-    strength: Float64Array;
+export type FeatureRarity = {
+    readonly titleCount: number;
+    /** Peso de raridade (IDF) de uma característica; 0 se ela não liga títulos ou é hub. */
+    weight(kind: FeatureKind, id: number): number;
 };
 
-type RawEdge = { feature: FeatureKey; weight: number };
+const featuresOf = (p: TitleProfile, kind: FeatureKind): readonly number[] =>
+    kind === "theme"
+        ? p.themeIds
+        : kind === "author"
+          ? p.authorIds
+          : kind === "writer"
+            ? p.writerIds
+            : p.companyIds;
 
-function titleEdges(title: GraphTitle): RawEdge[] {
-    const edges: RawEdge[] = [];
-    for (const id of title.genreTmdbIds) {
-        edges.push({ feature: featureKey("genre", id), weight: 1 });
-    }
-    for (const id of title.keywordTmdbIds) {
-        edges.push({ feature: featureKey("keyword", id), weight: 1 });
-    }
-    for (const id of title.directorIds) {
-        edges.push({ feature: featureKey("person", id), weight: DIRECTOR_WEIGHT });
-    }
-    for (const id of title.castIds.slice(0, CAST_LIMIT)) {
-        edges.push({ feature: featureKey("person", id), weight: CAST_WEIGHT });
-    }
-    // uma pessoa que dirige e atua no mesmo título vira uma aresta só, com o maior peso
-    const byFeature = new Map<FeatureKey, number>();
-    for (const edge of edges) {
-        byFeature.set(edge.feature, Math.max(byFeature.get(edge.feature) ?? 0, edge.weight));
-    }
-    return [...byFeature].map(([feature, weight]) => ({ feature, weight }));
-}
+const KINDS: readonly FeatureKind[] = ["theme", "author", "writer", "company"];
 
-function kindOf(key: FeatureKey): FeatureKind {
-    return key.slice(0, key.indexOf(":")) as FeatureKind;
-}
-
-/**
- * Monta o grafo. O peso de cada aresta é multiplicado pela raridade da característica (IDF,
- * log de títulos sobre títulos com ela): um tema que aparece em 4 títulos aproxima muito mais
- * do que "drama", que aparece em metade do catálogo.
- */
-export function buildTasteGraph(titles: readonly GraphTitle[]): TasteGraph {
-    const edgesByTitle = titles.map(titleEdges);
-
-    const documentFrequency = new Map<FeatureKey, number>();
-    for (const edges of edgesByTitle) {
-        for (const { feature } of edges) {
-            documentFrequency.set(feature, (documentFrequency.get(feature) ?? 0) + 1);
+export function featureRarity(profiles: readonly TitleProfile[]): FeatureRarity {
+    const counts = new Map<string, number>();
+    for (const p of profiles) {
+        for (const kind of KINDS) {
+            for (const id of new Set(featuresOf(p, kind))) {
+                const key = `${kind}:${id}`;
+                counts.set(key, (counts.get(key) ?? 0) + 1);
+            }
         }
     }
-
-    const titleIndex = new Map<number, number>();
-    titles.forEach((title, index) => titleIndex.set(title.id, index));
-
-    const featureIndex = new Map<FeatureKey, number>();
-    for (const [feature, count] of documentFrequency) {
-        if (count >= MIN_FEATURE_TITLES) {
-            featureIndex.set(feature, titles.length + featureIndex.size);
-        }
-    }
-    const nodeCount = titles.length + featureIndex.size;
-
-    // arestas não direcionadas, guardadas nos dois sentidos
-    const adjacency: { node: number; weight: number }[][] = Array.from(
-        { length: nodeCount },
-        () => [],
-    );
-    const total = Math.max(titles.length, 1);
-    edgesByTitle.forEach((edges, titleNode) => {
-        for (const { feature, weight } of edges) {
-            const featureNode = featureIndex.get(feature);
-            if (featureNode === undefined) continue;
-            const rarity = Math.log(1 + total / documentFrequency.get(feature)!);
-            const w = weight * KIND_WEIGHT[kindOf(feature)] * rarity;
-            adjacency[titleNode].push({ node: featureNode, weight: w });
-            adjacency[featureNode].push({ node: titleNode, weight: w });
-        }
-    });
-
-    const offsets = new Int32Array(nodeCount + 1);
-    adjacency.forEach((list, i) => (offsets[i + 1] = offsets[i] + list.length));
-    const neighbors = new Int32Array(offsets[nodeCount]);
-    const weights = new Float64Array(offsets[nodeCount]);
-    const strength = new Float64Array(nodeCount);
-    adjacency.forEach((list, i) => {
-        list.forEach(({ node, weight }, k) => {
-            neighbors[offsets[i] + k] = node;
-            weights[offsets[i] + k] = weight;
-            strength[i] += weight;
-        });
-    });
-
+    const n = Math.max(profiles.length, 1);
+    const hubLimit = Math.max(MIN_FEATURE_TITLES, Math.floor(n * THEME_HUB_FRACTION));
     return {
-        titleIds: titles.map((t) => t.id),
-        titleIndex,
-        featureIndex,
-        nodeCount,
-        offsets,
-        neighbors,
-        weights,
-        strength,
+        titleCount: n,
+        weight(kind, id) {
+            const count = counts.get(`${kind}:${id}`) ?? 0;
+            if (count < MIN_FEATURE_TITLES) return 0;
+            if (kind === "theme" && count > hubLimit) return 0;
+            return Math.log(n / count);
+        },
     };
 }
 
-/** Ponto de partida do passeio: um título ou uma característica, com um peso positivo. */
-export type Seed = { title: number; weight: number } | { feature: FeatureKey; weight: number };
+// ---------------------------------------------------------------------------------------------
+// A aresta (§4).
 
-export type PageRankOptions = {
-    // probabilidade de voltar ao ponto de partida a cada passo
-    restart?: number;
-    iterations?: number;
-};
+export const CONTENT_WEIGHTS = {
+    themes: 0.45,
+    genres: 0.15,
+    authors: 0.2,
+    writers: 0.1,
+    companies: 0.05,
+    seriesType: 0.05,
+} as const;
 
-export const DEFAULT_RESTART = 0.15;
-export const DEFAULT_ITERATIONS = 30;
+export const CONTENT_SHARE = 0.77;
+export const RECOMMENDATION_SHARE = 0.23;
+export const RECOMMENDATION_POSITIONS = 20;
 
-function seedVector(graph: TasteGraph, seeds: readonly Seed[]): Float64Array | null {
-    const vector = new Float64Array(graph.nodeCount);
-    let sum = 0;
-    for (const seed of seeds) {
-        if (!(seed.weight > 0)) continue;
-        const node =
-            "title" in seed
-                ? graph.titleIndex.get(seed.title)
-                : graph.featureIndex.get(seed.feature);
-        if (node === undefined || graph.strength[node] === 0) continue;
-        vector[node] += seed.weight;
-        sum += seed.weight;
+/** Cosseno entre dois conjuntos, cada elemento valendo o quadrado da sua raridade. */
+function rarityCosine(
+    a: readonly number[],
+    b: readonly number[],
+    weight: (id: number) => number,
+): number {
+    if (a.length === 0 || b.length === 0) return 0;
+    const setB = new Set(b);
+    let shared = 0;
+    let normA = 0;
+    let normB = 0;
+    for (const id of new Set(a)) {
+        const w = weight(id) ** 2;
+        normA += w;
+        if (setB.has(id)) shared += w;
     }
-    if (sum === 0) return null;
-    for (let i = 0; i < vector.length; i++) vector[i] /= sum;
-    return vector;
+    for (const id of setB) normB += weight(id) ** 2;
+    return normA > 0 && normB > 0 ? shared / Math.sqrt(normA * normB) : 0;
 }
 
+function jaccard(a: readonly number[], b: readonly number[]): number {
+    const setA = new Set(a);
+    const setB = new Set(b);
+    if (setA.size === 0 || setB.size === 0) return 0;
+    let shared = 0;
+    for (const id of setA) if (setB.has(id)) shared++;
+    return shared / (setA.size + setB.size - shared);
+}
+
+/** Dados da obra (§4.1): de 0 a 1. Mesma franquia vale 1. */
+export function contentScore(a: TitleProfile, b: TitleProfile, rarity: FeatureRarity): number {
+    if (a.collectionId !== null && a.collectionId === b.collectionId) return 1;
+    const w = CONTENT_WEIGHTS;
+    const cos = (kind: FeatureKind) =>
+        rarityCosine(featuresOf(a, kind), featuresOf(b, kind), (id) => rarity.weight(kind, id));
+    const sameSeriesType = a.seriesType !== null && a.seriesType === b.seriesType ? 1 : 0;
+    return (
+        w.themes * cos("theme") +
+        w.genres * jaccard(a.genreIds, b.genreIds) +
+        w.authors * cos("author") +
+        w.writers * cos("writer") +
+        w.companies * cos("company") +
+        w.seriesType * sameSeriesType
+    );
+}
+
+const positionValue = (position: number) =>
+    position < 1 ? 0 : Math.max(0, 1 - (position - 1) / RECOMMENDATION_POSITIONS);
+
+/** Recomendação do TMDB (§4.2): de 0 a 1, mais forte quando vale nos dois sentidos. */
+export function recommendationScore(a: TitleProfile, b: TitleProfile): number {
+    const ab = positionValue(a.recommendedIds.indexOf(b.id) + 1);
+    const ba = positionValue(b.recommendedIds.indexOf(a.id) + 1);
+    return Math.min(1, Math.max(ab, ba) + 0.5 * Math.min(ab, ba));
+}
+
+export type Proximity = { proximity: number; content: number; recommendation: number };
+
+export function proximity(a: TitleProfile, b: TitleProfile, rarity: FeatureRarity): Proximity {
+    const content = contentScore(a, b, rarity);
+    const recommendation = recommendationScore(a, b);
+    return {
+        proximity: CONTENT_SHARE * content + RECOMMENDATION_SHARE * recommendation,
+        content,
+        recommendation,
+    };
+}
+
+// ---------------------------------------------------------------------------------------------
+// O grafo de vizinhos mais próximos (§2).
+
+export const NEIGHBORS_PER_TITLE = 20;
+
+export type Edge = Proximity & { a: number; b: number };
+
 /**
- * PageRank personalizado por iteração de potência. Devolve, para cada nó, a probabilidade de um
- * passeio aleatório que recomeça nas sementes estar nele. Sem nenhuma semente válida, devolve null.
+ * Os k vizinhos mais próximos de cada título, unidos num grafo não direcionado: se B está entre
+ * os k de A, a aresta A–B existe. Devolve cada aresta uma vez, com a < b.
+ *
+ * Só compara pares que têm algo raro em comum (tema, autoria, roteiro, produtora, franquia ou
+ * recomendação), por um índice invertido: comparar todos com todos seria quadrático e quase
+ * todos os pares dariam perto de zero.
  */
-export function personalizedPageRank(
-    graph: TasteGraph,
-    seeds: readonly Seed[],
-    { restart = DEFAULT_RESTART, iterations = DEFAULT_ITERATIONS }: PageRankOptions = {},
-): Float64Array | null {
-    const start = seedVector(graph, seeds);
-    if (!start) return null;
-    let rank = Float64Array.from(start);
-    let next = new Float64Array(graph.nodeCount);
-    for (let step = 0; step < iterations; step++) {
-        next.fill(0);
-        let dangling = 0;
-        for (let i = 0; i < graph.nodeCount; i++) {
-            const mass = rank[i];
-            if (mass === 0) continue;
-            if (graph.strength[i] === 0) {
-                dangling += mass;
-                continue;
-            }
-            const share = ((1 - restart) * mass) / graph.strength[i];
-            for (let e = graph.offsets[i]; e < graph.offsets[i + 1]; e++) {
-                next[graph.neighbors[e]] += share * graph.weights[e];
+export function buildNeighborEdges(
+    profiles: readonly TitleProfile[],
+    k = NEIGHBORS_PER_TITLE,
+): Edge[] {
+    const rarity = featureRarity(profiles);
+    const byId = new Map(profiles.map((p) => [p.id, p]));
+
+    const index = new Map<string, number[]>();
+    const post = (key: string, id: number) => {
+        const list = index.get(key);
+        if (list) list.push(id);
+        else index.set(key, [id]);
+    };
+    for (const p of profiles) {
+        for (const kind of KINDS) {
+            for (const f of new Set(featuresOf(p, kind))) {
+                if (rarity.weight(kind, f) > 0) post(`${kind}:${f}`, p.id);
             }
         }
-        // o que se perdeu em nós sem saída também volta às sementes
-        const back = restart + (1 - restart) * dangling;
-        for (let i = 0; i < graph.nodeCount; i++) next[i] += back * start[i];
-        [rank, next] = [next, rank];
+        if (p.collectionId !== null) post(`collection:${p.collectionId}`, p.id);
     }
-    return rank;
+
+    const keysOf = (p: TitleProfile) => {
+        const keys: string[] = [];
+        for (const kind of KINDS) {
+            for (const f of new Set(featuresOf(p, kind))) keys.push(`${kind}:${f}`);
+        }
+        if (p.collectionId !== null) keys.push(`collection:${p.collectionId}`);
+        return keys;
+    };
+
+    const edges = new Map<string, Edge>();
+    for (const p of profiles) {
+        const candidates = new Set<number>();
+        for (const key of keysOf(p)) for (const id of index.get(key) ?? []) candidates.add(id);
+        // as recomendações de p entram mesmo sem nada em comum; as que apontam para p entram
+        // quando o outro título é processado
+        for (const id of p.recommendedIds) if (byId.has(id)) candidates.add(id);
+        candidates.delete(p.id);
+
+        const scored: Edge[] = [];
+        for (const id of candidates) {
+            const other = byId.get(id)!;
+            const score = proximity(p, other, rarity);
+            if (score.proximity > 0) scored.push({ a: p.id, b: id, ...score });
+        }
+        scored.sort((x, y) => y.proximity - x.proximity || x.b - y.b);
+        for (const edge of scored.slice(0, k)) {
+            const [a, b] = edge.a < edge.b ? [edge.a, edge.b] : [edge.b, edge.a];
+            edges.set(`${a}:${b}`, { ...edge, a, b });
+        }
+    }
+
+    return [...edges.values()].sort((x, y) => x.a - y.a || x.b - y.b);
 }
 
-export type TasteQuery = {
-    likes: readonly Seed[];
-    dislikes?: readonly Seed[];
-    // quanto um "não gostei" pesa contra um "gostei"
-    dislikeWeight?: number;
+/** Lista de adjacência a partir das arestas, nos dois sentidos. */
+export type NeighborGraph = ReadonlyMap<number, readonly { id: number; proximity: number }[]>;
+
+export function toNeighborGraph(
+    edges: readonly { a: number; b: number; proximity: number }[],
+): NeighborGraph {
+    const graph = new Map<number, { id: number; proximity: number }[]>();
+    const add = (from: number, id: number, p: number) => {
+        const list = graph.get(from);
+        if (list) list.push({ id, proximity: p });
+        else graph.set(from, [{ id, proximity: p }]);
+    };
+    for (const e of edges) {
+        add(e.a, e.b, e.proximity);
+        add(e.b, e.a, e.proximity);
+    }
+    return graph;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Gosto invisível (§6).
+
+export type TasteSignal = "liked" | "will_watch" | "disliked" | "not_interested";
+
+export const SIGNAL_WEIGHTS: Record<TasteSignal, number> = {
+    liked: 1,
+    will_watch: 0.6,
+    disliked: -1,
+    not_interested: -0.4,
 };
 
-export const DEFAULT_DISLIKE_WEIGHT = 0.8;
+// Quanto vale cada passo: vizinho, vizinho do vizinho, terceiro elo.
+export const STEP_DAMPING = [1, 0.35, 0.12] as const;
 
 /**
- * Pontuação de cada título: proximidade das sementes positivas menos a das negativas. Divide pela
- * raiz da força do nó para que títulos com muitas arestas não ganhem só por serem "centrais".
- * Títulos que são sementes ficam de fora: ninguém precisa que o Kinne indique o que já indicou.
+ * Espalha os sinais da pessoa pelo grafo em três passos. A cada passo, cada título passa a sua
+ * massa aos vizinhos em proporção à proximidade, dividida pela soma das proximidades dele: sem
+ * essa divisão a massa cresceria a cada passo e o amortecimento não diria nada.
+ *
+ * Os títulos com sinal ficam de fora do resultado: o Kinne não indica o que a pessoa já marcou.
  */
-export function scoreTitles(
-    graph: TasteGraph,
-    { likes, dislikes = [], dislikeWeight = DEFAULT_DISLIKE_WEIGHT }: TasteQuery,
-    options?: PageRankOptions,
+export function spreadTaste(
+    graph: NeighborGraph,
+    signals: readonly { titleId: number; signal: TasteSignal }[],
 ): Map<number, number> {
-    const positive = personalizedPageRank(graph, likes, options);
-    if (!positive) return new Map();
-    const negative = personalizedPageRank(graph, dislikes, options);
-
-    const seeded = new Set<number>();
-    for (const seed of [...likes, ...dislikes]) {
-        if ("title" in seed) seeded.add(seed.title);
+    let frontier = new Map<number, number>();
+    for (const { titleId, signal } of signals) {
+        frontier.set(titleId, (frontier.get(titleId) ?? 0) + SIGNAL_WEIGHTS[signal]);
     }
-
+    const marked = new Set(frontier.keys());
     const scores = new Map<number, number>();
-    graph.titleIds.forEach((id, node) => {
-        if (seeded.has(id) || graph.strength[node] === 0) return;
-        const raw = positive[node] - (negative ? dislikeWeight * negative[node] : 0);
-        scores.set(id, raw / Math.sqrt(graph.strength[node]));
-    });
+
+    for (const damping of STEP_DAMPING) {
+        const next = new Map<number, number>();
+        for (const [id, mass] of frontier) {
+            const neighbors = graph.get(id);
+            if (!neighbors || mass === 0) continue;
+            const strength = neighbors.reduce((sum, n) => sum + n.proximity, 0);
+            for (const n of neighbors) {
+                next.set(n.id, (next.get(n.id) ?? 0) + (mass * n.proximity) / strength);
+            }
+        }
+        for (const [id, mass] of next) {
+            if (!marked.has(id)) scores.set(id, (scores.get(id) ?? 0) + damping * mass);
+        }
+        frontier = next;
+    }
     return scores;
 }
 
-/** Converte pontuações em percentis de 0 a 1, para comparar pessoas com escalas diferentes. */
+/** Percentis de 0 a 1 (empates recebem o mesmo percentil), para comparar escalas diferentes. */
 export function toPercentiles(scores: ReadonlyMap<number, number>): Map<number, number> {
-    const sorted = [...scores].sort((a, b) => a[1] - b[1]);
+    const sorted = [...scores].sort((x, y) => x[1] - y[1]);
     const result = new Map<number, number>();
     const last = Math.max(sorted.length - 1, 1);
-    sorted.forEach(([id], rank) => result.set(id, sorted.length === 1 ? 1 : rank / last));
+    let i = 0;
+    while (i < sorted.length) {
+        let j = i;
+        while (j + 1 < sorted.length && sorted[j + 1][1] === sorted[i][1]) j++;
+        const value = sorted.length === 1 ? 1 : (i + j) / 2 / last;
+        for (let t = i; t <= j; t++) result.set(sorted[t][0], value);
+        i = j + 1;
+    }
     return result;
 }
 
+export const TASTE_SHARE = 0.8;
+
+export type RankCandidate = { id: number; quality: number };
+
 /**
- * Pontuação do grupo: o percentil do membro menos satisfeito. Um título só vai bem se for bom
- * para cada um, e não só na soma: evita o finalista que um ama e outro detesta. Membros sem
- * pontuação (nenhum sinal de gosto) não restringem o grupo.
+ * Ordem final do gosto (§6): 80% percentil do gosto + 20% percentil da nota ponderada, entre os
+ * candidatos que os filtros deixaram. Um candidato sem pontuação vale 0, neutro: fica abaixo do
+ * que a pessoa deve gostar e acima do que está perto do que ela não gostou. Sem nenhuma
+ * pontuação, devolve null e quem chama mantém a ordem de hoje.
+ */
+export function rankByTaste(
+    scores: ReadonlyMap<number, number>,
+    candidates: readonly RankCandidate[],
+): number[] | null {
+    if (scores.size === 0) return null;
+    const taste = toPercentiles(new Map(candidates.map((c) => [c.id, scores.get(c.id) ?? 0])));
+    const quality = toPercentiles(new Map(candidates.map((c) => [c.id, c.quality])));
+    return candidates
+        .map((c) => ({
+            id: c.id,
+            score: TASTE_SHARE * taste.get(c.id)! + (1 - TASTE_SHARE) * quality.get(c.id)!,
+        }))
+        .sort((x, y) => y.score - x.score || x.id - y.id)
+        .map((c) => c.id);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Sala de grupo (§7).
+
+/**
+ * Para cada candidato, o percentil do membro menos satisfeito: um título só vai bem se for bom
+ * para cada um, e não só na soma. Membros sem nenhum sinal não restringem o grupo.
  */
 export function groupScores(
     memberScores: readonly ReadonlyMap<number, number>[],
+    candidateIds: readonly number[],
 ): Map<number, number> {
-    const members = memberScores.filter((s) => s.size > 0).map(toPercentiles);
-    if (members.length === 0) return new Map();
+    const members = memberScores
+        .filter((s) => s.size > 0)
+        .map((s) => toPercentiles(new Map(candidateIds.map((id) => [id, s.get(id) ?? 0]))));
     const result = new Map<number, number>();
-    for (const [id] of members[0]) {
-        let worst = Infinity;
-        for (const member of members) {
-            const value = member.get(id);
-            if (value === undefined) {
-                worst = -Infinity;
-                break;
-            }
-            worst = Math.min(worst, value);
-        }
-        if (worst > -Infinity) result.set(id, worst);
+    if (members.length === 0) return result;
+    for (const id of candidateIds) {
+        result.set(id, Math.min(...members.map((m) => m.get(id)!)));
     }
     return result;
 }

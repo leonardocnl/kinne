@@ -94,7 +94,7 @@ amortecimento: 1 passo = 1,00 · 2 passos = 0,35 · 3 passos = 0,12
 sinal: curti = +1 · vou assistir = +0,6 · não curti = −1 · não me interessa = −0,4
 ```
 
-Na prática: três rodadas de "espalhar" pontos pelos vizinhos, a partir dos títulos com sinal. Cada rodada multiplica pela proximidade e pelo amortecimento.
+Na prática: três rodadas de "espalhar" pontos pelos vizinhos, a partir dos títulos com sinal. Em cada rodada, cada título reparte os seus pontos entre os vizinhos em proporção à proximidade, **dividindo pela soma das proximidades dele**: sem essa divisão, os pontos se multiplicariam a cada rodada (um título com 20 vizinhos passaria 20 vezes mais adiante) e o amortecimento não diria nada. Os títulos com sinal não recebem pontuação.
 
 **Ordem final:** 80% pontuação de gosto (em percentil) + 20% nota ponderada. Sem nenhum sinal, vale a ordem que o Kinne já usa hoje.
 

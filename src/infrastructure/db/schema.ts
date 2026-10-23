@@ -13,6 +13,7 @@ import {
     numeric,
     pgTable,
     primaryKey,
+    real,
     serial,
     smallint,
     text,
@@ -48,6 +49,9 @@ export const catalogTitles = pgTable(
         isRecommendable: boolean("is_recommendable").notNull().default(false),
         // Manual (C5): a carga nunca escreve; o papel kinne_sync nem tem UPDATE nesta coluna.
         isBlocked: boolean("is_blocked").notNull().default(false),
+        // grafo de gosto (docs/design/taste-graph.md §3): tipo só em série, coleção só em filme
+        seriesType: text("series_type"),
+        collectionTmdbId: integer("collection_tmdb_id"),
     },
     (t) => [
         check("catalog_titles_title_type_check", sql`${t.titleType} in ('movie', 'series')`),
@@ -62,6 +66,10 @@ export const catalogTitles = pgTable(
         unique("catalog_titles_tmdb_id_title_type_unique").on(t.tmdbId, t.titleType),
         index("catalog_titles_title_type_rating_idx").on(t.titleType, t.tmdbAverageRating),
         index("catalog_titles_runtime_minutes_idx").on(t.runtimeMinutes),
+        check(
+            "catalog_titles_series_type_check",
+            sql`${t.seriesType} in ('miniseries', 'scripted', 'documentary', 'reality', 'talk_show', 'news', 'video')`,
+        ),
     ],
 );
 
@@ -212,9 +220,75 @@ export const titleCredits = pgTable(
         creditOrder: smallint("credit_order").notNull(),
     },
     (t) => [
-        check("title_credits_role_check", sql`${t.role} in ('director', 'cast')`),
+        check(
+            "title_credits_role_check",
+            sql`${t.role} in ('director', 'cast', 'creator', 'writer')`,
+        ),
         primaryKey({ columns: [t.catalogTitleId, t.personId, t.role] }),
         index("title_credits_person_idx").on(t.personId),
+    ],
+);
+
+export const productionCompanies = pgTable("production_companies", {
+    id: serial("id").primaryKey(),
+    tmdbId: integer("tmdb_id").notNull().unique(),
+    name: text("name").notNull(),
+});
+
+export const catalogTitleProductionCompanies = pgTable(
+    "catalog_title_production_companies",
+    {
+        catalogTitleId: integer("catalog_title_id")
+            .notNull()
+            .references(() => catalogTitles.id),
+        productionCompanyId: integer("production_company_id")
+            .notNull()
+            .references(() => productionCompanies.id),
+    },
+    (t) => [primaryKey({ columns: [t.catalogTitleId, t.productionCompanyId] })],
+);
+
+// Recomendações do TMDB como vieram (ids do TMDB): o recomendado pode nem estar no catálogo. O
+// grafo resolve para títulos do catálogo na construção (taste-graph-data A2).
+export const tmdbRecommendations = pgTable(
+    "tmdb_recommendations",
+    {
+        catalogTitleId: integer("catalog_title_id")
+            .notNull()
+            .references(() => catalogTitles.id),
+        position: smallint("position").notNull(),
+        recommendedTmdbId: integer("recommended_tmdb_id").notNull(),
+        recommendedTitleType: text("recommended_title_type").notNull(),
+    },
+    (t) => [
+        primaryKey({ columns: [t.catalogTitleId, t.position] }),
+        check(
+            "tmdb_recommendations_type_check",
+            sql`${t.recommendedTitleType} in ('movie', 'series')`,
+        ),
+        check("tmdb_recommendations_position_check", sql`${t.position} between 1 and 20`),
+    ],
+);
+
+// O grafo de gosto pronto (docs/design/taste-graph.md §2): os vizinhos mais próximos de cada
+// título recomendável, guardados nos dois sentidos. Refeito por inteiro todo dia (graph:build).
+export const titleNeighbors = pgTable(
+    "title_neighbors",
+    {
+        catalogTitleId: integer("catalog_title_id")
+            .notNull()
+            .references(() => catalogTitles.id),
+        neighborTitleId: integer("neighbor_title_id")
+            .notNull()
+            .references(() => catalogTitles.id),
+        proximity: real("proximity").notNull(),
+        contentScore: real("content_score").notNull(),
+        recommendationScore: real("recommendation_score").notNull(),
+    },
+    (t) => [
+        primaryKey({ columns: [t.catalogTitleId, t.neighborTitleId] }),
+        check("title_neighbors_not_self_check", sql`${t.catalogTitleId} <> ${t.neighborTitleId}`),
+        check("title_neighbors_proximity_check", sql`${t.proximity} > 0 and ${t.proximity} <= 1`),
     ],
 );
 

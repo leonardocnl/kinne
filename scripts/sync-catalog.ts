@@ -45,7 +45,10 @@ async function main() {
             return;
         }
 
-        const window = changesWindow(await repository.lastOkWindowEnd(), startedAt);
+        // SYNC_FULL=1 força a carga completa, ex.: depois de a carga passar a ler campos novos
+        // (taste-graph-data, escopo 4).
+        const full = process.env.SYNC_FULL === "1";
+        const window = changesWindow(full ? null : await repository.lastOkWindowEnd(), startedAt);
         const source = new TmdbCatalogSource(new TmdbClient());
         let result: SyncResult;
         try {

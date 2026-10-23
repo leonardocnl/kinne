@@ -15,6 +15,7 @@
         "db:migrate": "drizzle-kit migrate",
         "db:seed": "tsx --conditions=react-server --env-file=.env.local scripts/seed.ts",
         "catalog:sync": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/sync-catalog.ts",
+        "graph:build": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/build-taste-graph.ts",
         "daily:pick": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/daily-pick.ts",
         "events:delete": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/delete-test-events.ts",
         "bundle:check": "node scripts/check-bundle-size.mjs",

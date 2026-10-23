@@ -1,100 +1,145 @@
-// Mostra o que cada sentimento devolve no catálogo real, para calibrar as receitas.
-// Só lê o banco. Uso: npm run feelings:calibrate
-// Saída: para cada sentimento, os temas da receita que o catálogo não tem (com temas de nome
-// parecido que ele tem, para trocar) e os 12 títulos recomendáveis que o sentimento devolve.
-import { eq } from "drizzle-orm";
-
+// Confere o grafo de gosto contra o gabarito (docs/design/taste-graph.md §10). Só lê o banco:
+// monta o grafo em memória, sem gravar nada.
+// Uso: npm run feelings:calibrate            (resumo: notas do gabarito)
+//      npm run feelings:calibrate -- --list  (também os 12 primeiros de cada lista)
 import { meetsQualityFloor } from "@/domain/catalog";
-import {
-    FEELING_LABELS,
-    FEELING_RECIPES,
-    FEELING_RESTART,
-    FEELINGS,
-    feelingSeeds,
-    rankByFeeling,
-} from "@/domain/feelings";
+import { FEELING_LABELS, FEELINGS, rankByFeeling, resolveRecipe } from "@/domain/feelings";
 import { weightedRating } from "@/domain/rounds";
-import { buildTasteGraph, scoreTitles } from "@/domain/taste-graph";
-import { createDb } from "@/infrastructure/db/client";
-import { catalogTitles } from "@/infrastructure/db/schema";
+import {
+    evaluateGolden,
+    FEELING_GOLDEN,
+    normalizeTitleName,
+    TASTE_GOLDEN,
+    type GoldenResult,
+    type TitleRef,
+} from "@/domain/taste-golden";
+import {
+    buildNeighborEdges,
+    rankByTaste,
+    spreadTaste,
+    toNeighborGraph,
+} from "@/domain/taste-graph";
+import { connectSyncDb } from "@/infrastructure/db/catalog-repository";
 import { DrizzleTasteGraphRepository } from "@/infrastructure/db/taste-graph-repository";
 import { publicErrorMessage } from "@/infrastructure/tmdb/client";
 
-const TOP = 12;
-const SIMILAR = 6;
+const SHOW = 12;
+const showLists = process.argv.includes("--list");
+
+function report(
+    label: string,
+    result: GoldenResult,
+    ranked: number[],
+    nameOf: (id: number) => string,
+) {
+    const score = `${result.found}/${result.expected}`;
+    const violations = result.violations.length;
+    console.log(`## ${label} — esperados ${score}, violações ${violations}`);
+    if (result.missed.length) console.log(`   fora dos 30: ${result.missed.join("; ")}`);
+    if (violations) console.log(`   VIOLAÇÕES: ${result.violations.join("; ")}`);
+    if (result.absent.length) console.log(`   ausentes no catálogo: ${result.absent.join("; ")}`);
+    if (showLists) {
+        ranked.slice(0, SHOW).forEach((id, i) => {
+            console.log(`   ${String(i + 1).padStart(2)}. ${nameOf(id)}`);
+        });
+    }
+    console.log("");
+}
 
 async function main() {
-    const db = createDb();
-    const started = performance.now();
-    const { titles, keywordIdsByName } = await new DrizzleTasteGraphRepository(db).load();
-    const loaded = performance.now();
-    const graph = buildTasteGraph(titles);
-    const built = performance.now();
-
-    const rows = (
-        await db
-            .select({
-                id: catalogTitles.id,
-                name: catalogTitles.displayTitle,
-                year: catalogTitles.releaseYear,
-                type: catalogTitles.titleType,
-                rating: catalogTitles.tmdbAverageRating,
-                votes: catalogTitles.tmdbVoteCount,
-                certification: catalogTitles.certificationBr,
-            })
-            .from(catalogTitles)
-            .where(eq(catalogTitles.isRecommendable, true))
-    )
-        .map((r) => ({ ...r, rating: Number(r.rating) }))
-        .filter((r) => meetsQualityFloor(r.rating, r.votes));
-    const info = new Map(rows.map((r) => [r.id, r]));
-    const mean = rows.reduce((sum, r) => sum + r.rating, 0) / Math.max(rows.length, 1);
-    const genresById = new Map(titles.map((t) => [t.id, t.genreTmdbIds]));
-    const candidates = rows.map((r) => ({
-        id: r.id,
-        genreTmdbIds: genresById.get(r.id) ?? [],
-        certification: r.certification,
-        quality: weightedRating(r.rating, r.votes, mean),
-    }));
-    const keywordNames = [...keywordIdsByName.keys()];
-
-    console.log(
-        `Catálogo: ${titles.length} títulos no grafo, ${rows.length} recomendáveis no piso, ` +
-            `${graph.featureIndex.size} características, ${graph.neighbors.length / 2} arestas. ` +
-            `Carga ${Math.round(loaded - started)} ms, grafo ${Math.round(built - loaded)} ms.\n`,
-    );
-
-    for (const feeling of FEELINGS) {
-        const resolve = (name: string) => keywordIdsByName.get(name.toLowerCase());
-        const recipe = FEELING_RECIPES[feeling];
-        const missing = [
-            ...Object.keys(recipe.keywords),
-            ...Object.keys(recipe.avoidKeywords ?? {}),
-        ].filter((name) => resolve(name) === undefined);
-
+    const url = process.env.DATABASE_URL_POOLED;
+    if (!url) throw new Error("DATABASE_URL_POOLED não definida");
+    const { db, close } = await connectSyncDb(url);
+    try {
         const t0 = performance.now();
-        const scores = scoreTitles(graph, feelingSeeds(feeling, resolve), {
-            restart: FEELING_RESTART,
-        });
-        const ranked = rankByFeeling(feeling, scores, candidates);
-        const ms = Math.round(performance.now() - t0);
+        const { rows, themeIdsByName } = await new DrizzleTasteGraphRepository(db).load();
+        const t1 = performance.now();
+        const edges = buildNeighborEdges(rows.map((r) => r.profile));
+        const graph = toNeighborGraph(edges);
+        const t2 = performance.now();
 
-        const label = FEELING_LABELS[feeling];
-        console.log(`## ${label} (${feeling}) — ${ranked.length} títulos, ${ms} ms`);
-        for (const name of missing) {
-            const words = name.toLowerCase().split(/[\s-]+/);
-            const similar = keywordNames
-                .filter((k) => words.some((w) => w.length > 3 && k.includes(w)))
-                .slice(0, SIMILAR);
-            const hint = similar.join(" | ") || "nenhum";
-            console.log(`   tema ausente: "${name}" — parecidos: ${hint}`);
+        const eligible = rows.filter((r) => meetsQualityFloor(r.rating, r.votes));
+        const mean = eligible.reduce((s, r) => s + r.rating, 0) / Math.max(eligible.length, 1);
+        const quality = (r: (typeof rows)[number]) => weightedRating(r.rating, r.votes, mean);
+        const byId = new Map(rows.map((r) => [r.profile.id, r]));
+        const nameOf = (id: number) => {
+            const r = byId.get(id)!;
+            return `${r.name} (${r.year ?? "?"}, ${r.profile.type === "movie" ? "filme" : "série"})`;
+        };
+
+        const byName = new Map<string, { id: number; year: number | null }[]>();
+        for (const r of rows) {
+            const key = normalizeTitleName(r.name);
+            byName.set(key, [...(byName.get(key) ?? []), { id: r.profile.id, year: r.year }]);
         }
-        ranked.slice(0, TOP).forEach((id, i) => {
-            const t = info.get(id)!;
-            const kind = t.type === "movie" ? "filme" : "série";
-            console.log(`   ${String(i + 1).padStart(2)}. ${t.name} (${t.year ?? "?"}, ${kind})`);
-        });
-        console.log("");
+        // ano com folga de 1: o TMDB às vezes data pela estreia em outro país
+        const resolve = (ref: TitleRef) =>
+            byName
+                .get(normalizeTitleName(ref.name))
+                ?.find((c) => c.year !== null && Math.abs(c.year - ref.year) <= 1)?.id;
+
+        const withNeighbors = graph.size;
+        console.log(
+            `Grafo: ${rows.length} títulos, ${withNeighbors} com vizinhos, ${edges.length} arestas. ` +
+                `Carga ${Math.round(t1 - t0)} ms, grafo ${Math.round(t2 - t1)} ms.\n`,
+        );
+
+        // raridade de tema em ids do TMDB, para as receitas
+        const themeCount = new Map<number, number>();
+        for (const r of rows) {
+            for (const id of new Set(r.themeTmdbIds)) {
+                themeCount.set(id, (themeCount.get(id) ?? 0) + 1);
+            }
+        }
+        const themeRarity = (id: number) =>
+            Math.log(rows.length / (themeCount.get(id) ?? rows.length));
+
+        let totalFound = 0;
+        let totalExpected = 0;
+        let totalViolations = 0;
+        const tally = (r: GoldenResult) => {
+            totalFound += r.found;
+            totalExpected += r.expected;
+            totalViolations += r.violations.length;
+        };
+
+        console.log("# Sentimentos\n");
+        const candidates = eligible.map((r) => ({
+            id: r.profile.id,
+            genreTmdbIds: r.genreTmdbIds,
+            themeTmdbIds: r.themeTmdbIds,
+            certification: r.certification,
+            quality: quality(r),
+        }));
+        for (const feeling of FEELINGS) {
+            const recipe = resolveRecipe(feeling, (name) => themeIdsByName.get(name.toLowerCase()));
+            const ranked = rankByFeeling(feeling, recipe, candidates, themeRarity);
+            const result = evaluateGolden(ranked, FEELING_GOLDEN[feeling], resolve);
+            tally(result);
+            report(`${FEELING_LABELS[feeling]} (${ranked.length} títulos)`, result, ranked, nameOf);
+        }
+
+        console.log("# Gosto\n");
+        const tasteCandidates = eligible.map((r) => ({ id: r.profile.id, quality: quality(r) }));
+        for (const golden of TASTE_GOLDEN) {
+            const signals = golden.signals.flatMap((s) => {
+                const titleId = resolve(s.title);
+                return titleId === undefined ? [] : [{ titleId, signal: s.signal }];
+            });
+            const scores = spreadTaste(graph, signals);
+            const ranked = (rankByTaste(scores, tasteCandidates) ?? []).filter(
+                (id) => !signals.some((s) => s.titleId === id),
+            );
+            const result = evaluateGolden(ranked, golden, resolve);
+            tally(result);
+            report(golden.label, result, ranked, nameOf);
+        }
+
+        console.log(
+            `TOTAL: esperados ${totalFound}/${totalExpected}, violações ${totalViolations}`,
+        );
+    } finally {
+        await close();
     }
 }
 

@@ -10,22 +10,26 @@ import type {
 import type { TitleType } from "@/domain/catalog";
 import type { BrCertification } from "@/domain/catalog-sync";
 import { Client } from "@neondatabase/serverless";
-import { and, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, inArray, or, sql, type SQL } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import {
     anonymousUsageEvents,
     catalogTitleGenres,
+    catalogTitleProductionCompanies,
     catalogTitles,
     catalogTitleThemeKeywords,
     dailyPicks,
     genres,
     meta,
     people,
+    productionCompanies,
     streamingAvailability,
     streamingServices,
     syncRuns,
     themeKeywords,
     titleCredits,
+    titleNeighbors,
+    tmdbRecommendations,
 } from "./schema";
 
 const COUNTRY = "BR";
@@ -69,6 +73,8 @@ const CONTENT_COLUMNS = {
     tmdbVoteCount: "tmdb_vote_count",
     certificationBr: "certification_br",
     certificationSource: "certification_source",
+    seriesType: "series_type",
+    collectionTmdbId: "collection_tmdb_id",
 } as const;
 const columns = Object.values(CONTENT_COLUMNS);
 // Só regrava (e só conta como atualizado) o que mudou de fato: a segunda carga não muda nada.
@@ -254,6 +260,15 @@ export class DrizzleCatalogRepository implements CatalogRepository {
                 ),
                 true,
             );
+            const companyIds = await upsertTags(
+                tx,
+                productionCompanies,
+                uniqueBy(
+                    titles.flatMap((t) => t.companies),
+                    (c) => c.tmdbId,
+                ),
+                true,
+            );
             const personIds = await upsertPeople(
                 tx,
                 uniqueBy(
@@ -284,6 +299,8 @@ export class DrizzleCatalogRepository implements CatalogRepository {
                         tmdbVoteCount: t.voteCount,
                         certificationBr: t.certification,
                         certificationSource: t.certificationSource,
+                        seriesType: t.seriesType,
+                        collectionTmdbId: t.collectionTmdbId,
                         lastSyncedAt: syncedAt,
                     })),
                 )
@@ -329,6 +346,12 @@ export class DrizzleCatalogRepository implements CatalogRepository {
                 .delete(catalogTitleThemeKeywords)
                 .where(inArray(catalogTitleThemeKeywords.catalogTitleId, ids));
             await tx.delete(titleCredits).where(inArray(titleCredits.catalogTitleId, ids));
+            await tx
+                .delete(catalogTitleProductionCompanies)
+                .where(inArray(catalogTitleProductionCompanies.catalogTitleId, ids));
+            await tx
+                .delete(tmdbRecommendations)
+                .where(inArray(tmdbRecommendations.catalogTitleId, ids));
             const insertAll = async <T>(rows: T[], insert: (chunk: T[]) => Promise<unknown>) => {
                 for (const c of chunks(rows)) await insert(c);
             };
@@ -360,6 +383,26 @@ export class DrizzleCatalogRepository implements CatalogRepository {
                     })),
                 ),
                 (c) => tx.insert(titleCredits).values(c),
+            );
+            await insertAll(
+                titles.flatMap((t) =>
+                    uniqueBy(t.companies, (c) => c.tmdbId).map((c) => ({
+                        catalogTitleId: titleId(t),
+                        productionCompanyId: companyIds.get(c.tmdbId)!,
+                    })),
+                ),
+                (c) => tx.insert(catalogTitleProductionCompanies).values(c),
+            );
+            await insertAll(
+                titles.flatMap((t) =>
+                    t.recommendations.map((r, i) => ({
+                        catalogTitleId: titleId(t),
+                        position: i + 1,
+                        recommendedTmdbId: r.tmdbId,
+                        recommendedTitleType: r.type,
+                    })),
+                ),
+                (c) => tx.insert(tmdbRecommendations).values(c),
             );
 
             return {
@@ -420,6 +463,20 @@ export class DrizzleCatalogRepository implements CatalogRepository {
                     .where(inArray(catalogTitleThemeKeywords.catalogTitleId, c));
                 await tx.delete(titleCredits).where(inArray(titleCredits.catalogTitleId, c));
                 await tx
+                    .delete(catalogTitleProductionCompanies)
+                    .where(inArray(catalogTitleProductionCompanies.catalogTitleId, c));
+                await tx
+                    .delete(tmdbRecommendations)
+                    .where(inArray(tmdbRecommendations.catalogTitleId, c));
+                await tx
+                    .delete(titleNeighbors)
+                    .where(
+                        or(
+                            inArray(titleNeighbors.catalogTitleId, c),
+                            inArray(titleNeighbors.neighborTitleId, c),
+                        ),
+                    );
+                await tx
                     .delete(streamingAvailability)
                     .where(inArray(streamingAvailability.catalogTitleId, c));
                 await tx.delete(catalogTitles).where(inArray(catalogTitles.id, c));
@@ -428,9 +485,16 @@ export class DrizzleCatalogRepository implements CatalogRepository {
     }
 }
 
+// Nomes fixos deste arquivo, nunca dado de fora (C6).
+const TAG_TABLES = new Map<unknown, string>([
+    [genres, "genres"],
+    [themeKeywords, "theme_keywords"],
+    [productionCompanies, "production_companies"],
+]);
+
 async function upsertTags(
     tx: Tx,
-    table: typeof genres | typeof themeKeywords,
+    table: typeof genres | typeof themeKeywords | typeof productionCompanies,
     tags: Tag[],
     updateName: boolean,
 ) {
@@ -443,9 +507,7 @@ async function upsertTags(
             ? insert.onConflictDoUpdate({
                   target: table.tmdbId,
                   set: { name: excluded("name") },
-                  setWhere: sql.raw(
-                      `${table === genres ? "genres" : "theme_keywords"}.name is distinct from excluded.name`,
-                  ),
+                  setWhere: sql.raw(`${TAG_TABLES.get(table)}.name is distinct from excluded.name`),
               })
             : insert.onConflictDoNothing());
         const rows = await tx

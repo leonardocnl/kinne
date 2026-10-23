@@ -73,3 +73,14 @@ describe("o 18 nas consultas de pessoas (recommendation-rounds C2)", () => {
         expect(titleIdsQuery(db, 1).toSQL().sql).not.toContain("certification_br");
     });
 });
+
+describe("papéis da busca de pessoas (taste-graph-data D1)", () => {
+    it("só direção e elenco: roteiro e criação ficam fora", () => {
+        for (const query of [suggestionsQuery(db, "x").toSQL(), titleIdsQuery(db, 1).toSQL()]) {
+            expect(query.sql).toContain('"title_credits"."role" in ($');
+            expect(query.params).toContain("director");
+            expect(query.params).toContain("cast");
+            expect(query.params).not.toContain("writer");
+        }
+    });
+});

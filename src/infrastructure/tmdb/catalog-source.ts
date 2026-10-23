@@ -1,5 +1,11 @@
 import "server-only";
-import type { CatalogSource, Credit, DetailsResult, Tag } from "@/application/sync-catalog";
+import type {
+    CatalogSource,
+    Credit,
+    DetailsResult,
+    SeriesType,
+    Tag,
+} from "@/application/sync-catalog";
 import { pickTrailer, type TitleType } from "@/domain/catalog";
 import { pickBackdrop, pickCertification } from "@/domain/catalog-sync";
 import { TmdbHttpError, type TmdbClient } from "./client";
@@ -17,6 +23,19 @@ const toTag = (t: { id: number; name: string }): Tag => ({ tmdbId: t.id, name: t
 const RESULT_CAP = 10_000;
 const MIN_YEAR = 1870;
 const MAX_CAST = 10; // C2
+// Funções de roteiro no crédito do TMDB (grafo de gosto, docs/design/taste-graph.md §3).
+const WRITER_JOBS = new Set(["Screenplay", "Writer", "Teleplay"]);
+const MAX_WRITERS = 5;
+
+const SERIES_TYPE_BY_TMDB: Record<string, SeriesType> = {
+    Miniseries: "miniseries",
+    Scripted: "scripted",
+    Documentary: "documentary",
+    Reality: "reality",
+    "Talk Show": "talk_show",
+    News: "news",
+    Video: "video",
+};
 // Trailer em pt ou no idioma original (pickTrailer): pedimos os idiomas originais mais comuns
 // numa chamada só. ponytail: idioma original fora da lista fica sem trailer; ampliar se faltar.
 const VIDEO_LANGUAGES = "pt,en,es,fr,de,it,ja,ko,zh,cn,hi,ru,tr,sv,da,no,pl,nl,th,id,ar,he,null";
@@ -97,8 +116,8 @@ export class TmdbCatalogSource implements CatalogSource {
                 language: "pt-BR",
                 append_to_response:
                     type === "movie"
-                        ? "credits,videos,images,keywords,release_dates"
-                        : "credits,videos,images,keywords,content_ratings",
+                        ? "credits,videos,images,keywords,release_dates,recommendations"
+                        : "credits,videos,images,keywords,content_ratings,recommendations",
                 include_video_language: VIDEO_LANGUAGES,
                 include_image_language: "null,pt,en",
             });
@@ -114,6 +133,13 @@ export class TmdbCatalogSource implements CatalogSource {
         const directors = new Map(
             d.credits.crew.filter((c) => c.job === "Director").map((c) => [c.id, c.name]),
         );
+        const writers = new Map(
+            d.credits.crew
+                .filter((c) => WRITER_JOBS.has(c.job))
+                .slice(0, MAX_WRITERS)
+                .map((c) => [c.id, c.name]),
+        );
+        const creators = "created_by" in d ? d.created_by : [];
         const credits: Credit[] = [
             ...[...directors].map(([id, name], order) => ({
                 tmdbPersonId: id,
@@ -130,6 +156,18 @@ export class TmdbCatalogSource implements CatalogSource {
                     role: "cast" as const,
                     order,
                 })),
+            ...[...writers].map(([id, name], order) => ({
+                tmdbPersonId: id,
+                name,
+                role: "writer" as const,
+                order,
+            })),
+            ...[...new Map(creators.map((c) => [c.id, c.name]))].map(([id, name], order) => ({
+                tmdbPersonId: id,
+                name,
+                role: "creator" as const,
+                order,
+            })),
         ];
         const trailer = pickTrailer(
             d.videos.results.map((v) => ({
@@ -159,6 +197,15 @@ export class TmdbCatalogSource implements CatalogSource {
             voteCount: d.vote_count,
             genres: d.genres.map(toTag),
             credits,
+            companies: d.production_companies.map(toTag),
+            // a recomendação de um filme é filme e a de uma série é série, salvo indicação
+            recommendations: d.recommendations.map((r) => ({
+                tmdbId: r.id,
+                type:
+                    (r.media_type ?? (type === "movie" ? "movie" : "tv")) === "movie"
+                        ? ("movie" as const)
+                        : ("series" as const),
+            })),
         };
 
         if ("title" in d) {
@@ -178,6 +225,8 @@ export class TmdbCatalogSource implements CatalogSource {
                     certification: cert.certification,
                     certificationSource: cert.source,
                     keywords: d.keywords.keywords.map(toTag),
+                    seriesType: null,
+                    collectionTmdbId: d.belongs_to_collection?.id ?? null,
                 },
             };
         }
@@ -195,6 +244,8 @@ export class TmdbCatalogSource implements CatalogSource {
                 certification: cert.certification,
                 certificationSource: cert.source,
                 keywords: d.keywords.results.map(toTag),
+                seriesType: (d.type && SERIES_TYPE_BY_TMDB[d.type]) || null,
+                collectionTmdbId: null,
             },
         };
     }

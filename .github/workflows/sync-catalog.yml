@@ -39,3 +39,9 @@ jobs:
       - run: npm run daily:pick
         env:
           DATABASE_URL_POOLED: ${{ secrets.SYNC_DATABASE_URL }}
+      # Grafo de gosto com o catálogo recém-atualizado (docs/design/taste-graph.md §9). Por último:
+      # se falhar, as indicações do dia já saíram e o grafo de ontem continua (taste-graph-data C4).
+      - run: npm run graph:build
+        env:
+          SYNC_TARGET: production
+          SYNC_DATABASE_URL: ${{ secrets.SYNC_DATABASE_URL }}

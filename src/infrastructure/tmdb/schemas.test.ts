@@ -121,6 +121,38 @@ describe("movieDetailsSchema", () => {
     });
 });
 
+describe("taste graph fields (taste-graph-data A1, A3)", () => {
+    it("keeps at most 20 recommendations, in TMDB order, dropping invalid ones", () => {
+        const results = [
+            { id: 5, media_type: "movie" },
+            { id: -1, media_type: "movie" },
+            { id: 6, media_type: "person" },
+            ...Array.from({ length: 30 }, (_, i) => ({ id: 100 + i, media_type: "movie" })),
+        ];
+        const r = parse({ recommendations: { results } });
+        expect(r.data?.recommendations).toHaveLength(20);
+        expect(r.data?.recommendations[0]).toEqual({ id: 5, media_type: "movie" });
+        expect(r.data?.recommendations[1].id).toBe(100);
+    });
+
+    it("treats missing or broken optional graph fields as empty", () => {
+        const r = parse({ recommendations: "x", production_companies: null });
+        expect(r.success).toBe(true);
+        expect(r.data?.recommendations).toEqual([]);
+        expect(r.data?.production_companies).toEqual([]);
+        expect(r.data?.belongs_to_collection).toBeUndefined();
+    });
+
+    it("reads the collection id and sanitises company names", () => {
+        const r = parse({
+            belongs_to_collection: { id: 404609, name: "Coleção" },
+            production_companies: [{ id: 41077, name: "A24" }],
+        });
+        expect(r.data?.belongs_to_collection).toEqual({ id: 404609 });
+        expect(r.data?.production_companies).toEqual([{ id: 41077, name: "A24" }]);
+    });
+});
+
 describe("seriesDetailsSchema", () => {
     it("aceita uma série válida", () => {
         const r = seriesDetailsSchema.safeParse({

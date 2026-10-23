@@ -34,6 +34,10 @@ const details = (tmdbId: number, change: Partial<TitleDetails> = {}): TitleDetai
     genres: [],
     keywords: [],
     credits: [],
+    seriesType: null,
+    collectionTmdbId: null,
+    companies: [],
+    recommendations: [],
     ...change,
 });
 

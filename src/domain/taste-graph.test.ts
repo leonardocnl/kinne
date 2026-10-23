@@ -1,158 +1,240 @@
 import { describe, expect, it } from "vitest";
 
 import {
-    FEELING_RECIPES,
     FEELINGS,
+    FEELING_RECIPES,
+    feelingAffinity,
     feelingAllows,
-    feelingSeeds,
     rankByFeeling,
+    resolveRecipe,
 } from "./feelings";
 import {
-    buildTasteGraph,
-    featureKey,
+    buildNeighborEdges,
+    contentScore,
+    featureRarity,
     groupScores,
-    personalizedPageRank,
-    scoreTitles,
+    proximity,
+    rankByTaste,
+    recommendationScore,
+    spreadTaste,
+    toNeighborGraph,
     toPercentiles,
-    type GraphTitle,
+    type TitleProfile,
 } from "./taste-graph";
 
-function title(id: number, parts: Partial<Omit<GraphTitle, "id">> = {}): GraphTitle {
+function title(id: number, parts: Partial<Omit<TitleProfile, "id">> = {}): TitleProfile {
     return {
         id,
-        genreTmdbIds: [],
-        keywordTmdbIds: [],
-        directorIds: [],
-        castIds: [],
+        type: "movie",
+        themeIds: [],
+        genreIds: [],
+        authorIds: [],
+        writerIds: [],
+        companyIds: [],
+        seriesType: null,
+        collectionId: null,
+        recommendedIds: [],
         ...parts,
     };
 }
 
-// Dois "mundos": comédias leves (1–3) e thrillers de crime (4–6), com um diretor em comum só
-// entre 4 e 5, e um título ponte (7) que é drama nos dois sentidos.
-const CATALOG: GraphTitle[] = [
-    title(1, { genreTmdbIds: [35], keywordTmdbIds: [100, 101] }),
-    title(2, { genreTmdbIds: [35], keywordTmdbIds: [100, 101] }),
-    title(3, { genreTmdbIds: [35], keywordTmdbIds: [101] }),
-    title(4, { genreTmdbIds: [53, 80], keywordTmdbIds: [200], directorIds: [9] }),
-    title(5, { genreTmdbIds: [53, 80], keywordTmdbIds: [200], directorIds: [9] }),
-    title(6, { genreTmdbIds: [53], keywordTmdbIds: [201] }),
-    title(7, { genreTmdbIds: [18], keywordTmdbIds: [201] }),
-    title(8, { genreTmdbIds: [18], keywordTmdbIds: [101] }),
-];
+// Um catálogo pequeno com padding: 40 títulos sem nada em comum, para a raridade fazer sentido.
+const filler = Array.from({ length: 40 }, (_, i) => title(1000 + i, { themeIds: [5000 + i] }));
+// O tema 12 ("baseado em fatos") é comum: está em mais 9 títulos sem relação.
+const commonTheme = Array.from({ length: 9 }, (_, i) => title(2000 + i, { themeIds: [12] }));
 
-describe("buildTasteGraph", () => {
-    it("drops features that link a single title", () => {
-        const graph = buildTasteGraph([
-            title(1, { keywordTmdbIds: [1, 2] }),
-            title(2, { keywordTmdbIds: [1] }),
+const filler2 = Array.from({ length: 200 }, (_, i) => title(3000 + i, { themeIds: [8000 + i] }));
+
+const chernobyl = title(1, {
+    type: "series",
+    themeIds: [10, 11, 12],
+    genreIds: [18, 36],
+    authorIds: [900],
+    writerIds: [901],
+    seriesType: "miniseries",
+    recommendedIds: [3],
+});
+const fukushima = title(2, { themeIds: [10, 11], genreIds: [18] });
+const whenTheySeeUs = title(3, {
+    type: "series",
+    themeIds: [12],
+    genreIds: [18],
+    seriesType: "miniseries",
+});
+const breakingBad = title(4, { type: "series", genreIds: [18, 80], seriesType: "scripted" });
+const CATALOG = [chernobyl, fukushima, whenTheySeeUs, breakingBad, ...filler, ...commonTheme];
+
+describe("featureRarity", () => {
+    it("weighs rare features above common ones and drops singletons", () => {
+        const rarity = featureRarity([
+            title(1, { themeIds: [1, 2] }),
+            title(2, { themeIds: [1, 2] }),
+            title(3, { themeIds: [2] }),
+            title(4, { themeIds: [3] }),
+            ...filler,
         ]);
-        expect(graph.featureIndex.has(featureKey("keyword", 1))).toBe(true);
-        expect(graph.featureIndex.has(featureKey("keyword", 2))).toBe(false);
+        expect(rarity.weight("theme", 1)).toBeGreaterThan(rarity.weight("theme", 2));
+        expect(rarity.weight("theme", 3)).toBe(0);
     });
 
-    it("merges a person who directs and acts in the same title into one edge", () => {
-        const graph = buildTasteGraph([
-            title(1, { directorIds: [5], castIds: [5] }),
-            title(2, { directorIds: [5] }),
-        ]);
-        const node = graph.titleIndex.get(1)!;
-        expect(graph.offsets[node + 1] - graph.offsets[node]).toBe(1);
-    });
-
-    it("weights rare features above common ones", () => {
-        const graph = buildTasteGraph(CATALOG);
-        const node = graph.titleIndex.get(4)!;
-        const weightTo = (key: ReturnType<typeof featureKey>) => {
-            const target = graph.featureIndex.get(key)!;
-            for (let e = graph.offsets[node]; e < graph.offsets[node + 1]; e++) {
-                if (graph.neighbors[e] === target) return graph.weights[e];
-            }
-            return 0;
-        };
-        // genre 53 has 3 titles, keyword 200 has 2
-        expect(weightTo(featureKey("keyword", 200))).toBeGreaterThan(
-            weightTo(featureKey("genre", 53)),
+    it("drops theme hubs, present in more than 5% of the catalog", () => {
+        const many = Array.from({ length: 100 }, (_, i) =>
+            title(i + 1, { themeIds: i < 10 ? [7] : [8 + i] }),
         );
+        expect(featureRarity(many).weight("theme", 7)).toBe(0);
     });
 });
 
-describe("personalizedPageRank", () => {
-    it("returns null without a usable seed", () => {
-        const graph = buildTasteGraph(CATALOG);
-        expect(personalizedPageRank(graph, [])).toBeNull();
-        expect(personalizedPageRank(graph, [{ title: 999, weight: 1 }])).toBeNull();
-        expect(personalizedPageRank(graph, [{ title: 1, weight: 0 }])).toBeNull();
+describe("proximity (design §4)", () => {
+    const rarity = featureRarity(CATALOG);
+
+    it("orders Chernobyl's candidates theme first, then kind of work", () => {
+        const near = (t: TitleProfile) => proximity(chernobyl, t, rarity).proximity;
+        expect(near(fukushima)).toBeGreaterThan(near(whenTheySeeUs));
+        expect(near(whenTheySeeUs)).toBeGreaterThan(near(breakingBad));
     });
 
-    it("keeps the total probability at 1", () => {
-        const graph = buildTasteGraph(CATALOG);
-        const rank = personalizedPageRank(graph, [{ title: 1, weight: 1 }])!;
-        const sum = rank.reduce((a, b) => a + b, 0);
-        expect(sum).toBeCloseTo(1, 6);
+    it("is symmetric and between 0 and 1", () => {
+        for (const a of CATALOG.slice(0, 4)) {
+            for (const b of CATALOG.slice(0, 4)) {
+                const ab = proximity(a, b, rarity).proximity;
+                expect(ab).toBeCloseTo(proximity(b, a, rarity).proximity, 10);
+                expect(ab).toBeGreaterThanOrEqual(0);
+                expect(ab).toBeLessThanOrEqual(1);
+            }
+        }
+    });
+
+    it("gives full content score to the same collection", () => {
+        const a = title(50, { collectionId: 7 });
+        const b = title(51, { collectionId: 7 });
+        expect(contentScore(a, b, rarity)).toBe(1);
+    });
+
+    it("values TMDB recommendations by position, stronger both ways", () => {
+        const a = title(60, { recommendedIds: [61] });
+        const b = title(61);
+        const c = title(62, { recommendedIds: [99, 98, 61] });
+        expect(recommendationScore(a, b)).toBe(1);
+        expect(recommendationScore(c, b)).toBeCloseTo(0.9, 10);
+        expect(recommendationScore(b, title(63))).toBe(0);
+        const both = recommendationScore(
+            title(64, { recommendedIds: [99, 65] }),
+            title(65, { recommendedIds: [64] }),
+        );
+        expect(both).toBe(1);
     });
 });
 
-describe("scoreTitles", () => {
-    it("ranks titles from the liked world above the other world", () => {
-        const graph = buildTasteGraph(CATALOG);
-        const scores = scoreTitles(graph, { likes: [{ title: 1, weight: 1 }] });
-        expect(scores.get(2)!).toBeGreaterThan(scores.get(5)!);
-        expect(scores.get(3)!).toBeGreaterThan(scores.get(6)!);
+describe("buildNeighborEdges", () => {
+    it("keeps each edge once, undirected, never to itself", () => {
+        const edges = buildNeighborEdges(CATALOG);
+        const keys = edges.map((e) => `${e.a}:${e.b}`);
+        expect(new Set(keys).size).toBe(keys.length);
+        for (const e of edges) {
+            expect(e.a).toBeLessThan(e.b);
+            expect(e.proximity).toBeGreaterThan(0);
+        }
     });
 
-    it("never scores the seeds themselves", () => {
-        const graph = buildTasteGraph(CATALOG);
-        const scores = scoreTitles(graph, {
-            likes: [{ title: 1, weight: 1 }],
-            dislikes: [{ title: 4, weight: 1 }],
-        });
+    it("links titles that share only a TMDB recommendation", () => {
+        const edges = buildNeighborEdges([title(1, { recommendedIds: [2] }), title(2), ...filler]);
+        expect(edges.some((e) => e.a === 1 && e.b === 2)).toBe(true);
+    });
+
+    it("caps each title at k neighbours of its own", () => {
+        const hub = title(1, { themeIds: [7] });
+        const others = Array.from({ length: 10 }, (_, i) => title(i + 2, { themeIds: [7] }));
+        const edges = buildNeighborEdges([hub, ...others, ...filler, ...filler2], 3);
+        // every title picks 3; the union is at most 11 × 3
+        expect(edges.length).toBeLessThanOrEqual(33);
+    });
+});
+
+describe("spreadTaste (design §6)", () => {
+    // 1 — 2 — 3 — 4 — 5 in a line, 6 hanging off 1
+    const graph = toNeighborGraph([
+        { a: 1, b: 2, proximity: 0.8 },
+        { a: 2, b: 3, proximity: 0.8 },
+        { a: 3, b: 4, proximity: 0.8 },
+        { a: 4, b: 5, proximity: 0.8 },
+        { a: 1, b: 6, proximity: 0.2 },
+    ]);
+
+    it("reaches three steps and no further", () => {
+        const scores = spreadTaste(graph, [{ titleId: 1, signal: "liked" }]);
+        expect(scores.has(4)).toBe(true);
+        expect(scores.has(5)).toBe(false);
+    });
+
+    it("scores closer and more similar titles higher", () => {
+        const scores = spreadTaste(graph, [{ titleId: 1, signal: "liked" }]);
+        expect(scores.get(2)!).toBeGreaterThan(scores.get(6)!);
+        expect(scores.get(2)!).toBeGreaterThan(scores.get(3)!);
+        expect(scores.get(3)!).toBeGreaterThan(scores.get(4)!);
+    });
+
+    it("never scores the titles the person marked", () => {
+        const scores = spreadTaste(graph, [
+            { titleId: 1, signal: "liked" },
+            { titleId: 3, signal: "not_interested" },
+        ]);
         expect(scores.has(1)).toBe(false);
-        expect(scores.has(4)).toBe(false);
+        expect(scores.has(3)).toBe(false);
     });
 
-    it("finds the same-director title through the person node", () => {
-        const graph = buildTasteGraph(CATALOG);
-        const scores = scoreTitles(graph, { likes: [{ title: 4, weight: 1 }] });
-        const ranked = [...scores].sort((a, b) => b[1] - a[1]).map(([id]) => id);
-        expect(ranked[0]).toBe(5);
+    it("pushes down titles near a dislike", () => {
+        const liked = spreadTaste(graph, [{ titleId: 1, signal: "liked" }]);
+        const both = spreadTaste(graph, [
+            { titleId: 1, signal: "liked" },
+            { titleId: 4, signal: "disliked" },
+        ]);
+        expect(both.get(3)!).toBeLessThan(liked.get(3)!);
     });
 
-    it("pushes down titles close to a dislike", () => {
-        const graph = buildTasteGraph(CATALOG);
-        const likeOnly = scoreTitles(graph, { likes: [{ title: 8, weight: 1 }] });
-        const withDislike = scoreTitles(graph, {
-            likes: [{ title: 8, weight: 1 }],
-            dislikes: [{ title: 6, weight: 1 }],
-        });
-        expect(withDislike.get(7)!).toBeLessThan(likeOnly.get(7)!);
+    it("ignores titles that are not in the graph", () => {
+        expect(spreadTaste(graph, [{ titleId: 999, signal: "liked" }]).size).toBe(0);
+    });
+});
+
+describe("rankByTaste", () => {
+    it("returns null without any taste, so callers keep today's order", () => {
+        expect(rankByTaste(new Map(), [{ id: 1, quality: 7 }])).toBeNull();
     });
 
-    it("starts from feature seeds too", () => {
-        const graph = buildTasteGraph(CATALOG);
-        const scores = scoreTitles(graph, {
-            likes: [{ feature: featureKey("genre", 53), weight: 1 }],
-        });
-        expect(scores.get(4)!).toBeGreaterThan(scores.get(1)!);
+    it("puts taste above quality and neutral above disliked", () => {
+        const ranked = rankByTaste(
+            new Map([
+                [1, 0.5],
+                [3, -0.5],
+            ]),
+            [
+                { id: 1, quality: 6 },
+                { id: 2, quality: 9 },
+                { id: 3, quality: 9.5 },
+            ],
+        );
+        expect(ranked).toEqual([1, 2, 3]);
     });
 });
 
 describe("toPercentiles", () => {
-    it("maps the lowest to 0 and the highest to 1", () => {
+    it("maps lowest to 0, highest to 1 and ties to the same value", () => {
         const result = toPercentiles(
             new Map([
                 [1, 0.5],
                 [2, -1],
                 [3, 3],
+                [4, 0.5],
             ]),
         );
         expect(result.get(2)).toBe(0);
-        expect(result.get(1)).toBe(0.5);
         expect(result.get(3)).toBe(1);
+        expect(result.get(1)).toBe(result.get(4));
     });
 });
 
-describe("groupScores", () => {
+describe("groupScores (design §7)", () => {
     it("uses the least satisfied member", () => {
         const ana = new Map([
             [1, 10],
@@ -164,8 +246,7 @@ describe("groupScores", () => {
             [2, 5],
             [3, 10],
         ]);
-        const group = groupScores([ana, bia]);
-        // 2 is the middle for both; 1 and 3 are loved by one and hated by the other
+        const group = groupScores([ana, bia], [1, 2, 3]);
         expect(group.get(2)).toBe(0.5);
         expect(group.get(1)).toBe(0);
         expect(group.get(3)).toBe(0);
@@ -176,67 +257,69 @@ describe("groupScores", () => {
             [1, 1],
             [2, 2],
         ]);
-        expect(groupScores([ana, new Map()])).toEqual(toPercentiles(ana));
-        expect(groupScores([new Map()]).size).toBe(0);
+        expect(groupScores([ana, new Map()], [1, 2])).toEqual(toPercentiles(ana));
+        expect(groupScores([new Map()], [1, 2]).size).toBe(0);
     });
 });
 
-describe("feelings", () => {
-    it("has a recipe with at least one positive genre for every feeling", () => {
+describe("feelings (design §5)", () => {
+    it("has a recipe with required genres for every feeling", () => {
         for (const feeling of FEELINGS) {
-            expect(Object.keys(FEELING_RECIPES[feeling].genres).length).toBeGreaterThan(0);
+            expect(FEELING_RECIPES[feeling].requireGenres.length).toBeGreaterThan(0);
         }
     });
 
-    it("skips keywords the catalog does not have", () => {
-        const known = new Map([["based on true story", 9672]]);
-        const { likes } = feelingSeeds("true-story", (name) => known.get(name));
-        const keywordSeeds = likes.filter((s) => "feature" in s && s.feature.startsWith("keyword"));
-        expect(keywordSeeds).toEqual([{ feature: "keyword:9672", weight: 3 }]);
-    });
-
-    it("turns avoided genres into dislikes", () => {
-        const { dislikes } = feelingSeeds("cry", () => undefined);
-        expect(dislikes).toContainEqual({ feature: "genre:53", weight: 1 });
-    });
-});
-
-describe("feeling rules", () => {
     it("requires one of the feeling's genres and rejects excluded ones", () => {
         expect(feelingAllows("scare", [27])).toBe(true);
         expect(feelingAllows("scare", [53])).toBe(false);
-        // horror-comedy and kids' horror are not what "Pra tomar susto" means
         expect(feelingAllows("scare", [27, 35])).toBe(false);
         expect(feelingAllows("scare", [27, 10751])).toBe(false);
-        // documentaries never enter a feeling
         expect(feelingAllows("true-story", [18, 99])).toBe(false);
     });
 
     it("applies the certification cap, failing closed without a rating", () => {
-        expect(feelingAllows("cozy", [10751], "10")).toBe(true);
         expect(feelingAllows("cozy", [10751], "12")).toBe(true);
         expect(feelingAllows("cozy", [35], "16")).toBe(false);
         expect(feelingAllows("cozy", [35], null)).toBe(false);
-        // feelings without a cap ignore the rating
         expect(feelingAllows("scare", [27], null)).toBe(true);
     });
 
-    it("ranks only allowed titles, mixing closeness and quality", () => {
-        const scores = new Map([
-            [1, 0.9],
-            [2, 0.5],
-            [3, 0.1],
-            [4, 1],
+    it("resolves only the themes the catalog has, avoided ones negative", () => {
+        const known = new Map([
+            ["grief", 1],
+            ["loss", 2],
         ]);
-        const ranked = rankByFeeling("scare", scores, [
-            { id: 1, genreTmdbIds: [27], quality: 5, certification: null },
-            { id: 2, genreTmdbIds: [27], quality: 9, certification: null },
-            { id: 3, genreTmdbIds: [27], quality: 6, certification: null },
-            { id: 4, genreTmdbIds: [35], quality: 9, certification: null },
-            { id: 5, genreTmdbIds: [27], quality: 9, certification: null },
-        ]);
-        // 4 is not horror; 5 has no graph score. 1 is closest (0.7 × 1 + 0.3 × 0) and beats
-        // 2, the best rated (0.7 × 0.5 + 0.3 × 1): closeness weighs more than quality
-        expect(ranked).toEqual([1, 2, 3]);
+        const recipe = resolveRecipe("cry", (name) => known.get(name));
+        expect([...recipe.themes.keys()].sort()).toEqual([1, 2]);
+        expect(recipe.genres.get(53)).toBeLessThan(0);
+    });
+
+    it("scores rare recipe themes above common ones", () => {
+        const recipe = {
+            genres: new Map<number, number>(),
+            themes: new Map([
+                [1, 1],
+                [2, 1],
+            ]),
+        };
+        const rarity = (id: number) => (id === 1 ? 3 : 0.5);
+        const rare = feelingAffinity(recipe, { genreTmdbIds: [], themeTmdbIds: [1] }, rarity);
+        const common = feelingAffinity(recipe, { genreTmdbIds: [], themeTmdbIds: [2] }, rarity);
+        expect(rare).toBeGreaterThan(common);
+    });
+
+    it("ranks only allowed titles, affinity over quality", () => {
+        const recipe = { genres: new Map<number, number>(), themes: new Map([[1, 1]]) };
+        const ranked = rankByFeeling(
+            "scare",
+            recipe,
+            [
+                { id: 1, genreTmdbIds: [27], themeTmdbIds: [1], certification: null, quality: 5 },
+                { id: 2, genreTmdbIds: [27], themeTmdbIds: [], certification: null, quality: 9 },
+                { id: 3, genreTmdbIds: [35], themeTmdbIds: [1], certification: null, quality: 9 },
+            ],
+            () => 1,
+        );
+        expect(ranked).toEqual([1, 2]);
     });
 });
