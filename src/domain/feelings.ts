@@ -1,9 +1,10 @@
-import { featureKey, type Seed } from "./taste-graph";
+import { featureKey, toPercentiles, type Seed } from "./taste-graph";
 
-// Escolha por sentimento: cada sentimento é uma "receita" de pontos de partida no grafo de gosto.
+// Escolha por sentimento: cada sentimento é uma "receita" de pontos de partida no grafo de gosto,
+// mais duas regras duras de gênero (o que o título precisa ter e o que ele não pode ter).
 // Os temas são referidos pelo nome em inglês do TMDB (o banco guarda o nome, e o id do TMDB de um
 // tema não é algo que se saiba de cor); a infrastructure resolve nome → tema na hora de montar.
-// Os pesos são valores de partida, a calibrar contra o catálogo real.
+// Os pesos são valores de partida, calibrados contra o catálogo real (calibrate-feelings).
 
 export const FEELINGS = [
     "laugh",
@@ -36,11 +37,14 @@ export const FEELING_LABELS: Record<Feeling, string> = {
 };
 
 export type FeelingRecipe = {
-    // gêneros do TMDB (ids de filme e de série) com o peso de cada um
+    // regra dura: o título precisa ter ao menos um destes gêneros do TMDB
+    requireGenres: readonly number[];
+    // regra dura: o título não pode ter nenhum destes
+    excludeGenres: readonly number[];
+    // sementes positivas: gêneros (id do TMDB) e temas (nome no TMDB), com peso
     genres: Readonly<Record<number, number>>;
-    // temas do TMDB pelo nome, com peso
     keywords: Readonly<Record<string, number>>;
-    // o que afasta: vira semente negativa
+    // sementes negativas: o que afasta sem proibir
     avoidGenres?: Readonly<Record<number, number>>;
     avoidKeywords?: Readonly<Record<string, number>>;
 };
@@ -59,7 +63,9 @@ const G = {
     fantasy: 14,
     history: 36,
     horror: 27,
+    kids: 10762,
     mystery: 9648,
+    reality: 10764,
     romance: 10749,
     sciFi: 878,
     sciFiFantasy: 10765,
@@ -68,14 +74,22 @@ const G = {
     warPolitics: 10768,
 } as const;
 
+// Documentário, reality e infantil nunca entram num sentimento: a calibração mostrou que eles
+// dominam as receitas (muitos temas literais) sem ser o que a pessoa quer quando escolhe um.
+const NEVER = [G.documentary, G.reality, G.kids];
+
 export const FEELING_RECIPES: Record<Feeling, FeelingRecipe> = {
     laugh: {
-        genres: { [G.comedy]: 3, [G.family]: 0.5, [G.animation]: 0.5 },
-        keywords: { "buddy comedy": 2, "road trip": 1, friendship: 1, parody: 1.5, satire: 1 },
-        avoidGenres: { [G.horror]: 1, [G.war]: 1 },
-        avoidKeywords: { death: 1, grief: 1.5, cancer: 1.5, suicide: 2 },
+        requireGenres: [G.comedy],
+        excludeGenres: [...NEVER, G.horror],
+        genres: { [G.comedy]: 3 },
+        keywords: { "buddy comedy": 2, parody: 1.5, satire: 1.5, "road trip": 1, slapstick: 1.5 },
+        avoidGenres: { [G.war]: 1, [G.crime]: 0.5, [G.thriller]: 0.5 },
+        avoidKeywords: { grief: 1.5, cancer: 1.5, suicide: 2 },
     },
     cry: {
+        requireGenres: [G.drama],
+        excludeGenres: [...NEVER, G.horror, G.action, G.comedy],
         genres: { [G.drama]: 2, [G.romance]: 0.5 },
         keywords: {
             grief: 2,
@@ -84,72 +98,98 @@ export const FEELING_RECIPES: Record<Feeling, FeelingRecipe> = {
             "father son relationship": 1,
             "mother daughter relationship": 1,
             "tragic love": 1.5,
-            "coming of age": 0.5,
+            "loss of loved one": 2,
         },
-        avoidGenres: { [G.comedy]: 1, [G.horror]: 1 },
+        avoidGenres: { [G.thriller]: 1, [G.crime]: 1 },
     },
     "nail-biting": {
-        genres: { [G.thriller]: 3, [G.crime]: 1.5, [G.mystery]: 1 },
+        requireGenres: [G.thriller],
+        excludeGenres: [...NEVER, G.family, G.animation, G.comedy],
+        genres: { [G.thriller]: 3, [G.crime]: 1, [G.mystery]: 1 },
         keywords: {
             heist: 1.5,
-            "cat and mouse": 2,
             hostage: 1.5,
             "serial killer": 1,
             survival: 1,
-            "race against time": 2,
+            "race against time": 1.5,
+            manhunt: 1.5,
         },
-        avoidGenres: { [G.comedy]: 1, [G.family]: 1 },
+        avoidGenres: { [G.romance]: 1 },
     },
     scare: {
+        requireGenres: [G.horror],
+        excludeGenres: [...NEVER, G.family, G.animation, G.comedy],
         genres: { [G.horror]: 3 },
         keywords: { supernatural: 1.5, "haunted house": 2, possession: 1.5, slasher: 1.5 },
-        avoidGenres: { [G.comedy]: 0.5, [G.family]: 1.5, [G.animation]: 1 },
     },
     cozy: {
-        genres: { [G.family]: 1.5, [G.comedy]: 1, [G.animation]: 1, [G.romance]: 0.5 },
+        requireGenres: [G.comedy, G.family, G.romance, G.animation],
+        excludeGenres: [...NEVER, G.horror, G.thriller, G.crime, G.war, G.action],
+        genres: { [G.family]: 1.5, [G.comedy]: 1.5, [G.romance]: 0.5, [G.animation]: 0.5 },
         keywords: {
-            "feel-good": 2.5,
             friendship: 1.5,
-            "small town": 1,
+            "small town": 1.5,
             "found family": 2,
             heartwarming: 2,
+            christmas: 1,
         },
-        avoidGenres: { [G.horror]: 2, [G.war]: 1.5, [G.thriller]: 1 },
-        avoidKeywords: { murder: 1.5, "serial killer": 2, torture: 2 },
+        avoidKeywords: { death: 1, grief: 1.5, murder: 1.5 },
     },
     "mind-bending": {
+        requireGenres: [G.mystery, G.sciFi, G.sciFiFantasy],
+        excludeGenres: [...NEVER, G.family, G.animation, G.comedy],
         genres: { [G.mystery]: 2, [G.sciFi]: 2, [G.sciFiFantasy]: 1.5, [G.thriller]: 0.5 },
         keywords: {
             "time travel": 2,
             "plot twist": 2,
-            "alternate reality": 2,
+            "parallel world": 2,
+            "time loop": 2,
             dystopia: 1,
-            "artificial intelligence": 1,
-            "nonlinear timeline": 2,
+            "nonlinear timeline": 1.5,
         },
-        avoidGenres: { [G.family]: 1 },
     },
     explosions: {
-        genres: { [G.action]: 3, [G.adventure]: 1.5, [G.actionAdventure]: 3 },
-        keywords: { "car chase": 2, shootout: 1.5, "martial arts": 1.5, superhero: 1, spy: 1 },
-        avoidGenres: { [G.romance]: 1, [G.documentary]: 1 },
+        requireGenres: [G.action, G.actionAdventure],
+        excludeGenres: [...NEVER, G.family, G.animation],
+        genres: { [G.action]: 3, [G.actionAdventure]: 3, [G.adventure]: 1, [G.thriller]: 0.5 },
+        keywords: { chase: 1.5, shootout: 1.5, "martial arts": 1.5, explosion: 2, spy: 1 },
+        avoidGenres: { [G.romance]: 1, [G.drama]: 0.5 },
     },
     swoon: {
+        requireGenres: [G.romance],
+        excludeGenres: [...NEVER, G.horror, G.thriller, G.animation],
         genres: { [G.romance]: 3, [G.comedy]: 0.5, [G.drama]: 0.5 },
-        keywords: { "romantic comedy": 2, "love at first sight": 1.5, "first love": 1.5 },
-        avoidGenres: { [G.horror]: 2, [G.war]: 1 },
+        keywords: { "love at first sight": 1.5, "first love": 1.5, romcom: 2, "love": 1 },
     },
     "true-story": {
-        genres: { [G.history]: 1.5, [G.crime]: 1, [G.drama]: 0.5, [G.documentary]: 1 },
+        requireGenres: [G.drama, G.history, G.crime, G.thriller, G.war, G.warPolitics],
+        excludeGenres: [...NEVER, G.animation, G.comedy],
+        genres: { [G.history]: 1.5, [G.drama]: 1, [G.crime]: 0.5 },
         keywords: {
             "based on true story": 3,
             biography: 2,
             "true crime": 2.5,
             "historical event": 1.5,
-            disaster: 1,
+            "based on real events": 3,
         },
     },
 };
+
+/** Se o título passa pelas regras duras de gênero do sentimento. */
+export function feelingAllows(feeling: Feeling, genreTmdbIds: readonly number[]): boolean {
+    const recipe = FEELING_RECIPES[feeling];
+    return (
+        genreTmdbIds.some((id) => recipe.requireGenres.includes(id)) &&
+        !genreTmdbIds.some((id) => recipe.excludeGenres.includes(id))
+    );
+}
+
+// O passeio de um sentimento volta mais vezes ao ponto de partida que o do gosto: o sentimento é
+// sobre os temas e gêneros da receita, não sobre títulos parecidos com títulos parecidos.
+export const FEELING_RESTART = 0.5;
+
+// Quanto a qualidade (nota ponderada) pesa contra a proximidade do sentimento na ordem final.
+export const FEELING_QUALITY_WEIGHT = 0.3;
 
 /**
  * As sementes de um sentimento. Recebe a função que resolve o nome de um tema no id do TMDB;
@@ -178,4 +218,36 @@ export function feelingSeeds(
         likes: toSeeds(recipe.genres, recipe.keywords),
         dislikes: toSeeds(recipe.avoidGenres, recipe.avoidKeywords),
     };
+}
+
+export type FeelingCandidate = {
+    id: number;
+    genreTmdbIds: readonly number[];
+    // nota ponderada (estilo IMDb) já calculada; maior é melhor
+    quality: number;
+};
+
+/**
+ * Ordem final de um sentimento: só os títulos que passam pelas regras duras, ordenados por uma
+ * mistura do percentil de proximidade no grafo com o percentil de qualidade. Sem a qualidade,
+ * o topo vira títulos obscuros com o tema exato; sem o grafo, vira a lista dos mais bem avaliados.
+ */
+export function rankByFeeling(
+    feeling: Feeling,
+    graphScores: ReadonlyMap<number, number>,
+    candidates: readonly FeelingCandidate[],
+): number[] {
+    const allowed = candidates.filter(
+        (c) => graphScores.has(c.id) && feelingAllows(feeling, c.genreTmdbIds),
+    );
+    const closeness = toPercentiles(new Map(allowed.map((c) => [c.id, graphScores.get(c.id)!])));
+    const quality = toPercentiles(new Map(allowed.map((c) => [c.id, c.quality])));
+    const w = FEELING_QUALITY_WEIGHT;
+    return allowed
+        .map((c) => ({
+            id: c.id,
+            score: (1 - w) * closeness.get(c.id)! + w * quality.get(c.id)!,
+        }))
+        .sort((a, b) => b.score - a.score)
+        .map((c) => c.id);
 }

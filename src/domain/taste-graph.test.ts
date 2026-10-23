@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { FEELINGS, FEELING_RECIPES, feelingSeeds } from "./feelings";
+import {
+    FEELING_RECIPES,
+    FEELINGS,
+    feelingAllows,
+    feelingSeeds,
+    rankByFeeling,
+} from "./feelings";
 import {
     buildTasteGraph,
     featureKey,
@@ -190,7 +196,38 @@ describe("feelings", () => {
     });
 
     it("turns avoided genres into dislikes", () => {
-        const { dislikes } = feelingSeeds("scare", () => undefined);
-        expect(dislikes).toContainEqual({ feature: "genre:10751", weight: 1.5 });
+        const { dislikes } = feelingSeeds("cry", () => undefined);
+        expect(dislikes).toContainEqual({ feature: "genre:53", weight: 1 });
+    });
+});
+
+describe("feeling rules", () => {
+    it("requires one of the feeling's genres and rejects excluded ones", () => {
+        expect(feelingAllows("scare", [27])).toBe(true);
+        expect(feelingAllows("scare", [53])).toBe(false);
+        // horror-comedy and kids' horror are not what "Pra tomar susto" means
+        expect(feelingAllows("scare", [27, 35])).toBe(false);
+        expect(feelingAllows("scare", [27, 10751])).toBe(false);
+        // documentaries never enter a feeling
+        expect(feelingAllows("true-story", [18, 99])).toBe(false);
+    });
+
+    it("ranks only allowed titles, mixing closeness and quality", () => {
+        const scores = new Map([
+            [1, 0.9],
+            [2, 0.5],
+            [3, 0.1],
+            [4, 1],
+        ]);
+        const ranked = rankByFeeling("scare", scores, [
+            { id: 1, genreTmdbIds: [27], quality: 5 },
+            { id: 2, genreTmdbIds: [27], quality: 9 },
+            { id: 3, genreTmdbIds: [27], quality: 6 },
+            { id: 4, genreTmdbIds: [35], quality: 9 },
+            { id: 5, genreTmdbIds: [27], quality: 9 },
+        ]);
+        // 4 is not horror; 5 has no graph score. 1 is closest (0.7 × 1 + 0.3 × 0) and beats
+        // 2, the best rated (0.7 × 0.5 + 0.3 × 1): closeness weighs more than quality
+        expect(ranked).toEqual([1, 2, 3]);
     });
 });
