@@ -96,6 +96,14 @@ after=$(psqlq -c "select count(*) from group_room_members")
 (( after < before )) || fail "a purga não apagou os membros das salas vencidas"
 assert_eq "$(psqlq -c "select count(*) from group_rooms where expires_at <= now()")" 0 "salas vencidas depois da purga"
 
+echo "9b. a limpeza diária (kinne_sync) apaga a sala vencida e as filhas, pelo cascade"
+V=$(new_room 77777777 sqltest-g cookie-g1)
+join_room 77777777 cookie-g2 >/dev/null
+psqlq -c "update group_rooms set created_at = now() - interval '5 hours', expires_at = now() - interval '2 hours' where id = $V" >/dev/null
+psql -v ON_ERROR_STOP=1 -qAt -c "set role kinne_sync; delete from group_rooms where expires_at <= now()" >/dev/null
+assert_eq "$(psqlq -c "select count(*) from group_rooms where id = $V")" 0 "sala apagada pela limpeza"
+assert_eq "$(psqlq -c "select count(*) from group_room_members where room_id = $V")" 0 "membros apagados pelo cascade"
+
 echo "10. permissões do kinne_app: lê, escreve só as colunas da fase e não apaga nem cria direto"
 denied() { # $1 = descrição, $2 = SQL que tem de ser recusado
     if psql -v ON_ERROR_STOP=1 -qAt -c "set role kinne_app; $2" >/dev/null 2>&1; then

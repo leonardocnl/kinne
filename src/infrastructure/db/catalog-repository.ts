@@ -190,6 +190,18 @@ export class DrizzleCatalogRepository implements CatalogRepository {
         return { cacheRows, counters: counters.rows };
     }
 
+    /**
+     * Limpeza diária das salas de grupo vencidas (group-room C2): o site também apaga as que
+     * encontra, mas uma sala que ninguém abre mais só sai por aqui. As filhas saem pelo cascade.
+     */
+    async cleanGroupRooms(): Promise<number> {
+        const r = await this.db.execute<{ n: string }>(
+            sql`with gone as (delete from group_rooms where expires_at <= now() returning 1)
+                select count(*) as n from gone`,
+        );
+        return Number(r.rows[0].n);
+    }
+
     async databaseSizeBytes(): Promise<number> {
         const r = await this.db.execute<{ size: string }>(
             sql`select pg_database_size(current_database()) as size`,

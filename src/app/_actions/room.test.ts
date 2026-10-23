@@ -268,7 +268,7 @@ describe("quem pede é achado pelo cookie, nunca por um id do corpo (A2, A3)", (
                     settings: null,
                 }),
             ).toEqual({ ok: false });
-            expect(await actions.roomState()).toEqual({ kind: "ended" });
+            expect(await actions.roomState()).toEqual({ kind: "none" });
         }
         for (const fn of Object.values(repository)) expect(fn).not.toHaveBeenCalled();
     });

@@ -134,6 +134,16 @@ try {
         })(),
     );
 
+    check(
+        "o estado do saguão traz o código, para mostrar o QR",
+        (state("creator") as unknown as { room: { code: string | null } }).room.code === "BBBBBBB2",
+    );
+    check(
+        "o estado lista os streamings marcados por alguém, sem dizer por quem",
+        JSON.stringify((state("creator") as unknown as { marked: string[] }).marked) ===
+            '["netflix"]',
+    );
+
     console.log("# começar");
     check(
         "só quem criou começa (A3)",
@@ -161,6 +171,12 @@ try {
         admin(
             "select string_agg(position || ':' || coalesce(group_score::text, 'n'), ',' order by position) from group_room_finalists where round = 1 and room_id = (select id from group_rooms where code = 'BBBBBBB2')",
         ) === "1:0.9,2:0.8,3:n,4:0.5",
+    );
+
+    check(
+        "depois de começar, o código some do estado",
+        (state("creator") as unknown as { room: { code: string | null } }).room.code === null ||
+            (state("creator") as unknown as { room: { code?: string } }).room.code === undefined,
     );
 
     console.log("# votar");

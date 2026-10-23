@@ -158,12 +158,13 @@ export async function leaveRoom(): Promise<RoomAnswer> {
     return OK;
 }
 
-export type RoomStateAnswer = RoomView | { kind: "limited" };
+export type RoomStateAnswer = RoomView | { kind: "limited" } | { kind: "none" };
 
 /** O estado da sala para quem pergunta, a cada 2,5 s enquanto a aba está visível (RNE007). */
 export async function roomState(): Promise<RoomStateAnswer> {
     const tokenHash = await memberTokenHash();
-    if (!tokenHash) return { kind: "ended" };
+    // sem cookie a pessoa nunca esteve numa sala; com cookie e sem sala, ela terminou (C10)
+    if (!tokenHash) return { kind: "none" };
     if (!admitMember(tokenHash)) return { kind: "limited" };
     return loadRoom(
         {
