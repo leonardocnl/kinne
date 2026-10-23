@@ -27,7 +27,9 @@ const finalist = (titleId: number, extra: Partial<RoomSnapshot["finalists"][numb
     ...extra,
 });
 
-function snapshot(extra: Partial<RoomSnapshot> & { room?: Partial<RoomSnapshot["room"]> } = {}) {
+function snapshot(
+    extra: Partial<Omit<RoomSnapshot, "room">> & { room?: Partial<RoomSnapshot["room"]> } = {},
+) {
     const { room, ...rest } = extra;
     return {
         room: {
