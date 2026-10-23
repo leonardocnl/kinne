@@ -208,10 +208,12 @@ export class DrizzleCatalogRepository implements CatalogRepository {
                 isActive: t.isActive,
                 isBlocked: t.isBlocked,
                 isRecommendable: t.isRecommendable,
+                // O drizzle não qualifica ${t.id} numa select de uma tabela só, e dentro do exists
+                // "id" viraria o da tabela de eventos: o id do título vai escrito à mão.
                 referenced: sql<boolean>`exists (select 1 from ${anonymousUsageEvents}
-                    where ${anonymousUsageEvents.catalogTitleId} = ${t.id})
+                    where ${anonymousUsageEvents.catalogTitleId} = "catalog_titles"."id")
                     or exists (select 1 from ${dailyPicks}
-                    where ${dailyPicks.catalogTitleId} = ${t.id})`,
+                    where ${dailyPicks.catalogTitleId} = "catalog_titles"."id")`,
                 hasSynopsis: sql<boolean>`${t.synopsis} is not null`,
                 hasBackdrop: sql<boolean>`${t.backdropImagePath} is not null`,
                 voteCount: t.tmdbVoteCount,
