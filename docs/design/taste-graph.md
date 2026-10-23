@@ -64,7 +64,11 @@ Ficam de fora da proximidade, por não dizerem nada sobre gosto: ano, duração,
 - Se o TMDB recomenda nos dois sentidos, vale o maior dos dois mais metade do menor, limitado a 1.
 - Recomendações para títulos fora do catálogo são descartadas.
 
-### 4.3 Exemplo (ilustrativo)
+### 4.3 Portão mínimo
+
+Um par só vira aresta se os **dados da obra** valerem pelo menos **0,05** (um gênero em três já basta), mesmo que o TMDB recomende um ao outro. Na 2ª calibração (2026-10-23), sem esse portão, o TMDB ligava títulos sem nada em comum por pura popularidade (uma comédia romântica no gosto de quem curtiu Chernobyl).
+
+### 4.4 Exemplo (ilustrativo)
 
 | Comparado com Chernobyl | Dados da obra | Recomendação | Proximidade |
 |---|---|---|---|

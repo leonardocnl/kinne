@@ -17,6 +17,7 @@ import {
     buildNeighborEdges,
     rankByTaste,
     spreadTaste,
+    strongestPath,
     toNeighborGraph,
 } from "@/domain/taste-graph";
 import { connectSyncDb } from "@/infrastructure/db/catalog-repository";
@@ -31,6 +32,7 @@ function report(
     result: GoldenResult,
     ranked: number[],
     nameOf: (id: number) => string,
+    why?: (id: number) => string,
 ) {
     const score = `${result.found}/${result.expected}`;
     const violations = result.violations.length;
@@ -43,7 +45,8 @@ function report(
     }
     if (showLists) {
         ranked.slice(0, SHOW).forEach((id, i) => {
-            console.log(`   ${String(i + 1).padStart(2)}. ${nameOf(id)}`);
+            const reason = why ? `  ← ${why(id)}` : "";
+            console.log(`   ${String(i + 1).padStart(2)}. ${nameOf(id)}${reason}`);
         });
     }
     console.log("");
@@ -59,6 +62,7 @@ async function main() {
         const t1 = performance.now();
         const edges = buildNeighborEdges(rows.map((r) => r.profile));
         const graph = toNeighborGraph(edges);
+        const edgeOf = new Map(edges.map((e) => [`${e.a}:${e.b}`, e]));
         const t2 = performance.now();
 
         const eligible = rows.filter((r) => meetsQualityFloor(r.rating, r.votes));
@@ -141,7 +145,23 @@ async function main() {
             );
             const result = evaluateGolden(ranked, golden, resolveEligible);
             tally(result);
-            report(golden.label, result, ranked, nameOf);
+            // o caminho mais forte até cada indicação, para achar a aresta que trouxe um intruso
+            const liked = signals.filter((x) => x.signal === "liked").map((x) => x.titleId);
+            const why = (id: number) => {
+                const path = strongestPath(graph, liked, id);
+                if (!path) return "só pelos sinais negativos ou pela nota";
+                return path.ids
+                    .slice(0, -1)
+                    .map((from, i) => {
+                        const to = path.ids[i + 1];
+                        const edge = edgeOf.get(from < to ? `${from}:${to}` : `${to}:${from}`)!;
+                        const c = edge.content.toFixed(2);
+                        const r = edge.recommendation.toFixed(2);
+                        return `${byId.get(from)!.name} [obra ${c}, TMDB ${r}]`;
+                    })
+                    .join(" → ");
+            };
+            report(golden.label, result, ranked, nameOf, why);
         }
 
         console.log(

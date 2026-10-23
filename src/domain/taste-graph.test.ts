@@ -17,6 +17,7 @@ import {
     rankByTaste,
     recommendationScore,
     spreadTaste,
+    strongestPath,
     toNeighborGraph,
     toPercentiles,
     type TitleProfile,
@@ -137,8 +138,12 @@ describe("buildNeighborEdges", () => {
         }
     });
 
-    it("links titles that share only a TMDB recommendation", () => {
-        const edges = buildNeighborEdges([title(1, { recommendedIds: [2] }), title(2), ...filler]);
+    it("links titles that share only a genre and a TMDB recommendation", () => {
+        const edges = buildNeighborEdges([
+            title(1, { genreIds: [18], recommendedIds: [2] }),
+            title(2, { genreIds: [18] }),
+            ...filler,
+        ]);
         expect(edges.some((e) => e.a === 1 && e.b === 2)).toBe(true);
     });
 
@@ -148,6 +153,34 @@ describe("buildNeighborEdges", () => {
         const edges = buildNeighborEdges([hub, ...others, ...filler, ...filler2], 3);
         // every title picks 3; the union is at most 11 × 3
         expect(edges.length).toBeLessThanOrEqual(33);
+    });
+});
+
+describe("edge gate", () => {
+    it("drops pairs with nothing in common, even when TMDB recommends them", () => {
+        const edges = buildNeighborEdges([
+            title(1, { genreIds: [18], recommendedIds: [2] }),
+            title(2, { genreIds: [35] }),
+            ...filler,
+        ]);
+        expect(edges.some((e) => e.a === 1 && e.b === 2)).toBe(false);
+    });
+});
+
+describe("strongestPath", () => {
+    const graph = toNeighborGraph([
+        { a: 1, b: 2, proximity: 0.9 },
+        { a: 2, b: 3, proximity: 0.9 },
+        { a: 1, b: 3, proximity: 0.2 },
+    ]);
+
+    it("prefers the stronger path after damping", () => {
+        // direct 0.2 × 1 = 0.2; via 2: 0.81 × 0.35 = 0.28
+        expect(strongestPath(graph, [1], 3)).toEqual({ ids: [1, 2, 3], strength: 0.81 * 0.35 });
+    });
+
+    it("returns null when the target is out of reach", () => {
+        expect(strongestPath(graph, [1], 99)).toBeNull();
     });
 });
 

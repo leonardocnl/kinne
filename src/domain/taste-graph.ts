@@ -162,6 +162,12 @@ export function proximity(a: TitleProfile, b: TitleProfile, rarity: FeatureRarit
 
 export const NEIGHBORS_PER_TITLE = 20;
 
+// Sem nada em comum na obra, não há aresta, nem com recomendação do TMDB. A 2ª calibração
+// (2026-10-23) mostrou Off Campus (comédia romântica) no gosto de quem curtiu Chernobyl e One
+// Piece no de quem curtiu Invocação do Mal: o TMDB às vezes recomenda por popularidade pura.
+// 0,05 é o mínimo de "algo em comum": um gênero em três já passa.
+export const MIN_CONTENT_SCORE = 0.05;
+
 export type Edge = Proximity & { a: number; b: number };
 
 /**
@@ -216,7 +222,7 @@ export function buildNeighborEdges(
         for (const id of candidates) {
             const other = byId.get(id)!;
             const score = proximity(p, other, rarity);
-            if (score.proximity > 0) scored.push({ a: p.id, b: id, ...score });
+            if (score.content >= MIN_CONTENT_SCORE) scored.push({ a: p.id, b: id, ...score });
         }
         scored.sort((x, y) => y.proximity - x.proximity || x.b - y.b);
         for (const edge of scored.slice(0, k)) {
@@ -314,6 +320,36 @@ export function spreadTaste(
         frontier = next;
     }
     return scores;
+}
+
+export type TastePath = { ids: number[]; strength: number };
+
+/**
+ * O caminho mais forte (produto das proximidades vezes o amortecimento) de um título com sinal
+ * positivo até o alvo, com até três arestas. Serve para explicar uma indicação: na calibração
+ * hoje, e um dia, se for o caso, na tela.
+ */
+export function strongestPath(
+    graph: NeighborGraph,
+    likedIds: readonly number[],
+    target: number,
+): TastePath | null {
+    let best: TastePath | null = null;
+    const walk = (path: number[], product: number) => {
+        const step = path.length - 1;
+        const here = path[path.length - 1];
+        if (step > 0 && here === target) {
+            const strength = product * STEP_DAMPING[step - 1];
+            if (!best || strength > best.strength) best = { ids: [...path], strength };
+            return;
+        }
+        if (step === STEP_DAMPING.length) return;
+        for (const n of graph.get(here) ?? []) {
+            if (!path.includes(n.id)) walk([...path, n.id], product * n.proximity);
+        }
+    };
+    for (const id of likedIds) walk([id], 1);
+    return best;
 }
 
 /** Percentis de 0 a 1 (empates recebem o mesmo percentil), para comparar escalas diferentes. */
