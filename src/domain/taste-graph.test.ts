@@ -192,6 +192,17 @@ describe("spreadTaste (design §6)", () => {
         expect(both.get(3)!).toBeLessThan(liked.get(3)!);
     });
 
+    it("damps hubs: a title linked to everything gains less than a dedicated neighbour", () => {
+        // 1 liked; 2 is a dedicated neighbour of 1; 9 is a hub linked to 1 and to 20 others
+        const hubGraph = toNeighborGraph([
+            { a: 1, b: 2, proximity: 0.5 },
+            { a: 1, b: 9, proximity: 0.5 },
+            ...Array.from({ length: 20 }, (_, i) => ({ a: 9, b: 100 + i, proximity: 0.5 })),
+        ]);
+        const scores = spreadTaste(hubGraph, [{ titleId: 1, signal: "liked" }]);
+        expect(scores.get(2)!).toBeGreaterThan(scores.get(9)!);
+    });
+
     it("ignores titles that are not in the graph", () => {
         expect(spreadTaste(graph, [{ titleId: 999, signal: "liked" }]).size).toBe(0);
     });
@@ -200,6 +211,21 @@ describe("spreadTaste (design §6)", () => {
 describe("rankByTaste", () => {
     it("returns null without any taste, so callers keep today's order", () => {
         expect(rankByTaste(new Map(), [{ id: 1, quality: 7 }])).toBeNull();
+    });
+
+    it("keeps a direct neighbour above a well-rated title reached by chance", () => {
+        const ranked = rankByTaste(
+            new Map([
+                [1, 1],
+                [2, 0.02],
+            ]),
+            [
+                { id: 1, quality: 6.5 },
+                { id: 2, quality: 9 },
+                { id: 3, quality: 8 },
+            ],
+        );
+        expect(ranked![0]).toBe(1);
     });
 
     it("puts taste above quality and neutral above disliked", () => {

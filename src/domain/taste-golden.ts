@@ -84,7 +84,7 @@ export const FEELING_GOLDEN: Record<Feeling, GoldenCase> = {
             t('Anne com um "E"', 2017),
             t("Klaus", 2019),
             t("Gravity Falls: Um Verão de Mistérios", 2012),
-            t("Bluey", 2018),
+            // Bluey saiu: é do gênero Kids, que nenhum sentimento aceita (decisão de 2026-10-23)
             t("Steven Universo", 2013),
         ],
         forbidden: [

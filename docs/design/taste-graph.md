@@ -94,9 +94,14 @@ amortecimento: 1 passo = 1,00 · 2 passos = 0,35 · 3 passos = 0,12
 sinal: curti = +1 · vou assistir = +0,6 · não curti = −1 · não me interessa = −0,4
 ```
 
-Na prática: três rodadas de "espalhar" pontos pelos vizinhos, a partir dos títulos com sinal. Em cada rodada, cada título reparte os seus pontos entre os vizinhos em proporção à proximidade, **dividindo pela soma das proximidades dele**: sem essa divisão, os pontos se multiplicariam a cada rodada (um título com 20 vizinhos passaria 20 vezes mais adiante) e o amortecimento não diria nada. Os títulos com sinal não recebem pontuação.
+Na prática: três rodadas de "espalhar" pontos pelos vizinhos, a partir dos títulos com sinal. Em cada rodada, os pontos que vão de um título A a um vizinho B são `pontos(A) × proximidade(A, B) / √(força(A) × força(B))`, em que força é a soma das proximidades de um título:
 
-**Ordem final:** 80% pontuação de gosto (em percentil) + 20% nota ponderada. Sem nenhum sinal, vale a ordem que o Kinne já usa hoje.
+- dividir pela força de **A** impede que os pontos se multipliquem a cada rodada (um título com 40 vizinhos não pode mandar 40 vezes mais adiante);
+- dividir pela força de **B** impede que títulos "no meio de tudo" acumulem pontos só por serem vizinhos de muita coisa. Na 1ª calibração (2026-10-23), sem essa divisão, Batman e Vingadores apareciam no gosto de quem curtiu Invocação do Mal, porque o TMDB recomenda títulos populares para quase tudo.
+
+Os títulos com sinal não recebem pontuação.
+
+**Ordem final:** 80% pontuação de gosto, dividida pela maior pontuação em módulo (fica entre −1 e 1), + 20% percentil da nota ponderada. Não em percentil: na 1ª calibração, o percentil apagava a diferença entre um vizinho direto e um título alcançado por acaso no 3º passo, e a nota decidia sozinha. Sem nenhum sinal, vale a ordem que o Kinne já usa hoje.
 
 ## 7. Sala de grupo
 

@@ -263,9 +263,16 @@ export const SIGNAL_WEIGHTS: Record<TasteSignal, number> = {
 export const STEP_DAMPING = [1, 0.35, 0.12] as const;
 
 /**
- * Espalha os sinais da pessoa pelo grafo em três passos. A cada passo, cada título passa a sua
- * massa aos vizinhos em proporção à proximidade, dividida pela soma das proximidades dele: sem
- * essa divisão a massa cresceria a cada passo e o amortecimento não diria nada.
+ * Espalha os sinais da pessoa pelo grafo em três passos. A cada passo, a massa vai de um título a
+ * um vizinho em proporção à proximidade, dividida pela raiz da força (soma das proximidades) dos
+ * dois lados:
+ *
+ * - do lado de quem passa, para a massa não crescer a cada passo (um título com 40 vizinhos não
+ *   pode mandar 40 vezes mais adiante);
+ * - do lado de quem recebe, para os títulos "no meio de tudo" não acumularem massa só por serem
+ *   vizinhos de muita coisa. A 1ª calibração do grafo (2026-10-23) mostrou Batman e Vingadores
+ *   no gosto de quem curtiu Invocação do Mal: o TMDB recomenda títulos populares para quase
+ *   tudo, e eles viravam ímãs no 2º e no 3º passo.
  *
  * Os títulos com sinal ficam de fora do resultado: o Kinne não indica o que a pessoa já marcou.
  */
@@ -280,14 +287,25 @@ export function spreadTaste(
     const marked = new Set(frontier.keys());
     const scores = new Map<number, number>();
 
+    const strengthCache = new Map<number, number>();
+    const strength = (id: number) => {
+        let value = strengthCache.get(id);
+        if (value === undefined) {
+            value = (graph.get(id) ?? []).reduce((sum, n) => sum + n.proximity, 0);
+            strengthCache.set(id, value);
+        }
+        return value;
+    };
+
     for (const damping of STEP_DAMPING) {
         const next = new Map<number, number>();
         for (const [id, mass] of frontier) {
             const neighbors = graph.get(id);
             if (!neighbors || mass === 0) continue;
-            const strength = neighbors.reduce((sum, n) => sum + n.proximity, 0);
+            const from = Math.sqrt(strength(id));
             for (const n of neighbors) {
-                next.set(n.id, (next.get(n.id) ?? 0) + (mass * n.proximity) / strength);
+                const share = (mass * n.proximity) / (from * Math.sqrt(strength(n.id)));
+                next.set(n.id, (next.get(n.id) ?? 0) + share);
             }
         }
         for (const [id, mass] of next) {
@@ -319,22 +337,30 @@ export const TASTE_SHARE = 0.8;
 export type RankCandidate = { id: number; quality: number };
 
 /**
- * Ordem final do gosto (§6): 80% percentil do gosto + 20% percentil da nota ponderada, entre os
- * candidatos que os filtros deixaram. Um candidato sem pontuação vale 0, neutro: fica abaixo do
- * que a pessoa deve gostar e acima do que está perto do que ela não gostou. Sem nenhuma
- * pontuação, devolve null e quem chama mantém a ordem de hoje.
+ * Ordem final do gosto (§6): 80% gosto + 20% percentil da nota ponderada, entre os candidatos que
+ * os filtros deixaram. O gosto entra dividido pela maior pontuação em módulo (fica entre −1 e 1),
+ * e não em percentil: o percentil apagava a diferença entre o vizinho direto e o título alcançado
+ * por acaso no 3º passo, e a nota decidia sozinha (1ª calibração do grafo: Invocação do Mal 4,
+ * da mesma franquia, ficava fora dos 30 de quem curtiu Invocação do Mal).
+ *
+ * Um candidato sem pontuação vale 0, neutro. Sem nenhuma pontuação, devolve null e quem chama
+ * mantém a ordem de hoje.
  */
 export function rankByTaste(
     scores: ReadonlyMap<number, number>,
     candidates: readonly RankCandidate[],
 ): number[] | null {
     if (scores.size === 0) return null;
-    const taste = toPercentiles(new Map(candidates.map((c) => [c.id, scores.get(c.id) ?? 0])));
+    let peak = 0;
+    for (const c of candidates) peak = Math.max(peak, Math.abs(scores.get(c.id) ?? 0));
+    if (peak === 0) return null;
     const quality = toPercentiles(new Map(candidates.map((c) => [c.id, c.quality])));
     return candidates
         .map((c) => ({
             id: c.id,
-            score: TASTE_SHARE * taste.get(c.id)! + (1 - TASTE_SHARE) * quality.get(c.id)!,
+            score:
+                (TASTE_SHARE * (scores.get(c.id) ?? 0)) / peak +
+                (1 - TASTE_SHARE) * quality.get(c.id)!,
         }))
         .sort((x, y) => y.score - x.score || x.id - y.id)
         .map((c) => c.id);

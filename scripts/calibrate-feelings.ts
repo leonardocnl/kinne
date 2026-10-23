@@ -37,7 +37,10 @@ function report(
     console.log(`## ${label} — esperados ${score}, violações ${violations}`);
     if (result.missed.length) console.log(`   fora dos 30: ${result.missed.join("; ")}`);
     if (violations) console.log(`   VIOLAÇÕES: ${result.violations.join("; ")}`);
-    if (result.absent.length) console.log(`   ausentes no catálogo: ${result.absent.join("; ")}`);
+    if (result.absent.length) {
+        // abaixo do piso: o título existe, mas nunca é indicado (RNG001), então não conta
+        console.log(`   ausentes ou abaixo do piso: ${result.absent.join("; ")}`);
+    }
     if (showLists) {
         ranked.slice(0, SHOW).forEach((id, i) => {
             console.log(`   ${String(i + 1).padStart(2)}. ${nameOf(id)}`);
@@ -77,6 +80,12 @@ async function main() {
             byName
                 .get(normalizeTitleName(ref.name))
                 ?.find((c) => c.year !== null && Math.abs(c.year - ref.year) <= 1)?.id;
+        // o gabarito só conta títulos que podem ser indicados; os sinais aceitam qualquer um
+        const eligibleIds = new Set(eligible.map((r) => r.profile.id));
+        const resolveEligible = (ref: TitleRef) => {
+            const id = resolve(ref);
+            return id !== undefined && eligibleIds.has(id) ? id : undefined;
+        };
 
         const withNeighbors = graph.size;
         console.log(
@@ -114,7 +123,7 @@ async function main() {
         for (const feeling of FEELINGS) {
             const recipe = resolveRecipe(feeling, (name) => themeIdsByName.get(name.toLowerCase()));
             const ranked = rankByFeeling(feeling, recipe, candidates, themeRarity);
-            const result = evaluateGolden(ranked, FEELING_GOLDEN[feeling], resolve);
+            const result = evaluateGolden(ranked, FEELING_GOLDEN[feeling], resolveEligible);
             tally(result);
             report(`${FEELING_LABELS[feeling]} (${ranked.length} títulos)`, result, ranked, nameOf);
         }
@@ -130,7 +139,7 @@ async function main() {
             const ranked = (rankByTaste(scores, tasteCandidates) ?? []).filter(
                 (id) => !signals.some((s) => s.titleId === id),
             );
-            const result = evaluateGolden(ranked, golden, resolve);
+            const result = evaluateGolden(ranked, golden, resolveEligible);
             tally(result);
             report(golden.label, result, ranked, nameOf);
         }
