@@ -43,6 +43,11 @@ describe("parseFilterRequest", () => {
         ["rodada acima de 999", { ...ok, round: 1000 }],
         ["18+ que não é booleano", { ...ok, filters: { ...WIRE, adult: "sim" } }],
         ["sem o 18+", { ...ok, filters: { ...WIRE, adult: undefined } }],
+        ["sentimento fora dos nove (A4)", { ...ok, filters: { ...WIRE, feeling: "tristeza" } }],
+        ["sentimento que não é texto (A4)", { ...ok, filters: { ...WIRE, feeling: 3 } }],
+        ["sentimento como chave de objeto (A4)", { ...ok, filters: { ...WIRE, feeling: {} } }],
+        ["sem o sentimento", { ...ok, filters: { ...WIRE, feeling: undefined } }],
+        ["peso de sentimento vindo do navegador (A6)", { ...ok, filters: { ...WIRE, weight: 2 } }],
         ["pessoa com id texto", { ...ok, filters: { ...WIRE, personId: "1056" } }],
         ["pessoa com id grande demais", { ...ok, filters: { ...WIRE, personId: 2 ** 31 } }],
         [

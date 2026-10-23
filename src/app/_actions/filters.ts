@@ -1,9 +1,11 @@
 "use server";
 
 import "server-only";
-import { drawUnseen, matchTitles, type FilterCandidate } from "@/domain/filters";
-import { buildRounds, meanRating, roundEnd, type RoundEnd } from "@/domain/rounds";
+import { planFilteredRounds } from "@/application/filtered-draw";
+import { drawUnseen, type FilterCandidate } from "@/domain/filters";
+import { roundEnd, type RoundEnd } from "@/domain/rounds";
 import { candidates } from "../_data/candidates";
+import { loadFeelingKit } from "../_data/feelings";
 import { parseFilterRequest } from "../_data/filters";
 import { personTitleIds } from "../_data/people";
 import { admitPersonQuery } from "../_data/person-limit";
@@ -19,6 +21,7 @@ export async function filterCandidates(): Promise<FilterCandidate[]> {
         kinneGenres: c.kinneGenres,
         streamingTmdbIds: c.streamingTmdbIds,
         adult: c.adult,
+        feelings: c.feelings,
     }));
 }
 
@@ -40,8 +43,13 @@ export async function drawFiltered(input: unknown): Promise<FilteredDraw> {
     const person =
         filters.personId === null ? null : new Set(await personTitleIds(filters.personId));
     const all = await candidates();
-    const matching = matchTitles(all, filters, watched, person);
-    const rounds = buildRounds(matching, filters, meanRating(all));
+    // a ordem do sentimento só carrega quando há sentimento (US008 RNE002)
+    const feeling = filters.feeling === null ? null : await loadFeelingKit(filters.feeling);
+    const { matching, rounds } = planFilteredRounds(
+        { candidates: all, person, feeling },
+        filters,
+        watched,
+    );
     const pick = drawUnseen(rounds[round] ?? [], seen);
     return { slug: pick?.slug ?? null, end: roundEnd(rounds, round, matching.length) };
 }

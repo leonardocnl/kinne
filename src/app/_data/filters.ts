@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { FEELINGS } from "@/domain/feelings";
 import { KINNE_GENRES, isKinneGenre } from "@/domain/genre";
 import { MIN_RATING } from "@/domain/catalog";
 import { MAX_PERSON_ID } from "@/domain/person-search";
@@ -28,6 +29,8 @@ const filtersSchema = z.strictObject({
     personId: z.int().min(1).max(MAX_PERSON_ID).nullable(),
     // chip 18+ (recommendation-rounds A1)
     adult: z.boolean(),
+    // US008: um dos nove sentimentos ou nenhum; nunca vira chave de nada além da receita fixa (A4)
+    feeling: z.enum(FEELINGS).nullable(),
 });
 
 // marcados quando os filtros abriram: o marcado depois conta como uma das 10 (US005 RNE001);

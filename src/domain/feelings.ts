@@ -318,3 +318,70 @@ export function rankByFeeling(
         .sort((a, b) => b.score - a.score || a.id - b.id)
         .map((c) => c.id);
 }
+
+// ---------------------------------------------------------------------------------------------
+// Do servidor para o navegador e de volta (US008 RNE004).
+
+const bitOf = (feeling: Feeling) => 1 << FEELINGS.indexOf(feeling);
+
+/**
+ * Quais sentimentos aceitam o título, num número com um bit por sentimento. É só o que o
+ * navegador recebe para o contador: receitas, pesos e temas ficam no servidor.
+ */
+export function feelingMask(genreTmdbIds: readonly number[], certification: string | null): number {
+    let mask = 0;
+    for (const feeling of FEELINGS) {
+        if (feelingAllows(feeling, genreTmdbIds, certification)) mask |= bitOf(feeling);
+    }
+    return mask;
+}
+
+export const maskAllows = (mask: number, feeling: Feeling): boolean =>
+    (mask & bitOf(feeling)) !== 0;
+
+/** O que a ordem do sentimento precisa de cada título, em ids do TMDB. */
+export type FeelingProfile = {
+    id: number;
+    genreTmdbIds: readonly number[];
+    themeTmdbIds: readonly number[];
+    certification: string | null;
+};
+
+export type FeelingData = {
+    profiles: readonly FeelingProfile[];
+    // nome do tema em minúsculas → id do TMDB
+    themeIdsByName: readonly (readonly [string, number])[];
+};
+
+/** Um sentimento pronto para ordenar: receita resolvida e raridade dos temas. */
+export type FeelingKit = {
+    feeling: Feeling;
+    recipe: ResolvedRecipe;
+    profiles: ReadonlyMap<number, FeelingProfile>;
+    themeRarity: (themeTmdbId: number) => number;
+};
+
+export function feelingKit(feeling: Feeling, data: FeelingData): FeelingKit {
+    const names = new Map(data.themeIdsByName);
+    const counts = new Map<number, number>();
+    for (const p of data.profiles) {
+        for (const id of new Set(p.themeTmdbIds)) counts.set(id, (counts.get(id) ?? 0) + 1);
+    }
+    const total = Math.max(data.profiles.length, 1);
+    return {
+        feeling,
+        recipe: resolveRecipe(feeling, (name) => names.get(name.toLowerCase())),
+        profiles: new Map(data.profiles.map((p) => [p.id, p])),
+        themeRarity: (id) => Math.log(total / (counts.get(id) ?? total)),
+    };
+}
+
+/** Afinidade de cada título da lista com o sentimento (títulos sem ficha ficam de fora). */
+export function affinities(kit: FeelingKit, ids: readonly number[]): Map<number, number> {
+    const result = new Map<number, number>();
+    for (const id of ids) {
+        const profile = kit.profiles.get(id);
+        if (profile) result.set(id, feelingAffinity(kit.recipe, profile, kit.themeRarity));
+    }
+    return result;
+}
