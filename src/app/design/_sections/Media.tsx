@@ -1,6 +1,7 @@
 import { Button } from "../../_components/ui/Button";
 import { Frame } from "../../_components/ui/Frame";
 import { Score } from "../../_components/ui/Score";
+import { QrCode } from "../../_components/ui/QrCode";
 import { Skeleton } from "../../_components/ui/Skeleton";
 import { Toast } from "../../_components/ui/Toast";
 import { Wordmark } from "../../_components/ui/Wordmark";
@@ -106,6 +107,20 @@ export function Media() {
                         ),
                     }}
                 />
+            </Spec>
+
+            <Spec
+                name="QrCode"
+                props={["text", "label", "className?"]}
+                does="QR code de um texto, em SVG, sem biblioteca. Módulos escuros em ink sobre o papel claro, com a margem de silêncio que a leitura pede. O tamanho vem de quem usa; o label diz para que serve."
+            >
+                <Row label="endereço da sala">
+                    <QrCode
+                        text="https://kinne.app/sala/ABCD2345"
+                        label="QR code de exemplo"
+                        className="size-40"
+                    />
+                </Row>
             </Spec>
 
             <Spec

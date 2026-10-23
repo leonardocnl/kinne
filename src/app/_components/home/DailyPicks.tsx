@@ -213,28 +213,34 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
                     {/* um amarelo por tela (CM003): com os filtros abertos, o de trás some */}
                     <div
                         className={cx(
-                            "flex gap-2.5 transition-opacity duration-fade motion-reduce:transition-none desktop:pb-11.5",
+                            "flex flex-col gap-2 transition-opacity duration-fade motion-reduce:transition-none desktop:pb-11.5",
                             filters.open && "invisible opacity-0",
                         )}
                     >
-                        <Button
-                            ref={chooseRef}
-                            variant="primary"
-                            onClick={filters.show}
-                            onPointerEnter={preloadFiltersPanel}
-                            onFocus={preloadFiltersPanel}
-                            className="max-desktop:min-w-0 max-desktop:flex-1 max-desktop:px-2.5 desktop:min-w-42"
-                        >
-                            Escolher agora
-                        </Button>
-                        <Button
-                            variant="quiet"
-                            onClick={() => surprise.draw()}
-                            aria-busy={surprise.pending}
-                            className="max-desktop:min-w-0 max-desktop:flex-1 max-desktop:px-2.5 desktop:min-w-42"
-                        >
-                            Me surpreenda
-                        </Button>
+                        <div className="flex gap-2.5">
+                            <Button
+                                ref={chooseRef}
+                                variant="primary"
+                                onClick={filters.show}
+                                onPointerEnter={preloadFiltersPanel}
+                                onFocus={preloadFiltersPanel}
+                                className="max-desktop:min-w-0 max-desktop:flex-1 max-desktop:px-2.5 desktop:min-w-42"
+                            >
+                                Escolher agora
+                            </Button>
+                            <Button
+                                variant="quiet"
+                                onClick={() => surprise.draw()}
+                                aria-busy={surprise.pending}
+                                className="max-desktop:min-w-0 max-desktop:flex-1 max-desktop:px-2.5 desktop:min-w-42"
+                            >
+                                Me surpreenda
+                            </Button>
+                        </div>
+                        {/* discreto, sem a cor de destaque (US011 C1, CM003) */}
+                        <TextLink href="/sala" className="self-center desktop:self-end">
+                            Assistir em grupo
+                        </TextLink>
                     </div>
                 </div>
                 {panelMounted && (
