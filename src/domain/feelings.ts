@@ -47,7 +47,12 @@ export type FeelingRecipe = {
     // sementes negativas: o que afasta sem proibir
     avoidGenres?: Readonly<Record<number, number>>;
     avoidKeywords?: Readonly<Record<string, number>>;
+    // regra dura opcional: classificação indicativa máxima (sem classificação, não entra)
+    maxCertification?: Certification;
 };
+
+export const CERTIFICATIONS = ["L", "10", "12", "14", "16", "18"] as const;
+export type Certification = (typeof CERTIFICATIONS)[number];
 
 // Ids de gênero do TMDB usados nas receitas (filme / série).
 const G = {
@@ -83,13 +88,30 @@ export const FEELING_RECIPES: Record<Feeling, FeelingRecipe> = {
         requireGenres: [G.comedy],
         excludeGenres: [...NEVER, G.horror],
         genres: { [G.comedy]: 3 },
-        keywords: { "buddy comedy": 2, parody: 1.5, satire: 1.5, "road trip": 1, slapstick: 1.5 },
-        avoidGenres: { [G.war]: 1, [G.crime]: 0.5, [G.thriller]: 0.5 },
+        keywords: {
+            "buddy comedy": 2,
+            parody: 1.5,
+            satire: 1.5,
+            "road trip": 1,
+            "slapstick comedy": 1.5,
+        },
+        avoidGenres: { [G.war]: 1, [G.action]: 1, [G.actionAdventure]: 1, [G.animation]: 0.5 },
         avoidKeywords: { grief: 1.5, cancer: 1.5, suicide: 2 },
     },
     cry: {
         requireGenres: [G.drama],
-        excludeGenres: [...NEVER, G.horror, G.action, G.comedy],
+        // a 2ª calibração trouxe Breaking Bad, Evangelion, WandaVision e Donnie Darko
+        excludeGenres: [
+            ...NEVER,
+            G.horror,
+            G.action,
+            G.comedy,
+            G.crime,
+            G.mystery,
+            G.thriller,
+            G.sciFi,
+            G.sciFiFantasy,
+        ],
         genres: { [G.drama]: 2, [G.romance]: 0.5 },
         keywords: {
             grief: 2,
@@ -125,6 +147,8 @@ export const FEELING_RECIPES: Record<Feeling, FeelingRecipe> = {
     cozy: {
         requireGenres: [G.comedy, G.family, G.romance, G.animation],
         excludeGenres: [...NEVER, G.horror, G.thriller, G.crime, G.war, G.action],
+        // a 2ª calibração trouxe Mr. Pickles e Sex Education: animação adulta não aquece
+        maxCertification: "12",
         genres: { [G.family]: 1.5, [G.comedy]: 1.5, [G.romance]: 0.5, [G.animation]: 0.5 },
         keywords: {
             friendship: 1.5,
@@ -137,8 +161,9 @@ export const FEELING_RECIPES: Record<Feeling, FeelingRecipe> = {
     },
     "mind-bending": {
         requireGenres: [G.mystery, G.sciFi, G.sciFiFantasy],
-        excludeGenres: [...NEVER, G.family, G.animation, G.comedy],
-        genres: { [G.mystery]: 2, [G.sciFi]: 2, [G.sciFiFantasy]: 1.5, [G.thriller]: 0.5 },
+        // romance tirava Outlander; ação pesa contra para não virar lista de blockbusters
+        excludeGenres: [...NEVER, G.family, G.animation, G.comedy, G.romance],
+        genres: { [G.mystery]: 1.5, [G.sciFi]: 1, [G.sciFiFantasy]: 1, [G.thriller]: 0.5 },
         keywords: {
             "time travel": 2,
             "plot twist": 2,
@@ -147,6 +172,7 @@ export const FEELING_RECIPES: Record<Feeling, FeelingRecipe> = {
             dystopia: 1,
             "nonlinear timeline": 1.5,
         },
+        avoidGenres: { [G.action]: 1.5, [G.actionAdventure]: 1.5, [G.adventure]: 1 },
     },
     explosions: {
         requireGenres: [G.action, G.actionAdventure],
@@ -170,14 +196,23 @@ export const FEELING_RECIPES: Record<Feeling, FeelingRecipe> = {
             biography: 2,
             "true crime": 2.5,
             "historical event": 1.5,
-            "based on real events": 3,
+            "based on real person": 2,
         },
     },
 };
 
 /** Se o título passa pelas regras duras de gênero do sentimento. */
-export function feelingAllows(feeling: Feeling, genreTmdbIds: readonly number[]): boolean {
+export function feelingAllows(
+    feeling: Feeling,
+    genreTmdbIds: readonly number[],
+    certification: string | null = null,
+): boolean {
     const recipe = FEELING_RECIPES[feeling];
+    if (recipe.maxCertification) {
+        const max = CERTIFICATIONS.indexOf(recipe.maxCertification);
+        const actual = CERTIFICATIONS.indexOf(certification as Certification);
+        if (actual < 0 || actual > max) return false;
+    }
     return (
         genreTmdbIds.some((id) => recipe.requireGenres.includes(id)) &&
         !genreTmdbIds.some((id) => recipe.excludeGenres.includes(id))
@@ -223,6 +258,7 @@ export function feelingSeeds(
 export type FeelingCandidate = {
     id: number;
     genreTmdbIds: readonly number[];
+    certification: string | null;
     // nota ponderada (estilo IMDb) já calculada; maior é melhor
     quality: number;
 };
@@ -238,7 +274,7 @@ export function rankByFeeling(
     candidates: readonly FeelingCandidate[],
 ): number[] {
     const allowed = candidates.filter(
-        (c) => graphScores.has(c.id) && feelingAllows(feeling, c.genreTmdbIds),
+        (c) => graphScores.has(c.id) && feelingAllows(feeling, c.genreTmdbIds, c.certification),
     );
     const closeness = toPercentiles(new Map(allowed.map((c) => [c.id, graphScores.get(c.id)!])));
     const quality = toPercentiles(new Map(allowed.map((c) => [c.id, c.quality])));

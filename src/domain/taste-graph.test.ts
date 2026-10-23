@@ -212,6 +212,15 @@ describe("feeling rules", () => {
         expect(feelingAllows("true-story", [18, 99])).toBe(false);
     });
 
+    it("applies the certification cap, failing closed without a rating", () => {
+        expect(feelingAllows("cozy", [10751], "10")).toBe(true);
+        expect(feelingAllows("cozy", [10751], "12")).toBe(true);
+        expect(feelingAllows("cozy", [35], "16")).toBe(false);
+        expect(feelingAllows("cozy", [35], null)).toBe(false);
+        // feelings without a cap ignore the rating
+        expect(feelingAllows("scare", [27], null)).toBe(true);
+    });
+
     it("ranks only allowed titles, mixing closeness and quality", () => {
         const scores = new Map([
             [1, 0.9],
@@ -220,11 +229,11 @@ describe("feeling rules", () => {
             [4, 1],
         ]);
         const ranked = rankByFeeling("scare", scores, [
-            { id: 1, genreTmdbIds: [27], quality: 5 },
-            { id: 2, genreTmdbIds: [27], quality: 9 },
-            { id: 3, genreTmdbIds: [27], quality: 6 },
-            { id: 4, genreTmdbIds: [35], quality: 9 },
-            { id: 5, genreTmdbIds: [27], quality: 9 },
+            { id: 1, genreTmdbIds: [27], quality: 5, certification: null },
+            { id: 2, genreTmdbIds: [27], quality: 9, certification: null },
+            { id: 3, genreTmdbIds: [27], quality: 6, certification: null },
+            { id: 4, genreTmdbIds: [35], quality: 9, certification: null },
+            { id: 5, genreTmdbIds: [27], quality: 9, certification: null },
         ]);
         // 4 is not horror; 5 has no graph score. 1 is closest (0.7 × 1 + 0.3 × 0) and beats
         // 2, the best rated (0.7 × 0.5 + 0.3 × 1): closeness weighs more than quality

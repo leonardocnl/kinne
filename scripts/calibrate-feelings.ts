@@ -40,6 +40,7 @@ async function main() {
                 type: catalogTitles.titleType,
                 rating: catalogTitles.tmdbAverageRating,
                 votes: catalogTitles.tmdbVoteCount,
+                certification: catalogTitles.certificationBr,
             })
             .from(catalogTitles)
             .where(eq(catalogTitles.isRecommendable, true))
@@ -52,6 +53,7 @@ async function main() {
     const candidates = rows.map((r) => ({
         id: r.id,
         genreTmdbIds: genresById.get(r.id) ?? [],
+        certification: r.certification,
         quality: weightedRating(r.rating, r.votes, mean),
     }));
     const keywordNames = [...keywordIdsByName.keys()];
