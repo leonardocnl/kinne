@@ -148,6 +148,42 @@ describe("joinRoom (C3, C4, A1, A4, RNE003)", () => {
         expect(setCookie).toHaveBeenCalledOnce();
     });
 
+    it("com o cookie de uma sala viva, volta a ela sem criar entrada nova (RNE002)", async () => {
+        store.set("kinne_room", goodCookie);
+        repository.snapshot.mockResolvedValue({
+            room: { expiresAt: new Date(Date.now() + 3_600_000).toISOString() },
+        });
+        const { joinRoom } = await import("./room");
+        expect(await joinRoom({ code: "abcd-2345", member })).toEqual({ ok: true });
+        expect(repository.join).not.toHaveBeenCalled();
+        // o cookie continua o mesmo: nada é regravado
+        expect(setCookie).not.toHaveBeenCalled();
+        expect(repository.snapshot.mock.calls[0][0]).toMatch(/^[0-9a-f]{64}$/);
+    });
+
+    it("com o cookie de uma sala que terminou ou venceu, entra normalmente", async () => {
+        store.set("kinne_room", goodCookie);
+        repository.join.mockResolvedValue(true);
+        const { joinRoom } = await import("./room");
+        repository.snapshot.mockResolvedValue(null);
+        expect(await joinRoom({ code: "ABCD2345", member })).toEqual({ ok: true });
+        repository.snapshot.mockResolvedValue({
+            room: { expiresAt: new Date(Date.now() - 1000).toISOString() },
+        });
+        expect(await joinRoom({ code: "ABCD2345", member })).toEqual({ ok: true });
+        expect(repository.join).toHaveBeenCalledTimes(2);
+        expect(setCookie).toHaveBeenCalledTimes(2);
+    });
+
+    it("código malformado continua recusado mesmo com o cookie de uma sala viva", async () => {
+        store.set("kinne_room", goodCookie);
+        repository.snapshot.mockResolvedValue({
+            room: { expiresAt: new Date(Date.now() + 3_600_000).toISOString() },
+        });
+        const { joinRoom } = await import("./room");
+        expect(await joinRoom({ code: "lixo", member })).toEqual({ ok: false });
+    });
+
     it("a mesma resposta para código inexistente, vencido, cheio ou começado (RNE003)", async () => {
         const { joinRoom } = await import("./room");
         repository.join.mockResolvedValue(false);

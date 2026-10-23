@@ -76,8 +76,14 @@ export async function joinRoom(input: unknown): Promise<RoomAnswer> {
     if (!request || !(await admitIp("join"))) return REFUSED;
     const code = normalizeCode(request.code);
     if (!code) return REFUSED;
+    const repository = roomRepository();
+    // Reabrir o endereço do QR (ou digitar o código de novo) com o cookie de uma sala viva leva de
+    // volta a essa sala, sem criar entrada nova: o cookie vale mais que o código (RNE002).
+    const current = await memberTokenHash();
+    const here = current ? await repository.snapshot(current) : null;
+    if (here && new Date(here.room.expiresAt).getTime() > Date.now()) return OK;
     const token = newMemberToken();
-    const joined = await roomRepository().join({
+    const joined = await repository.join({
         code,
         tokenHash: hashToken(token),
         member: request.member,

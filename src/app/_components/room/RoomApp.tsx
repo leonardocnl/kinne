@@ -51,7 +51,7 @@ export function RoomApp({ joinCode }: RoomAppProps) {
         if (!joinCode || started.current) return;
         started.current = true;
         let live = true;
-        // quem recarrega a página do QR já está na sala: não entra duas vezes
+        // quem recarrega a página do QR já está na sala: o servidor o devolve a ela (RNE002)
         joinOnce(joinCode).then(
             (ok) => {
                 if (!live) return;
