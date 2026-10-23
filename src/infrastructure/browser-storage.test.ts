@@ -8,6 +8,7 @@ import {
     savedFilters,
     savedStreamings,
     shownTitles,
+    tasteSignals,
     teamBrowser,
     titleOrigin,
     watchedTitles,
@@ -187,5 +188,20 @@ describe("abrir os filtros ao chegar (US004 C3)", () => {
         filtersOnArrival.request();
         expect(filtersOnArrival.take()).toBe(true);
         expect(filtersOnArrival.take()).toBe(false);
+    });
+});
+
+describe("sinais de gosto (US009 RNE001)", () => {
+    it("guarda, troca o anterior e descarta o que foi mexido à mão", () => {
+        const localStorage = memoryStorage();
+        vi.stubGlobal("window", { localStorage });
+        tasteSignals.record(3, "liked");
+        tasteSignals.record(4, "will_watch");
+        tasteSignals.record(3, "disliked");
+        expect(tasteSignals.read()).toEqual({ liked: [], willWatch: [4], disliked: [3] });
+        localStorage.setItem("kinne:taste", '{"liked":[1,"x",-2],"extra":1}');
+        expect(tasteSignals.read()).toEqual({ liked: [1], willWatch: [], disliked: [] });
+        localStorage.setItem("kinne:taste", "{quebrado");
+        expect(tasteSignals.read()).toEqual({ liked: [], willWatch: [], disliked: [] });
     });
 });

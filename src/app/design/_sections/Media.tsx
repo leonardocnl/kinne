@@ -77,11 +77,22 @@ export function Media() {
 
             <Spec
                 name="Toast"
-                props={["message?", "className?"]}
-                does="Confirma em poucas palavras o que acabou de acontecer. Fica sempre na página, vazio e invisível, para o leitor de tela anunciar o texto novo."
+                props={["message?", "children?", "className?"]}
+                does="Confirma em poucas palavras o que acabou de acontecer, com ações curtas ao lado se preciso (a pergunta “Curtiu?”). Fica sempre na página, vazio e invisível, para o leitor de tela anunciar o texto novo."
             >
                 <Row label="com texto">
                     <Toast message="Anotado: você já viu Chernobyl." />
+                </Row>
+                <Row label="com pergunta">
+                    <Toast message="Anotado: você já viu Chernobyl.">
+                        <span className="font-medium">Curtiu?</span>
+                        <Button variant="round" aria-label="Curti">
+                            <span aria-hidden="true">👍</span>
+                        </Button>
+                        <Button variant="round" aria-label="Não curti">
+                            <span aria-hidden="true">👎</span>
+                        </Button>
+                    </Toast>
                 </Row>
                 <DoDont
                     use={{

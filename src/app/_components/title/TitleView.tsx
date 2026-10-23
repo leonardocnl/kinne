@@ -87,7 +87,7 @@ export function TitleView({ title, daily }: TitleViewProps) {
 
     function markSeen() {
         watchedTitles.add(title.id);
-        showToast(`Anotado: você já viu ${title.title}.`);
+        showToast(`Anotado: você já viu ${title.title}.`, { asking: title.id });
         // fora das recomendações não há próxima opção: a tela fica onde está
         if (title.recommendable) next("seen");
         track("already_watched_clicked", { titleId: title.id });
