@@ -105,7 +105,7 @@ Na prática: três rodadas de "espalhar" pontos pelos vizinhos, a partir dos tí
 
 Os títulos com sinal não recebem pontuação.
 
-**Ordem final:** 80% pontuação de gosto, dividida pela maior pontuação em módulo (fica entre −1 e 1), + 20% percentil da nota ponderada. Não em percentil: na 1ª calibração, o percentil apagava a diferença entre um vizinho direto e um título alcançado por acaso no 3º passo, e a nota decidia sozinha. Sem nenhum sinal, vale a ordem que o Kinne já usa hoje.
+**Ordem final, em três faixas:** primeiro o que o gosto alcançou (pontuação positiva), depois o neutro, por último o que está perto do que a pessoa não curtiu. A nota só ordena **dentro** de cada faixa (na 3ª calibração, Breaking Bad entrava no gosto de quem curtiu Invocação do Mal só pela nota). Dentro da faixa positiva: 80% `√(pontuação / maior pontuação)` + 20% percentil da nota ponderada. A divisão evita que o percentil apague a diferença entre vizinho direto e acaso (1ª calibração); a raiz evita que um vizinho fortíssimo, como a mesma franquia, achate todos os outros (3ª calibração). Sem nenhum sinal, vale a ordem que o Kinne já usa hoje.
 
 ## 7. Sala de grupo
 

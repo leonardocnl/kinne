@@ -261,6 +261,21 @@ describe("rankByTaste", () => {
         expect(ranked![0]).toBe(1);
     });
 
+    it("never lets a title reached by no path beat one the taste reached", () => {
+        const ranked = rankByTaste(
+            new Map([
+                [1, 1],
+                [2, 0.001],
+            ]),
+            [
+                { id: 1, quality: 7 },
+                { id: 2, quality: 5 },
+                { id: 3, quality: 9.9 },
+            ],
+        );
+        expect(ranked).toEqual([1, 2, 3]);
+    });
+
     it("puts taste above quality and neutral above disliked", () => {
         const ranked = rankByTaste(
             new Map([

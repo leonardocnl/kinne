@@ -373,32 +373,37 @@ export const TASTE_SHARE = 0.8;
 export type RankCandidate = { id: number; quality: number };
 
 /**
- * Ordem final do gosto (§6): 80% gosto + 20% percentil da nota ponderada, entre os candidatos que
- * os filtros deixaram. O gosto entra dividido pela maior pontuação em módulo (fica entre −1 e 1),
- * e não em percentil: o percentil apagava a diferença entre o vizinho direto e o título alcançado
- * por acaso no 3º passo, e a nota decidia sozinha (1ª calibração do grafo: Invocação do Mal 4,
- * da mesma franquia, ficava fora dos 30 de quem curtiu Invocação do Mal).
+ * Ordem final do gosto (§6), em três faixas: primeiro o que o gosto alcançou (pontuação positiva),
+ * depois o neutro (sem pontuação), por último o que está perto do que a pessoa não curtiu. A nota
+ * só ordena dentro de cada faixa: na 3ª calibração, Breaking Bad e One Piece entravam no gosto de
+ * quem curtiu Invocação do Mal só pela nota, à frente de títulos de terror alcançados pelo grafo.
  *
- * Um candidato sem pontuação vale 0, neutro. Sem nenhuma pontuação, devolve null e quem chama
- * mantém a ordem de hoje.
+ * Dentro da faixa positiva: 80% gosto + 20% percentil da nota ponderada. O gosto entra como a raiz
+ * de (pontuação / maior pontuação): sem a divisão, o percentil apagava a diferença entre vizinho
+ * direto e acaso no 3º passo (1ª calibração); sem a raiz, um vizinho muito forte (a mesma
+ * franquia) achatava todos os outros perto de zero (3ª calibração).
+ *
+ * Sem nenhuma pontuação positiva, devolve null e quem chama mantém a ordem de hoje.
  */
 export function rankByTaste(
     scores: ReadonlyMap<number, number>,
     candidates: readonly RankCandidate[],
 ): number[] | null {
-    if (scores.size === 0) return null;
     let peak = 0;
-    for (const c of candidates) peak = Math.max(peak, Math.abs(scores.get(c.id) ?? 0));
+    for (const c of candidates) peak = Math.max(peak, scores.get(c.id) ?? 0);
     if (peak === 0) return null;
     const quality = toPercentiles(new Map(candidates.map((c) => [c.id, c.quality])));
+    const tier = (s: number) => (s > 0 ? 0 : s === 0 ? 1 : 2);
     return candidates
-        .map((c) => ({
-            id: c.id,
-            score:
-                (TASTE_SHARE * (scores.get(c.id) ?? 0)) / peak +
-                (1 - TASTE_SHARE) * quality.get(c.id)!,
-        }))
-        .sort((x, y) => y.score - x.score || x.id - y.id)
+        .map((c) => {
+            const s = scores.get(c.id) ?? 0;
+            const q = quality.get(c.id)!;
+            // positivo: gosto e nota; neutro: só a nota; negativo: o mais negativo por último
+            const within =
+                s > 0 ? TASTE_SHARE * Math.sqrt(s / peak) + (1 - TASTE_SHARE) * q : s === 0 ? q : s;
+            return { id: c.id, tier: tier(s), within };
+        })
+        .sort((x, y) => x.tier - y.tier || y.within - x.within || x.id - y.id)
         .map((c) => c.id);
 }
 
