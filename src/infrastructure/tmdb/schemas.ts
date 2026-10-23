@@ -76,6 +76,14 @@ const image = z.object({
 });
 
 const person = { id, name: requiredText(LIMITS.personName) };
+
+// Grafo de gosto (taste-graph-data A1): só id e tipo; no máximo 20, na ordem do TMDB.
+export const MAX_RECOMMENDATIONS = 20;
+const recommendation = z.object({ id, media_type: z.enum(["movie", "tv"]).optional() });
+const recommendations = z
+    .object({ results: listOf(recommendation) })
+    .catch({ results: [] })
+    .transform((r) => r.results.slice(0, MAX_RECOMMENDATIONS));
 const credits = z
     .object({
         cast: listOf(z.object({ ...person, order: z.number().int().min(0).max(10_000) })),
@@ -95,6 +103,8 @@ const common = {
     videos: z.object({ results: listOf(video) }).catch({ results: [] }),
     images: z.object({ backdrops: listOf(image) }).catch({ backdrops: [] }),
     credits,
+    production_companies: listOf(tag),
+    recommendations,
 };
 
 const countryCode = z.string().regex(/^[A-Z]{2}$/);
@@ -106,6 +116,7 @@ export const movieDetailsSchema = z.object({
     original_title: requiredText(LIMITS.title),
     release_date: releaseYear,
     runtime: runtime.nullish(),
+    belongs_to_collection: z.object({ id }).nullish().catch(null),
     keywords: z.object({ keywords: listOf(tag) }).catch({ keywords: [] }),
     release_dates: z
         .object({
@@ -125,6 +136,9 @@ export const seriesDetailsSchema = z.object({
     original_name: requiredText(LIMITS.title),
     first_air_date: releaseYear,
     episode_run_time: z.array(runtime).max(100).catch([]),
+    created_by: listOf(z.object(person)),
+    // taste-graph-data A3: texto livre do TMDB, mapeado para uma lista fixa em catalog-source
+    type: z.string().max(50).nullish().catch(null),
     keywords: z.object({ results: listOf(tag) }).catch({ results: [] }),
     content_ratings: z
         .object({ results: listOf(z.object({ iso_3166_1: countryCode, rating: certification })) })

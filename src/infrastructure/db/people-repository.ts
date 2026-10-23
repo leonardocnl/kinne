@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import { ADULT_CERTIFICATION } from "@/domain/catalog-sync";
 import {
     MAX_PERSON_RESULTS,
@@ -32,6 +32,10 @@ export const candidateTitle = and(
     ne(catalogTitles.certificationBr, ADULT_CERTIFICATION),
 );
 
+// Roteiro e criação existem só para o grafo de gosto: a busca segue "ator ou diretor"
+// (taste-graph-data D1).
+const personRole = inArray(titleCredits.role, ["director", "cast"]);
+
 const name = sql`kinne_normalize(${people.name})`;
 const titles = sql<number>`count(distinct ${titleCredits.catalogTitleId})::int`;
 // o papel em que mais aparece; empate fica com direção, o que a pessoa escolheu fazer
@@ -46,7 +50,7 @@ export function suggestionsQuery(db: Db, term: string) {
         .from(people)
         .innerJoin(titleCredits, eq(titleCredits.personId, people.id))
         .innerJoin(catalogTitles, eq(catalogTitles.id, titleCredits.catalogTitleId))
-        .where(and(sql`${name} like '%' || ${needle} || '%'`, candidateTitle))
+        .where(and(sql`${name} like '%' || ${needle} || '%'`, candidateTitle, personRole))
         .groupBy(people.id)
         .orderBy(sql`(${name} like ${needle} || '%') desc`, desc(titles), asc(people.id))
         .limit(MAX_PERSON_RESULTS);
@@ -60,7 +64,7 @@ export function titleIdsQuery(db: Db, personId: number) {
             .from(titleCredits)
             .innerJoin(catalogTitles, eq(catalogTitles.id, titleCredits.catalogTitleId))
             // com os 18: o chip 18+ decide no navegador e no sorteio (recommendation-rounds C2)
-            .where(and(eq(titleCredits.personId, personId), drawableTitle))
+            .where(and(eq(titleCredits.personId, personId), drawableTitle, personRole))
             .orderBy(asc(titleCredits.catalogTitleId))
             .limit(MAX_PERSON_TITLES)
     );

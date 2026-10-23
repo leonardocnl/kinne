@@ -6,6 +6,7 @@ import {
     isSlug,
     MAX_SLUG_LENGTH,
     meetsQualityFloor,
+    meetsTasteFloor,
     pickTrailer,
     uniqueSlug,
     type Video,
@@ -172,5 +173,12 @@ describe("formatRuntime", () => {
         expect(formatRuntime(128, "movie")).toBe("2h 08min");
         expect(formatRuntime(65, "series")).toBe("1h 05min por episódio");
         expect(formatRuntime(55, "series")).toBe("55min por episódio");
+    });
+});
+
+describe("meetsTasteFloor (taste graph §8)", () => {
+    it("needs only 100 votes, whatever the rating", () => {
+        expect(meetsTasteFloor(100)).toBe(true);
+        expect(meetsTasteFloor(99)).toBe(false);
     });
 });

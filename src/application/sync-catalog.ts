@@ -13,9 +13,24 @@ export type Tag = { tmdbId: number; name: string };
 export type Credit = {
     tmdbPersonId: number;
     name: string;
-    role: "director" | "cast";
+    // creator e writer alimentam só o grafo de gosto (taste-graph-data D1)
+    role: "director" | "cast" | "creator" | "writer";
     order: number;
 };
+
+export const SERIES_TYPES = [
+    "miniseries",
+    "scripted",
+    "documentary",
+    "reality",
+    "talk_show",
+    "news",
+    "video",
+] as const;
+export type SeriesType = (typeof SERIES_TYPES)[number];
+
+// Uma recomendação do TMDB, na ordem dele (posição 1 = a primeira).
+export type TmdbRecommendation = { tmdbId: number; type: TitleType };
 
 export type TitleDetails = {
     tmdbId: number;
@@ -37,6 +52,11 @@ export type TitleDetails = {
     genres: Tag[];
     keywords: Tag[];
     credits: Credit[];
+    // grafo de gosto (docs/design/taste-graph.md §3)
+    seriesType: SeriesType | null;
+    collectionTmdbId: number | null;
+    companies: Tag[];
+    recommendations: TmdbRecommendation[];
 };
 
 export type CatalogTitle = TitleDetails & { slug: string };

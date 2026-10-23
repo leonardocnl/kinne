@@ -14,6 +14,10 @@ Cópia em Markdown dos requisitos mantidos no Google Drive (pasta KINNE › 01 �
 | US005  | [us005-responder-a-uma-recomendacao.md](us005-responder-a-uma-recomendacao.md) | Vou assistir, Já vi                                                |
 | US006  | [us006-tirar-a-equipe-da-contagem.md](us006-tirar-a-equipe-da-contagem.md)     | Endereço secreto da equipe                                         |
 | US007  | [us007-manter-o-catalogo-atualizado.md](us007-manter-o-catalogo-atualizado.md) | Atualização diária                                                 |
+| US008  | [us008-escolher-pelo-que-sinto.md](us008-escolher-pelo-que-sinto.md)           | Sentimentos nos filtros (pós-MVP, proposta)                        |
+| US009  | [us009-gosto-invisivel.md](us009-gosto-invisivel.md)                           | Ordem pelo gosto (pós-MVP, proposta)                               |
+| US010  | [us010-curtiu.md](us010-curtiu.md)                                             | "Curtiu?" depois de "Já vi" (pós-MVP, proposta)                    |
+| US011  | [us011-sala-de-grupo.md](us011-sala-de-grupo.md)                               | Sala de grupo (pós-MVP, proposta)                                  |
 | 02     | [02-requisitos-nao-funcionais.md](02-requisitos-nao-funcionais.md)             | RNF01 a RNF11                                                      |
 | 03     | [03-medicao-da-semana-0.md](03-medicao-da-semana-0.md)                         | Critérios, definições, eventos                                     |
 | 04     | [04-mudancas-e-pendencias.md](04-mudancas-e-pendencias.md)                     | O que mudou e o que falta decidir                                  |
