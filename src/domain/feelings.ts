@@ -86,7 +86,7 @@ const NEVER = [G.documentary, G.reality, G.kids];
 export const FEELING_RECIPES: Record<Feeling, FeelingRecipe> = {
     laugh: {
         requireGenres: [G.comedy],
-        // pesos negativos não bastaram (3ª calibração): One-Punch Man e Gavião Arqueiro seguiam
+        // pesos negativos não bastaram (3ª calibração): One-Punch Man e Gavião Arqueiro
         excludeGenres: [...NEVER, G.horror, G.action, G.actionAdventure],
         genres: { [G.comedy]: 3 },
         keywords: {
@@ -161,7 +161,7 @@ export const FEELING_RECIPES: Record<Feeling, FeelingRecipe> = {
         avoidKeywords: { death: 1, grief: 1.5, murder: 1.5 },
     },
     "mind-bending": {
-        // sci-fi & fantasia de série sozinho é amplo demais (Outlander); exige mistério ou sci-fi
+        // sci-fi & fantasia de série sozinho é amplo demais (Outlander): exige mistério
         requireGenres: [G.mystery, G.sciFi],
         // pesos negativos não bastaram (3ª calibração): Ultimato e Exterminador seguiam no topo
         excludeGenres: [
