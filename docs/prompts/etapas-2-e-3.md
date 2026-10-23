@@ -8,7 +8,7 @@ Você vai implementar, em sequência, a etapa 2 (US008 Escolher pelo que sinto, 
 
 ## Contexto
 
-A etapa 1 está no PR #26 (branch `feat/taste-graph`, não mesclado): grafo de vizinhos mais próximos, sentimentos, piso com gosto, `graph:build`, gabarito, e os requisitos e modelos de ameaças das etapas 2 e 3. A migration 0009 já foi aplicada no banco develop. Nenhuma tela lê o grafo ainda.
+A etapa 1 está no PR #26 (branch `feat/taste-graph`): grafo de vizinhos mais próximos, sentimentos, piso com gosto, `graph:build`, gabarito, e os requisitos e modelos de ameaças das etapas 2 e 3. A migration 0009 já foi aplicada no banco develop. Nenhuma tela lê o grafo ainda.
 
 ## Decisões do dono do projeto (23/10/2026)
 
@@ -46,7 +46,6 @@ Valem como aprovadas. Ao começar, atualize os documentos para refletir isso: tr
 
 ## Regras para as duas etapas
 
-- Não mescle nada e não abra PR para `develop` nem `main`: o teste com usuários de 26/10/2026 roda sobre o `develop` atual.
 - Um commit por critério ou grupo pequeno de critérios, citando o critério (ex.: `feat(feelings): feeling chips in filters (US008 C1)`).
 - Cada mitigação marcada **AC** nos modelos de ameaças vira teste ou verificação automática. Schemas zod estritos. Nenhum query param; na sala, o código só no caminho do QR, trocado por `/sala` logo ao entrar.
 - Interface: siga o DESIGN.md e o estilo existente (chips, painel de vidro, um só controle amarelo por tela). Foco em fazer existir: nada de refino visual além do necessário para ficar coerente.

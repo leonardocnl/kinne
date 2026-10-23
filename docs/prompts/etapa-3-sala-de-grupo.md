@@ -6,7 +6,7 @@ Cole o texto abaixo numa sessão nova do Claude Code na nuvem, com o repositóri
 
 Você vai implementar a sala de grupo do Kinne: a história US011.
 
-**Contexto.** O grafo de gosto está no PR #26 (`feat/taste-graph`) e as telas de gosto e sentimentos no PR da etapa 2 (`feat/taste-ui`). Nenhum dos dois foi mesclado.
+**Contexto.** O grafo de gosto está no PR #26 (`feat/taste-graph`) e as telas de gosto e sentimentos no PR da etapa 2 (`feat/taste-ui`).
 
 **Leia antes de qualquer código, nesta ordem:**
 
@@ -18,7 +18,7 @@ Você vai implementar a sala de grupo do Kinne: a história US011.
 
 **Como trabalhar:**
 
-- Crie a branch `feat/group-room` a partir de `origin/feat/taste-ui` e abra o PR como **rascunho** com base em `feat/taste-ui`. Não mescle nada.
+- Crie a branch `feat/group-room` a partir de `origin/feat/taste-ui` e abra o PR como **rascunho** com base em `feat/taste-ui`.
 - Primeiro proponha e mostre a modelagem das tabelas (`group_rooms`, `group_room_members`, `group_room_finalists`, `group_room_votes`), com tipos, chaves, índices e as permissões de `kinne_app`. **Espere aprovação** antes de escrever a migration.
 - A migration nova segue o padrão da 0009: SQL e snapshot do drizzle-kit (rode `npm run db:generate`), com os `GRANT` mínimos. Não aplique em nenhum banco; quem aplica é o dono do projeto.
 - Domínio puro em `src/domain/group-room.ts` (fases, código, finalistas, vencedor), com testes; casos de uso em `application`; ações em `src/app/_actions/`.

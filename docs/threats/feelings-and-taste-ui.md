@@ -60,9 +60,9 @@ New inputs: `feeling` (enum) in the filter request; `taste` (three id lists) in 
 
 ### D. Repudiation / integrity of metrics
 
-| #   | Threat                                       | L / I | Mitigation                                                                                                  |
-| --- | -------------------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------- |
-| D1  | Week-0 metrics distorted by taste reordering | M / M | Ship after the 26/10 test; `recommendation_shown` keeps its schema, so before/after can be compared by date |
+| #   | Threat                                       | L / I | Mitigation                                                                       |
+| --- | -------------------------------------------- | ----- | -------------------------------------------------------------------------------- |
+| D1  | Week-0 metrics distorted by taste reordering | M / M | `recommendation_shown` keeps its schema, so before/after can be compared by date |
 
 ## Accepted risks
 

@@ -6,7 +6,7 @@ Cole o texto abaixo numa sessão nova do Claude Code na nuvem, com o repositóri
 
 Você vai implementar a etapa 2 do grafo de gosto do Kinne: as histórias US008 (Escolher pelo que sinto), US009 (Gosto invisível) e US010 (Curtiu?).
 
-**Contexto.** A etapa 1 está no PR #26 (branch `feat/taste-graph`, ainda não mesclado): grafo de vizinhos mais próximos, sentimentos, piso com gosto, `graph:build` e gabarito. Nada da etapa 1 é lido pelas telas ainda. A migration 0009 já foi aplicada no banco develop.
+**Contexto.** A etapa 1 está no PR #26 (branch `feat/taste-graph`): grafo de vizinhos mais próximos, sentimentos, piso com gosto, `graph:build` e gabarito. Nada da etapa 1 é lido pelas telas ainda. A migration 0009 já foi aplicada no banco develop.
 
 **Leia antes de qualquer código, nesta ordem:**
 
@@ -18,7 +18,7 @@ Você vai implementar a etapa 2 do grafo de gosto do Kinne: as histórias US008 
 
 **Como trabalhar:**
 
-- Crie a branch `feat/taste-ui` a partir de `origin/feat/taste-graph` e abra o PR como **rascunho** com base em `feat/taste-graph`. Não mescle nada e não abra PR para `develop` nem `main`: o teste com usuários de 26/10/2026 roda sobre o `develop` atual.
+- Crie a branch `feat/taste-ui` a partir de `origin/feat/taste-graph` e abra o PR como **rascunho** com base em `feat/taste-graph`.
 - Ordem: US010 (menor) → US008 → US009. Um commit por critério ou grupo pequeno de critérios, citando o critério (ex.: `feat(feelings): feeling chips in filters (US008 C1)`).
 - Cada mitigação marcada **AC** nos modelos de ameaças vira teste. Os schemas zod são estritos.
 - Interface: siga o DESIGN.md e o estilo existente (chips, painel de vidro, só um controle amarelo por tela). Foco em fazer existir: nada de refino visual além do necessário para ficar coerente com o que já existe.
