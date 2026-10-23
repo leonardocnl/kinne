@@ -104,6 +104,8 @@ Preview keeps the **develop** branch values: no production credential in Preview
 
 Open the PR `develop` → `main`, wait for CI, merge. Vercel deploys Production from `main`.
 
+Then put `.github/workflows/sync-catalog.yml` back to its production form: `ref: main` on the checkout, `SYNC_TARGET: production`, `secrets.SYNC_DATABASE_URL` in both steps, and the `REVALIDATE_ORIGIN` / `REVALIDATE_SECRET` env lines. Remove the temporary rows in security §17 and in catalog-sync trust boundary 4. Do this before the first production sync (§7).
+
 ## 7. First production sync
 
 1. Actions → **Sync catalog** → Run workflow (branch `main`). The first full load reads about 22k titles; the job allows 60 minutes.
