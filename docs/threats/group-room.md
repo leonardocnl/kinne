@@ -1,6 +1,6 @@
 # Threat analysis — Group room (US011)
 
-Status: proposed 2026-10-23, awaiting the owner's approval. Every mitigation marked **AC** is an acceptance criterion with a covering test (or, for headers and cookies, an automated check) in the branch that implements it.
+Status: approved 2026-10-23. Every mitigation marked **AC** is an acceptance criterion with a covering test (or, for headers and cookies, an automated check) in the branch that implements it.
 
 ## Scope
 

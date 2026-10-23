@@ -1,6 +1,6 @@
 # Threat analysis — Feelings, invisible taste and "Curtiu?" (US008, US009, US010)
 
-Status: proposed 2026-10-23, awaiting the owner's approval. Complements `taste-graph.md` (request-time use of the graph) and `taste-graph-data.md` (sync and build). Every mitigation marked **AC** is an acceptance criterion with a covering test in the branch that implements it.
+Status: approved 2026-10-23. Complements `taste-graph.md` (request-time use of the graph) and `taste-graph-data.md` (sync and build). Every mitigation marked **AC** is an acceptance criterion with a covering test in the branch that implements it.
 
 ## Scope
 

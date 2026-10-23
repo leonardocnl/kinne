@@ -1,6 +1,6 @@
 # US009 – Gosto invisível
 
-Kinne · Requisitos do pós-MVP · proposta de 23/10/2026, aguardando aprovação
+Kinne · Requisitos do pós-MVP · aprovada em 23/10/2026
 
 |                |                                                                                          |
 | -------------- | ---------------------------------------------------------------------------------------- |

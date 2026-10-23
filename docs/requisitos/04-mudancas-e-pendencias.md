@@ -21,10 +21,10 @@ Kinne · Requisitos da semana 0 · versão de 12/10/2026
 
 ### Grafo de gosto (23/10/2026)
 
-- [ ] Aprovar US008 a US011 e os modelos de ameaças `feelings-and-taste-ui.md` e `group-room.md`.
-- [ ] Decidir se entra um botão "Não me interessa" na tela do título. O modelo já tem o sinal (−0,4), mas hoje não há botão; sem ele, US009 usa só curti, não curti e vou assistir.
-- [ ] Sala de grupo: confirmar que "o que cada um topa" é só streamings e gêneros (US011 C5), sem veto de título, e que pessoas aparecem sem nome ("Pessoa 1").
-- [ ] Sala de grupo: confirmar a união dos streamings (basta um membro ter) em vez da interseção.
+- [x] Aprovar US008 a US011 e os modelos de ameaças `feelings-and-taste-ui.md` e `group-room.md` (aprovados em 23/10/2026).
+- [x] Botão "Não me interessa": não entra nesta versão. O gosto usa só curti, não curti e vou assistir (decisão de 23/10/2026).
+- [x] Sala de grupo: "o que cada um topa" é só streamings e gêneros (US011 C5), sem veto de título, e as pessoas aparecem sem nome ("Pessoa 1") (decisão de 23/10/2026).
+- [x] Sala de grupo: os streamings valem em união, basta um membro ter (decisão de 23/10/2026).
 - [ ] Levar US008 a US011 ao Drive.
 
 ### Design
