@@ -19,6 +19,7 @@ import {
     text,
     timestamp,
     unique,
+    uniqueIndex,
     uuid,
 } from "drizzle-orm/pg-core";
 
@@ -375,4 +376,162 @@ export const searchCounters = pgTable(
         count: integer("count").notNull(),
     },
     (t) => [primaryKey({ columns: [t.day, t.name] })],
+);
+
+// ---------------------------------------------------------------------------------------------
+// Contas (US012 a US015, docs/threats/accounts.md). O site não escreve nestas tabelas nem lê as de
+// códigos e sessões: tudo passa por funções kinne_* que recebem o hash do token da sessão e
+// resolvem a conta lá dentro (migration 0011).
+
+export const users = pgTable(
+    "users",
+    {
+        id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+        // o único dado pessoal (US012 RNE001); o kinne_app não lê esta coluna
+        email: text("email").notNull(),
+        createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    },
+    (t) => [
+        unique("users_email_unique").on(t.email),
+        check(
+            "users_email_check",
+            sql`${t.email} = lower(btrim(${t.email})) and char_length(${t.email}) between 3 and 254
+                and ${t.email} ~ '^[^@[:space:]]+@[^@[:space:]]+\\.[^@[:space:]]+$'`,
+        ),
+    ],
+);
+
+// Códigos de 6 dígitos, só como HMAC com AUTH_SECRET (A5): o hash leva o e-mail e a finalidade.
+// Entrar: ligado ao hash do e-mail (a conta só nasce quando o código é confirmado). Apagar a conta:
+// ligado à conta que o pediu.
+export const signInCodes = pgTable(
+    "sign_in_codes",
+    {
+        id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+        purpose: text("purpose").notNull(),
+        emailHash: char("email_hash", { length: 64 }),
+        userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }),
+        codeHash: char("code_hash", { length: 64 }).notNull(),
+        attempts: smallint("attempts").notNull().default(0),
+        createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+        expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+        usedAt: timestamp("used_at", { withTimezone: true }),
+    },
+    (t) => [
+        check("sign_in_codes_purpose_check", sql`${t.purpose} in ('sign_in', 'delete_account')`),
+        check(
+            "sign_in_codes_target_check",
+            sql`(${t.purpose} = 'sign_in' and ${t.emailHash} is not null and ${t.userId} is null)
+                or (${t.purpose} = 'delete_account' and ${t.userId} is not null and ${t.emailHash} is null)`,
+        ),
+        check("sign_in_codes_attempts_check", sql`${t.attempts} between 0 and 5`),
+        check("sign_in_codes_expiry_check", sql`${t.expiresAt} > ${t.createdAt}`),
+        // um código vivo por e-mail (e por conta, para apagar): pedir outro anula o anterior (RNE002)
+        uniqueIndex("sign_in_codes_live_email_idx")
+            .on(t.emailHash)
+            .where(sql`${t.purpose} = 'sign_in' and ${t.usedAt} is null`),
+        uniqueIndex("sign_in_codes_live_user_idx")
+            .on(t.userId)
+            .where(sql`${t.purpose} = 'delete_account' and ${t.usedAt} is null`),
+        index("sign_in_codes_expires_at_idx").on(t.expiresAt),
+    ],
+);
+
+export const userSessions = pgTable(
+    "user_sessions",
+    {
+        id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+        userId: integer("user_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        // SHA-256 de 32 bytes aleatórios (A2); o cookie nunca vai ao banco
+        tokenHash: char("token_hash", { length: 64 }).notNull(),
+        createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+        lastUsedAt: timestamp("last_used_at", { withTimezone: true }).notNull().defaultNow(),
+        // 30 dias renovados com o uso, sem passar do teto de 90 desde o login (RNE005)
+        expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+        absoluteExpiresAt: timestamp("absolute_expires_at", { withTimezone: true }).notNull(),
+    },
+    (t) => [
+        unique("user_sessions_token_hash_unique").on(t.tokenHash),
+        check("user_sessions_expiry_check", sql`${t.expiresAt} <= ${t.absoluteExpiresAt}`),
+        index("user_sessions_user_idx").on(t.userId),
+        index("user_sessions_expires_at_idx").on(t.expiresAt),
+    ],
+);
+
+export const userStreamings = pgTable(
+    "user_streamings",
+    {
+        userId: integer("user_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        streaming: text("streaming").notNull(),
+    },
+    (t) => [
+        primaryKey({ columns: [t.userId, t.streaming] }),
+        check(
+            "user_streamings_streaming_check",
+            sql`${t.streaming} in ('netflix', 'max', 'prime-video', 'disney-plus', 'globoplay')`,
+        ),
+    ],
+);
+
+// Um título, um sinal (US009 RNE001): o mais recente vale. Sem cascade no título: a carga do
+// catálogo mantém o título inativo enquanto alguém o referencia (titleReferenced).
+export const userTasteSignals = pgTable(
+    "user_taste_signals",
+    {
+        userId: integer("user_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        catalogTitleId: integer("catalog_title_id")
+            .notNull()
+            .references(() => catalogTitles.id),
+        signal: text("signal").notNull(),
+        updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    },
+    (t) => [
+        primaryKey({ columns: [t.userId, t.catalogTitleId] }),
+        check(
+            "user_taste_signals_signal_check",
+            sql`${t.signal} in ('liked', 'will_watch', 'disliked')`,
+        ),
+        index("user_taste_signals_recent_idx").on(t.userId, t.signal, t.updatedAt),
+    ],
+);
+
+export const userWatched = pgTable(
+    "user_watched",
+    {
+        userId: integer("user_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        catalogTitleId: integer("catalog_title_id")
+            .notNull()
+            .references(() => catalogTitles.id),
+        createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    },
+    (t) => [
+        primaryKey({ columns: [t.userId, t.catalogTitleId] }),
+        index("user_watched_recent_idx").on(t.userId, t.createdAt),
+    ],
+);
+
+// Um passo sem linha ainda não foi respondido (US013 C5); "skipped" alimenta "Complete seu gosto".
+export const userOnboarding = pgTable(
+    "user_onboarding",
+    {
+        userId: integer("user_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        step: smallint("step").notNull(),
+        status: text("status").notNull(),
+        updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    },
+    (t) => [
+        primaryKey({ columns: [t.userId, t.step] }),
+        check("user_onboarding_step_check", sql`${t.step} between 1 and 3`),
+        check("user_onboarding_status_check", sql`${t.status} in ('done', 'skipped')`),
+    ],
 );

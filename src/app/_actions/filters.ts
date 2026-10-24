@@ -5,6 +5,7 @@ import { planFilteredRounds } from "@/application/filtered-draw";
 import { drawUnseen, type FilterCandidate } from "@/domain/filters";
 import { roundEnd, type RoundEnd } from "@/domain/rounds";
 import { hasPositiveSignal } from "@/domain/taste-signals";
+import { drawAccount } from "../_data/account";
 import { candidates } from "../_data/candidates";
 import { loadFeelingKit } from "../_data/feelings";
 import { neighborGraphOrNull } from "../_data/taste-graph";
@@ -36,7 +37,18 @@ export type FilteredDraw = { slug: string | null; end: RoundEnd };
  * (US004 C3): a rodada seguinte ou que não sobrou nenhuma.
  */
 export async function drawFiltered(input: unknown): Promise<FilteredDraw> {
-    const { filters, watched, seen, taste, round } = parseFilterRequest(input);
+    const request = parseFilterRequest(input);
+    const { seen, round } = request;
+    // Com a conta aberta, o servidor lê o gosto, o "Já vi" e os streamings da conta; as listas do
+    // pedido são ignoradas (US015 RNE003, ameaças A4, B2). Sentimento é só de quem tem conta
+    // (RNE005, B3): sem sessão, o pedido é recusado aqui, não só na tela.
+    const account = await drawAccount();
+    if (request.filters.feeling !== null && !account) throw new Error("Pedido recusado");
+    const watched = account ? account.watched : request.watched;
+    const taste = account ? account.taste : request.taste;
+    const filters = account
+        ? { ...request.filters, streamings: account.streamings }
+        : request.filters;
     // person-search B4: com pessoa, o sorteio consulta o banco e entra no mesmo limite
     if (filters.personId !== null && !(await admitPersonQuery())) {
         throw new Error("Pedido recusado");

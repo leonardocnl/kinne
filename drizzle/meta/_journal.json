@@ -71,6 +71,13 @@
       "when": 1792752702529,
       "tag": "0009_taste_graph",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792837767015,
+      "tag": "0010_accounts",
+      "breakpoints": true
     }
   ]
 }

@@ -30,14 +30,21 @@ import {
     titleCredits,
     titleNeighbors,
     tmdbRecommendations,
+    userTasteSignals,
+    userWatched,
 } from "./schema";
 
 // O drizzle não qualifica ${t.id} numa select de uma tabela só, e dentro do exists "id" viraria
-// o da tabela de eventos: o id do título vai escrito à mão.
+// o da tabela de eventos: o id do título vai escrito à mão. O gosto e o "Já vi" das contas também
+// contam: sem cascade, o título que alguém marcou fica inativo em vez de sumir do gosto da pessoa.
 export const titleReferenced = sql<boolean>`exists (select 1 from ${anonymousUsageEvents}
     where ${anonymousUsageEvents.catalogTitleId} = "catalog_titles"."id")
     or exists (select 1 from ${dailyPicks}
-    where ${dailyPicks.catalogTitleId} = "catalog_titles"."id")`;
+    where ${dailyPicks.catalogTitleId} = "catalog_titles"."id")
+    or exists (select 1 from ${userTasteSignals}
+    where ${userTasteSignals.catalogTitleId} = "catalog_titles"."id")
+    or exists (select 1 from ${userWatched}
+    where ${userWatched.catalogTitleId} = "catalog_titles"."id")`;
 
 const COUNTRY = "BR";
 const CHUNK = 2000;

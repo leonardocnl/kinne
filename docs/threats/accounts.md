@@ -12,7 +12,7 @@ Status: approved 2026-10-23; data model approved with the adjustments of 2026-10
 6. Feelings restricted to signed-in people.
 7. Email through Resend (`RESEND_API_KEY`); a development transport that prints the code, outside production only.
 
-New tables: `users`, `sign_in_codes`, `user_sessions`, `user_streamings`, `user_taste_signals`, `user_watched`, `user_onboarding` (migration 0011). New secrets: `AUTH_SECRET` (HMAC key for codes and email hashes, separate from `RATE_LIMIT_SECRET`) and `RESEND_API_KEY`.
+New tables: `users`, `sign_in_codes`, `user_sessions`, `user_streamings`, `user_taste_signals`, `user_watched`, `user_onboarding` (migration `0010_accounts`; the second of this and the group room (#28) to merge renumbers and regenerates its snapshot). New secrets: `AUTH_SECRET` (HMAC key for codes and email hashes, separate from `RATE_LIMIT_SECRET`) and `RESEND_API_KEY`.
 
 ## Assets
 

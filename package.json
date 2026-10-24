@@ -21,7 +21,8 @@
         "bundle:check": "node scripts/check-bundle-size.mjs",
         "smoke:title": "tsx --conditions=react-server scripts/smoke-title.ts",
         "search:check-normalization": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/check-search-normalization.ts",
-        "feelings:calibrate": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/calibrate-feelings.ts"
+        "feelings:calibrate": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/calibrate-feelings.ts",
+        "test:db": "KINNE_TEST_DB=1 vitest run --no-file-parallelism src/app/_actions/account.db.test.ts src/infrastructure/db/accounts.db.test.ts"
     },
     "dependencies": {
         "@neondatabase/serverless": "^1.2.0",
