@@ -16,10 +16,12 @@ import { randomBytes } from "node:crypto";
 import { searchConfig } from "@/infrastructure/search-config";
 import { candidates } from "../_data/candidates";
 import {
+    accountStreamings,
     admitIp,
     admitMember,
     createRoomSchema,
     joinRoomSchema,
+    memberFromAccount,
     memberTokenHash,
     parseWith,
     preferencesSchema,
@@ -49,6 +51,8 @@ export async function createRoom(input: unknown): Promise<RoomAnswer> {
     if (!request || !key || !(await admitIp("create"))) return REFUSED;
     const token = newMemberToken();
     const repository = roomRepository();
+    // com sessão, gosto, "Já vi" e streamings são os da conta (US015 RNE003)
+    const member = await memberFromAccount(request.member);
     // 31^8 códigos: uma colisão é raríssima, e três tentativas bastam
     for (let attempt = 0; attempt < 3; attempt++) {
         const code = generateCode((n) => new Uint8Array(randomBytes(n)));
@@ -56,7 +60,7 @@ export async function createRoom(input: unknown): Promise<RoomAnswer> {
             code,
             creatorKey: key,
             tokenHash: hashToken(token),
-            member: request.member,
+            member,
         });
         if (outcome.kind === "created") {
             await setMemberCookie(token, fromNow(ROOM_TTL_MS));
@@ -86,7 +90,7 @@ export async function joinRoom(input: unknown): Promise<RoomAnswer> {
     const joined = await repository.join({
         code,
         tokenHash: hashToken(token),
-        member: request.member,
+        member: await memberFromAccount(request.member),
     });
     if (!joined) return REFUSED;
     await setMemberCookie(token, fromNow(ROOM_TTL_MS));
@@ -104,7 +108,8 @@ export async function updatePreferences(input: unknown): Promise<RoomAnswer> {
     }
     const done = await repository.updatePreferences({
         tokenHash,
-        streamings: request.streamings,
+        // quem tem conta tem os streamings da conta; mudar é no perfil (US015 RNE003)
+        streamings: (await accountStreamings()) ?? request.streamings,
         genres: request.genres,
         ready: request.ready,
     });

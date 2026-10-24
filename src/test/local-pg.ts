@@ -27,6 +27,19 @@ function assertLocalDatabase() {
     }
 }
 
+/**
+ * Põe a instrução no formato "uma linha de JSON com todas as linhas": consultas viram subconsulta,
+ * escritas com RETURNING viram CTE, e escritas sem RETURNING rodam e devolvem [].
+ */
+function asJson(text: string): string {
+    if (!/^\s*(insert|update|delete)\b/i.test(text)) {
+        return `select coalesce(json_agg(t), '[]'::json) from (${text}) t`;
+    }
+    return /\breturning\b/i.test(text)
+        ? `with t as (${text}) select coalesce(json_agg(t), '[]'::json) from t`
+        : `${text}; select '[]'::json`;
+}
+
 function psql(text: string): string {
     assertLocalDatabase();
     return execFileSync("psql", ["-v", "ON_ERROR_STOP=1", "-qAt", "-c", text], {
@@ -49,9 +62,7 @@ export function localDb(role = "kinne_app") {
         async execute(statement: SQL) {
             const { sql, params } = dialect.sqlToQuery(statement);
             const text = sql.replace(/\$(\d+)/g, (_, n) => literal(params[Number(n) - 1]));
-            const out = psql(
-                `set role ${role}; select coalesce(json_agg(t), '[]'::json) from (${text}) t`,
-            );
+            const out = psql(`set role ${role}; ${asJson(text)}`);
             const json = out
                 .split("\n")
                 .filter((line) => line !== "SET" && line !== "")
@@ -65,7 +76,7 @@ export function localDb(role = "kinne_app") {
 export function runAs(role: string, statement: SQL): Record<string, unknown>[] {
     const { sql, params } = dialect.sqlToQuery(statement);
     const text = sql.replace(/\$(\d+)/g, (_, n) => literal(params[Number(n) - 1]));
-    const out = psql(`set role ${role}; select coalesce(json_agg(t), '[]'::json) from (${text}) t`);
+    const out = psql(`set role ${role}; ${asJson(text)}`);
     return JSON.parse(
         out
             .split("\n")

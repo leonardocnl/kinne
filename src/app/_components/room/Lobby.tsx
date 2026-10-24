@@ -1,5 +1,6 @@
 "use client";
 
+import { useAccountStatus } from "../account/store";
 import { useId, useRef, useState, useSyncExternalStore } from "react";
 import type { RoomView } from "@/application/group-room";
 import { RUNTIME_LIMITS, type TypeChoice } from "@/domain/filters";
@@ -42,6 +43,8 @@ type LobbyProps = { view: Room; refresh: () => Promise<void>; onLeave: () => voi
 export function Lobby({ view, refresh, onLeave }: LobbyProps) {
     const id = useId();
     const origin = useOrigin();
+    // com conta, os streamings são os do perfil e valem na sala (US015 RNE003)
+    const hasAccount = useAccountStatus().state === "account";
     const [streamings, setStreamings] = useState<Streaming[]>(view.me.streamings);
     const [genres, setGenres] = useState<KinneGenre[]>(view.me.genres);
     const [ready, setReady] = useState(view.me.ready);
@@ -156,6 +159,7 @@ export function Lobby({ view, refresh, onLeave }: LobbyProps) {
                                 <Chip
                                     key={s.id}
                                     pressed={on}
+                                    disabled={hasAccount}
                                     onClick={() =>
                                         change(
                                             "streamings",
@@ -170,6 +174,11 @@ export function Lobby({ view, refresh, onLeave }: LobbyProps) {
                             );
                         })}
                     </div>
+                    {hasAccount && (
+                        <p className="text-data text-faint">
+                            Estes são os streamings da sua conta. Para mudar, use o seu perfil.
+                        </p>
+                    )}
                 </div>
 
                 <div className={section}>
