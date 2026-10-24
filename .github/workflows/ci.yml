@@ -26,6 +26,24 @@ jobs:
       - run: npm run build
       - run: npm run bundle:check
 
+  # Cabeçalhos e CSP no app construído e servido (security.md §10). O playwright vem do npx/npm fora
+  # do lockfile, em versão fixa, como o lhci; este job não tem nenhum segredo.
+  security-headers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm install --no-save --ignore-scripts playwright@1.63.0
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+
   # Os testes de ataque das contas (docs/threats/accounts.md) precisam de um PostgreSQL de verdade:
   # as funções kinne_* são a garantia. Banco descartável do próprio job, nunca o do projeto.
   accounts-db:
