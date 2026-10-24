@@ -1,6 +1,6 @@
 # Threat analysis — Accounts: sign-in by email code, onboarding, profile (US012–US015)
 
-Status: proposed 2026-10-23, awaiting the owner's approval. Implements `docs/security.md` §13 (adapted from magic link to a 6-digit code, owner decision of 2026-10-23: nothing secret in URLs). Every mitigation marked **AC** is an acceptance criterion with a covering test, and every test in section "Attack tests" must try the attack for real (forged requests against the server actions), not only unit-check a helper.
+Status: approved 2026-10-23; data model approved with the adjustments of 2026-10-24 (section "Data model decisions"). Implements `docs/security.md` §13 (adapted from magic link to a 6-digit code, owner decision of 2026-10-23: nothing secret in URLs). Every mitigation marked **AC** is an acceptance criterion with a covering test, and every test in section "Attack tests" must try the attack for real (forged requests against the server actions), not only unit-check a helper.
 
 ## Scope
 
@@ -12,7 +12,7 @@ Status: proposed 2026-10-23, awaiting the owner's approval. Implements `docs/sec
 6. Feelings restricted to signed-in people.
 7. Email through Resend (`RESEND_API_KEY`); a development transport that prints the code, outside production only.
 
-New tables (names indicative; the implementing session proposes the model for approval): users, sign-in codes, sessions, user streamings, user taste signals, user watched titles, onboarding progress. New secret: `RESEND_API_KEY`.
+New tables: `users`, `sign_in_codes`, `user_sessions`, `user_streamings`, `user_taste_signals`, `user_watched`, `user_onboarding` (migration 0011). New secrets: `AUTH_SECRET` (HMAC key for codes and email hashes, separate from `RATE_LIMIT_SECRET`) and `RESEND_API_KEY`.
 
 ## Assets
 
@@ -75,10 +75,20 @@ New tables (names indicative; the implementing session proposes the model for ap
 
 ### E. Privileges and secrets
 
-| #   | Threat                                             | L / I | Mitigation                                                                                                                                |
-| --- | -------------------------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| E1  | `RESEND_API_KEY` reaching the client bundle        | L / H | AC: read only in a `server-only` module; no `NEXT_PUBLIC_`; bundle check covers the key pattern                                           |
-| E2  | App role able to read or change more than it needs | L / H | AC: `kinne_app` gets only the grants each table needs (column-level where possible); `kinne_sync` only deletes expired sessions and codes |
+| #   | Threat                                             | L / I | Mitigation                                                                                                                                                                                                                                                                                                     |
+| --- | -------------------------------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| E1  | `RESEND_API_KEY` reaching the client bundle        | L / H | AC: read only in a `server-only` module; no `NEXT_PUBLIC_`; bundle check covers the key pattern                                                                                                                                                                                                                |
+| E2  | App role able to read or change more than it needs | L / H | AC: `kinne_app` has no access at all to `sign_in_codes` and `user_sessions`, no DML on any account table, no `SELECT` on `users.email`; it reads the other account tables only and writes through `SECURITY DEFINER` functions that take the session token hash; `kinne_sync` only executes the purge function |
+
+## Data model decisions (2026-10-24)
+
+1. **Keyed hashes.** `AUTH_SECRET` (at least 32 characters, server-only, never `NEXT_PUBLIC_`) keys two HMAC-SHA-256 uses: the email hash of a pending code (`HMAC(AUTH_SECRET, "email|" + email)`) and the code hash (`HMAC(AUTH_SECRET, "code|" + purpose + "|" + email + "|" + code)`). A code is therefore only valid for the email and the purpose it was issued for (A5). Without `AUTH_SECRET`, no code is issued (fail closed). Session tokens are 32 random bytes stored as plain SHA-256 (high entropy, no key needed).
+2. **Every function that acts on an account takes the session's `token_hash`** and resolves the user inside the database (`kinne_user_of`, not granted to `kinne_app`). No function has a `user_id` parameter, so the database itself guarantees that only a valid session changes its own account. `kinne_app` cannot read `users.email` (column-level `SELECT (id, created_at)`): the profile and the export get it from `kinne_session_email(token_hash)`. It keeps `SELECT` on the streamings, signals, "Já vi" and onboarding tables for the draws, always filtered by the user id that `kinne_session_user` returned.
+3. **Merge on sign-in (US015 RNE002).** On a conflict for the same title the browser wins (it was touched in this very session, before the login); "Já vi" is a union; streamings: the account's if it has any, else the browser's. Limits: 200 per signal list, 2000 "Já vi", 10 sessions per account (the oldest goes first).
+4. **The catalog sync keeps titles that people reference.** `titleReferenced` includes `user_taste_signals` and `user_watched`; `kinne_sync` gets `SELECT (catalog_title_id)` on both (no cascade: a title that leaves the streamings turns inactive and the person keeps it).
+5. **Deleting the account** uses a code bound to the user (`purpose = delete_account`, `user_id` set, no email hash), issued only to a valid session and checked, with the same 5-attempt rule, inside `kinne_delete_account(token_hash, code_hash)`.
+6. **Limits** (all through `kinne_take_tokens`): per email 1 request per 60 s and 5 per hour; per IP 10 requests per 10 min; per IP 20 verify attempts per 10 min; global 80 emails per UTC day. Per code: 5 attempts. Sessions renew at most once an hour.
+7. **CI.** The attack tests need a real PostgreSQL (the functions are the guarantee). They run in a dedicated CI job with a PostgreSQL service; locally they run with `npm run test:db`.
 
 ## Attack tests (required)
 
@@ -94,6 +104,7 @@ The implementing session writes these as automated tests that call the real serv
 8. Deletion with a valid session but no fresh code → refused.
 9. Sign-out → the old cookie no longer works on any action.
 10. Production guard: with `NODE_ENV=production` and no `RESEND_API_KEY`, `requestCode` sends nothing and prints no code.
+11. Cross-account: with the session token of account A, call every function that acts on an account (sign-out, sign-out everywhere, streamings, signals, "Já vi", onboarding step, delete code, delete account, email) with arguments built to hit account B (B's title ids, B's code hash, B's token hash as an argument, a token of another length or case); account B must be unchanged afterwards. A static check also fails if any `kinne_*` account function has a `user_id` parameter.
 
 ## Accepted risks
 
