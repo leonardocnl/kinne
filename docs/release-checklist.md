@@ -77,6 +77,16 @@ select id, created_at from drizzle.__drizzle_migrations order by id;
 
 5. Neon compute fixed at 0.25 CU minimum and maximum (RNF06).
 
+### Automatic migrations on develop (`migrate-develop.yml`)
+
+The **develop** database is migrated by `.github/workflows/migrate-develop.yml`; production is still migrated by hand (step 3.1).
+
+- Triggers: `push` to `develop` and `workflow_dispatch` (never `pull_request`). The job runs only when the ref is `develop`, in the GitHub environment `develop`, with `permissions: contents: read` and a fixed `concurrency` group (`cancel-in-progress: false`, so a migration is never cut in half).
+- Order: `npm run db:migrate:guard` reads `meta.environment` **before any migration SQL** and exits 1 with a generic message if it is not exactly `develop` (absent, empty or `production` all refuse); then `npm run db:migrate` (`drizzle-kit migrate`); then `npm run db:migrate:verify` counts the rows in `drizzle.__drizzle_migrations` and fails if the database has fewer than the repository's `drizzle/meta/_journal.json`.
+- No step prints the database URL; the secret is masked by GitHub and the scripts print only counts and generic messages.
+- Secret: `MIGRATE_DATABASE_URL`, an **environment secret of `develop`** (Settings → Environments → develop), not a repository secret. Value: Neon **direct** (not pooled) URL of the develop branch as the owner role. Restrict the environment to the `develop` branch (Deployment branches) so no other branch can read it.
+- **There is no production version yet**: the production database is still on migration 0001 and its rise (step 3) is planned and done by hand with the owner's eyes on every migration, in the freeze-free window. Automating it would apply 0002–0010 to production unattended. A production workflow (environment `production`, `meta.environment = 'production'`, trigger on `main`) is a separate decision after launch; the guard in `src/application/migration-guard.ts` would then take the target as a parameter.
+
 ## 4. GitHub Actions secrets (repository settings → Secrets and variables → Actions)
 
 | Secret              | Value                                                                                    |
