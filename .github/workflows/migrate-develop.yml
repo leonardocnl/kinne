@@ -1,0 +1,44 @@
+name: Migrate develop
+
+# Aplica as migrations do Drizzle no banco develop. Só push em develop ou execução manual;
+# nunca pull_request (o segredo não pode chegar a código de PR). Não há versão para produção:
+# ver docs/release-checklist.md.
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+concurrency:
+  group: migrate-develop
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    # workflow_dispatch pode ser iniciado em qualquer branch; só develop recebe o segredo.
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Environment com o segredo MIGRATE_DATABASE_URL (papel dono do banco develop).
+    environment: develop
+    env:
+      # Conexão direta. O GitHub mascara o valor; nenhum passo o imprime.
+      DATABASE_URL: ${{ secrets.MIGRATE_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: develop
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # Trava: antes de qualquer SQL de migration, o banco precisa ter meta.environment = 'develop'.
+      - run: npm run db:migrate:guard
+      # drizzle.config.ts carrega .env.local; um arquivo vazio basta (a variável exportada vence).
+      - run: touch .env.local
+      - run: npm run db:migrate
+      # Falha se o banco ficou atrás do repositório (journal do Drizzle).
+      - run: npm run db:migrate:verify

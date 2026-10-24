@@ -13,6 +13,8 @@
         "format:check": "prettier --check .",
         "db:generate": "drizzle-kit generate",
         "db:migrate": "drizzle-kit migrate",
+        "db:migrate:guard": "tsx scripts/migrate-develop.ts guard",
+        "db:migrate:verify": "tsx scripts/migrate-develop.ts verify",
         "db:seed": "tsx --conditions=react-server --env-file=.env.local scripts/seed.ts",
         "catalog:sync": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/sync-catalog.ts",
         "graph:build": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/build-taste-graph.ts",
