@@ -81,6 +81,12 @@ async function main() {
             return null;
         });
 
+        // Salas de grupo vencidas (group-room C2): mesma regra, falha a limpeza falha o job.
+        const rooms = await repository.cleanGroupRooms().catch(() => {
+            exitCode = 1;
+            return null;
+        });
+
         // Sessões e códigos vencidos das contas (D3): falha na purga não desfaz a carga, mas falha o job.
         const purged = await repository.purgeExpiredAuth().catch(() => {
             exitCode = 1;
@@ -112,6 +118,9 @@ async function main() {
                       ...search.counters.map((r) => `| ${r.day} | ${r.name} | ${r.count} |`),
                   ]
                 : ["**Aviso:** limpeza da busca falhou."]),
+            rooms === null
+                ? "**Aviso:** limpeza das salas de grupo falhou."
+                : `Salas de grupo vencidas apagadas: ${rooms}.`,
             purged === null
                 ? "**Aviso:** limpeza das contas falhou."
                 : `Contas: ${purged} sessões e códigos vencidos apagados.`,

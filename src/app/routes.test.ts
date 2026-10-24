@@ -23,6 +23,8 @@ describe("rotas (H3)", () => {
             "/entrar",
             "/perfil",
             "/privacidade",
+            "/sala",
+            "/sala/[code]",
             "/titulo/[slug]",
         ]);
     });

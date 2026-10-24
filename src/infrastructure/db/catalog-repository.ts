@@ -19,6 +19,7 @@ import {
     catalogTitles,
     catalogTitleThemeKeywords,
     dailyPicks,
+    groupRoomFinalists,
     genres,
     meta,
     people,
@@ -35,12 +36,16 @@ import {
 } from "./schema";
 
 // O drizzle não qualifica ${t.id} numa select de uma tabela só, e dentro do exists "id" viraria
-// o da tabela de eventos: o id do título vai escrito à mão. O gosto e o "Já vi" das contas também
-// contam: sem cascade, o título que alguém marcou fica inativo em vez de sumir do gosto da pessoa.
+// o da tabela de eventos: o id do título vai escrito à mão. Os finalistas de uma sala de grupo
+// também contam: a chave do banco recusaria apagar o título enquanto a sala vive (US011). O gosto e
+// o "Já vi" das contas também: sem cascade, o título que alguém marcou fica inativo em vez de sumir
+// do gosto da pessoa.
 export const titleReferenced = sql<boolean>`exists (select 1 from ${anonymousUsageEvents}
     where ${anonymousUsageEvents.catalogTitleId} = "catalog_titles"."id")
     or exists (select 1 from ${dailyPicks}
     where ${dailyPicks.catalogTitleId} = "catalog_titles"."id")
+    or exists (select 1 from ${groupRoomFinalists}
+    where ${groupRoomFinalists.catalogTitleId} = "catalog_titles"."id")
     or exists (select 1 from ${userTasteSignals}
     where ${userTasteSignals.catalogTitleId} = "catalog_titles"."id")
     or exists (select 1 from ${userWatched}
@@ -202,6 +207,18 @@ export class DrizzleCatalogRepository implements CatalogRepository {
                 where day >= current_date - 1 order by day, name`,
         );
         return { cacheRows, counters: counters.rows };
+    }
+
+    /**
+     * Limpeza diária das salas de grupo vencidas (group-room C2): o site também apaga as que
+     * encontra, mas uma sala que ninguém abre mais só sai por aqui. As filhas saem pelo cascade.
+     */
+    async cleanGroupRooms(): Promise<number> {
+        const r = await this.db.execute<{ n: string }>(
+            sql`with gone as (delete from group_rooms where expires_at <= now() returning 1)
+                select count(*) as n from gone`,
+        );
+        return Number(r.rows[0].n);
     }
 
     /**

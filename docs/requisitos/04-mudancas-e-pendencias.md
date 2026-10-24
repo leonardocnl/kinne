@@ -25,6 +25,7 @@ Kinne · Requisitos da semana 0 · versão de 12/10/2026
 - [x] Botão "Não me interessa": não entra nesta versão. O gosto usa só curti, não curti e vou assistir (decisão de 23/10/2026).
 - [x] Sala de grupo: "o que cada um topa" é só streamings e gêneros (US011 C5), sem veto de título, e as pessoas aparecem sem nome ("Pessoa 1") (decisão de 23/10/2026).
 - [x] Sala de grupo: os streamings valem em união, basta um membro ter (decisão de 23/10/2026).
+- [x] Sala de grupo: se quem criou sair, o papel passa para a pessoa mais antiga na sala; se era a única, a sala encerra (US011 C11, decisão de 23/10/2026).
 - [ ] Levar US008 a US011 ao Drive.
 
 ### Design

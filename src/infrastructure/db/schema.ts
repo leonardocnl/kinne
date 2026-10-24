@@ -8,6 +8,7 @@ import {
     check,
     date,
     doublePrecision,
+    foreignKey,
     index,
     integer,
     jsonb,
@@ -540,5 +541,163 @@ export const userOnboarding = pgTable(
         primaryKey({ columns: [t.userId, t.step] }),
         check("user_onboarding_step_check", sql`${t.step} between 1 and 3`),
         check("user_onboarding_status_check", sql`${t.status} in ('done', 'skipped')`),
+    ],
+);
+
+// Sala de grupo (US011, docs/threats/group-room.md). Tudo é apagado quando a sala expira: o
+// `delete` em group_rooms leva as filhas junto (cascade) e só passa por kinne_purge_group_rooms
+// (site, SECURITY DEFINER) ou pelo papel kinne_sync (limpeza diária).
+
+export const groupRooms = pgTable(
+    "group_rooms",
+    {
+        id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+        // 8 caracteres de um alfabeto de 31, sem 0, O, 1, I, L (RNE001)
+        code: text("code").notNull(),
+        phase: text("phase").notNull().default("lobby"),
+        round: smallint("round").notNull().default(1),
+        // escolhidos por quem criou (C5)
+        typeChoice: text("type_choice").notNull().default("both"),
+        maxRuntimeMinutes: smallint("max_runtime_minutes"),
+        // HMAC do código do navegador de quem criou, só para o limite de 3 salas por hora (D1)
+        creatorKeyHash: text("creator_key_hash").notNull(),
+        // quem criou hoje; passa à pessoa mais antiga se ela sair (C11). Nula só durante a criação
+        creatorMemberId: integer("creator_member_id"),
+        createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+        // criação + 3 h; no resultado, no máximo resultado + 30 min (C10)
+        expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+        resultAt: timestamp("result_at", { withTimezone: true }),
+    },
+    (t) => [
+        unique("group_rooms_code_unique").on(t.code),
+        check("group_rooms_code_check", sql`${t.code} ~ '^[2-9A-HJKMNP-Z]{8}$'`),
+        check("group_rooms_phase_check", sql`${t.phase} in ('lobby', 'voting', 'result')`),
+        check("group_rooms_round_check", sql`${t.round} between 1 and 3`),
+        check("group_rooms_type_check", sql`${t.typeChoice} in ('movie', 'series', 'both')`),
+        check(
+            "group_rooms_runtime_check",
+            sql`${t.maxRuntimeMinutes} is null or ${t.maxRuntimeMinutes} in (90, 105, 120)`,
+        ),
+        check("group_rooms_expiry_check", sql`${t.expiresAt} > ${t.createdAt}`),
+        index("group_rooms_expires_at_idx").on(t.expiresAt),
+        index("group_rooms_creator_key_idx").on(t.creatorKeyHash, t.createdAt),
+    ],
+);
+
+export const groupRoomMembers = pgTable(
+    "group_room_members",
+    {
+        id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+        roomId: integer("room_id")
+            .notNull()
+            .references(() => groupRooms.id, { onDelete: "cascade" }),
+        // ordem de entrada: "Pessoa N" (RNE004). Quem sai guarda o número; até 8 pessoas na sala
+        // ao mesmo tempo (RNE008), por isso o teto de 16 entradas no total
+        position: smallint("position").notNull(),
+        // SHA-256 do cookie de membro (A2); nulo depois de sair
+        tokenHash: char("token_hash", { length: 64 }),
+        ready: boolean("ready").notNull().default(false),
+        streamings: text("streamings")
+            .array()
+            .notNull()
+            .default(sql`'{}'`),
+        genres: text("genres")
+            .array()
+            .notNull()
+            .default(sql`'{}'`),
+        // o que o navegador mandou ao entrar (RNE009); apagado ao sair
+        watchedIds: integer("watched_ids")
+            .array()
+            .notNull()
+            .default(sql`'{}'`),
+        likedIds: integer("liked_ids")
+            .array()
+            .notNull()
+            .default(sql`'{}'`),
+        willWatchIds: integer("will_watch_ids")
+            .array()
+            .notNull()
+            .default(sql`'{}'`),
+        dislikedIds: integer("disliked_ids")
+            .array()
+            .notNull()
+            .default(sql`'{}'`),
+        joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().defaultNow(),
+        leftAt: timestamp("left_at", { withTimezone: true }),
+    },
+    (t) => [
+        unique("group_room_members_token_hash_unique").on(t.tokenHash),
+        unique("group_room_members_room_position_unique").on(t.roomId, t.position),
+        // alvo da chave composta dos votos: o voto é de um membro da mesma sala
+        unique("group_room_members_room_id_id_unique").on(t.roomId, t.id),
+        check("group_room_members_position_check", sql`${t.position} between 1 and 16`),
+        check(
+            "group_room_members_streamings_check",
+            sql`${t.streamings} <@ array['netflix', 'max', 'prime-video', 'disney-plus', 'globoplay']::text[]`,
+        ),
+        check(
+            "group_room_members_genres_check",
+            sql`${t.genres} <@ array['action', 'comedy', 'drama', 'romance', 'suspense']::text[]`,
+        ),
+        check(
+            "group_room_members_sizes_check",
+            sql`coalesce(cardinality(${t.watchedIds}), 0) <= 1000
+                and coalesce(cardinality(${t.likedIds}), 0) <= 200
+                and coalesce(cardinality(${t.willWatchIds}), 0) <= 200
+                and coalesce(cardinality(${t.dislikedIds}), 0) <= 200`,
+        ),
+        // quem saiu não guarda cookie
+        check("group_room_members_left_check", sql`${t.leftAt} is null or ${t.tokenHash} is null`),
+    ],
+);
+
+export const groupRoomFinalists = pgTable(
+    "group_room_finalists",
+    {
+        roomId: integer("room_id")
+            .notNull()
+            .references(() => groupRooms.id, { onDelete: "cascade" }),
+        round: smallint("round").notNull(),
+        catalogTitleId: integer("catalog_title_id")
+            .notNull()
+            .references(() => catalogTitles.id),
+        position: smallint("position").notNull(),
+        // o percentil do membro menos satisfeito (design §7); nulo sem nenhum sinal de gosto
+        groupScore: real("group_score"),
+    },
+    (t) => [
+        primaryKey({ columns: [t.roomId, t.round, t.catalogTitleId] }),
+        unique("group_room_finalists_position_unique").on(t.roomId, t.round, t.position),
+        check("group_room_finalists_round_check", sql`${t.round} between 1 and 3`),
+        check("group_room_finalists_position_check", sql`${t.position} between 1 and 5`),
+    ],
+);
+
+export const groupRoomVotes = pgTable(
+    "group_room_votes",
+    {
+        roomId: integer("room_id").notNull(),
+        round: smallint("round").notNull(),
+        memberId: integer("member_id").notNull(),
+        catalogTitleId: integer("catalog_title_id").notNull(),
+        // uma linha por finalista a cada "Votar": votar de novo troca a cédula (B1)
+        approved: boolean("approved").notNull(),
+    },
+    (t) => [
+        primaryKey({ columns: [t.roomId, t.round, t.memberId, t.catalogTitleId] }),
+        foreignKey({
+            columns: [t.roomId, t.round, t.catalogTitleId],
+            foreignColumns: [
+                groupRoomFinalists.roomId,
+                groupRoomFinalists.round,
+                groupRoomFinalists.catalogTitleId,
+            ],
+            name: "group_room_votes_finalist_fk",
+        }).onDelete("cascade"),
+        foreignKey({
+            columns: [t.roomId, t.memberId],
+            foreignColumns: [groupRoomMembers.roomId, groupRoomMembers.id],
+            name: "group_room_votes_member_fk",
+        }).onDelete("cascade"),
     ],
 );

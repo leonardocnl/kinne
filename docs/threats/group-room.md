@@ -38,22 +38,22 @@ New: routes `/sala` and `/sala/[code]`; server actions `createRoom`, `joinRoom`,
 
 ### B. Tampering
 
-| #   | Threat                                                           | L / I | Mitigation                                                                                                                                                             |
-| --- | ---------------------------------------------------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| B1  | Voting several times or for titles that are not finalists        | M / M | AC: unique `(round_id, member_id, catalog_title_id)`; a vote for a title not among the round's finalists is rejected; a second "Votar" replaces the ballot, never adds |
-| B2  | Forged preferences pulling unsuitable titles in                  | M / M | AC: strict zod on preferences; finalists computed only from recommendable, floor-passing, non-18 titles (RNE005); preferences can only narrow the pool                 |
-| B3  | Forged taste lists skewing the group                             | M / L | Same bounds as `feelings-and-taste-ui.md` A3; a member can only shift their own percentile, and the group uses the minimum, so forging cannot force a title through    |
-| B4  | Replaying old state transitions (start twice, vote after result) | M / L | AC: every write checks the room phase in the same transaction (`select … for update`); actions in the wrong phase are refused                                          |
+| #   | Threat                                                           | L / I | Mitigation                                                                                                                                                                                                                                                                                                                   |
+| --- | ---------------------------------------------------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B1  | Voting several times or for titles that are not finalists        | M / M | AC: unique `(round_id, member_id, catalog_title_id)`; a vote for a title not among the round's finalists is rejected; a second "Votar" replaces the ballot, never adds                                                                                                                                                       |
+| B2  | Forged preferences pulling unsuitable titles in                  | M / M | AC: strict zod on preferences; finalists computed only from recommendable, floor-passing, non-18 titles (RNE005); preferences can only narrow the pool                                                                                                                                                                       |
+| B3  | Forged taste lists skewing the group                             | M / L | Same bounds as `feelings-and-taste-ui.md` A3; a member can only shift their own percentile, and the group uses the minimum, so forging cannot force a title through                                                                                                                                                          |
+| B4  | Replaying old state transitions (start twice, vote after result) | M / L | AC: every write checks the room phase in the same statement (compare-and-set, e.g. `update … where phase = 'lobby' returning …`, approved 2026-10-23 because the Neon HTTP driver has no interactive transactions, so no `select … for update`); several writes go in one `db.batch`; actions in the wrong phase are refused |
 
 ### C. Information disclosure
 
-| #   | Threat                                                     | L / I | Mitigation                                                                                                                                               |
-| --- | ---------------------------------------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| C1  | Code leaking through the URL (history, referrer, logs)     | M / M | AC: code only in the path of the QR target, replaced by `/sala` right after join (RNE002); `Referrer-Policy: no-referrer` on `/sala*`; code never logged |
-| C2  | Members' taste, "Já vi" and preferences outliving the room | M / M | AC: rows deleted on expiry (lazy on read plus a cleanup step in the daily job); no copy in events; retention noted in the privacy text                   |
-| C3  | Free-text names used for abuse or XSS                      | M / M | By design there are no names in this version (RNE004); members are "Pessoa N"                                                                            |
-| C4  | Seeing who voted for what                                  | M / L | AC: `roomState` returns only counts and, after the result, totals per finalist; never member→vote                                                        |
-| C5  | Inferring a member's taste from the finalists              | L / L | Accepted: finalists come from everyone combined; with two people some inference is possible, as when choosing together in person                         |
+| #   | Threat                                                     | L / I | Mitigation                                                                                                                                                                                                                              |
+| --- | ---------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| C1  | Code leaking through the URL (history, referrer, logs)     | M / M | AC: code only in the path of the QR target, replaced by `/sala` right after join (RNE002); `Referrer-Policy: no-referrer` on `/sala*`; code never logged                                                                                |
+| C2  | Members' taste, "Já vi" and preferences outliving the room | M / M | AC: rows deleted on expiry (lazy on read through `kinne_purge_group_rooms()`, a `SECURITY DEFINER` function, plus a cleanup step in the daily job; `kinne_app` has no `DELETE`); no copy in events; retention noted in the privacy text |
+| C3  | Free-text names used for abuse or XSS                      | M / M | By design there are no names in this version (RNE004); members are "Pessoa N"                                                                                                                                                           |
+| C4  | Seeing who voted for what                                  | M / L | AC: `roomState` returns only counts and, after the result, totals per finalist; never member→vote                                                                                                                                       |
+| C5  | Inferring a member's taste from the finalists              | L / L | Accepted: finalists come from everyone combined; with two people some inference is possible, as when choosing together in person                                                                                                        |
 
 ### D. Denial of service / cost
 
@@ -62,6 +62,13 @@ New: routes `/sala` and `/sala/[code]`; server actions `createRoom`, `joinRoom`,
 | D1  | Room creation spam                                        | M / M | AC: 3 rooms per browser id per hour and a per-IP token bucket; rooms expire (US011 C10, RNE008)                                                                       |
 | D2  | Polling keeping Neon awake and burning free compute hours | H / M | AC: poll only while the tab is visible, stop at result/expiry, back off to 10 s in the lobby after 2 minutes idle; `roomState` is one indexed read. Measure in the PR |
 | D3  | Finalist computation per round being slow                 | L / L | One spread per member (≤ 8) on the cached graph: ~8 ms each                                                                                                           |
+
+### F. Role hand-over (US011 C11, added 2026-10-23)
+
+| #   | Threat                                                   | L / I | Mitigation                                                                                                                                                    |
+| --- | -------------------------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| F1  | Two simultaneous leaves leave no creator or two creators | M / M | AC: leave and hand-over are one SQL statement; a unique partial index allows one creator per room; a test runs two leaves at once against the same room state |
+| F2  | A leaver keeping access (cookie, taste) after leaving    | L / M | AC: leaving clears `token_hash` and the personal arrays in the same statement                                                                                 |
 
 ### E. Repudiation
 
