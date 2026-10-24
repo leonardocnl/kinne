@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { ToastHost } from "./ToastHost";
 
@@ -13,7 +14,12 @@ export function Shell({ children }: { children: ReactNode }) {
                     assistir: <b className="font-medium text-soft">JustWatch</b>. Este produto usa a
                     API do TMDB, mas não é endossado nem certificado pelo TMDB.
                 </p>
-                <p>O Kinne conta visitas sem identificar quem você é.</p>
+                <p>
+                    O Kinne conta visitas sem identificar quem você é.{" "}
+                    <Link href="/privacidade" className="underline underline-offset-5">
+                        Privacidade
+                    </Link>
+                </p>
             </footer>
         </div>
     );

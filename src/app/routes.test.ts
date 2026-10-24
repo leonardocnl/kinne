@@ -14,7 +14,17 @@ const routes = files
 
 describe("rotas (H3)", () => {
     it("só as rotas conhecidas existem", () => {
-        expect(routes).toEqual(["/", "/[secret]", "/api/revalidate", "/design", "/titulo/[slug]"]);
+        expect(routes).toEqual([
+            "/",
+            "/[secret]",
+            "/api/revalidate",
+            "/boas-vindas",
+            "/design",
+            "/entrar",
+            "/perfil",
+            "/privacidade",
+            "/titulo/[slug]",
+        ]);
     });
 
     it("a busca é uma server action só (G8), sem nada da busca em rota ou URL", () => {

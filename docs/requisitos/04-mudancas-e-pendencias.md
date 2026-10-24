@@ -105,3 +105,5 @@ Kinne · Requisitos da semana 0 · versão de 12/10/2026
 - [ ] Comprar o domínio kinne.com.br e configurar o Resend (registros SPF, DKIM e DMARC no DNS).
 - [ ] Revisar o rascunho do texto de privacidade antes de as contas irem ao ar (US014 RNE003).
 - [ ] Decidir se volta o botão "Não me interessa" (previsto no MVP, fora da etapa 2).
+- [ ] Definir `AUTH_SECRET`, `RESEND_API_KEY` e `AUTH_EMAIL_FROM` na Vercel; sem eles ninguém entra.
+- [ ] Ligar a sala de grupo à conta (US015 C2) quando o PR da sala for mesclado.

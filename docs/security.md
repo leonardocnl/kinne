@@ -42,6 +42,7 @@ Security by design: every feature is specified, built and reviewed against these
 - **Database roles:**
   - `kinne_app` (used by the site, created by migration 0006): `SELECT` on catalog tables, `INSERT` on events and on `daily_picks` (the home page writes a missing day), `SELECT`/`INSERT`/`UPDATE` on `search_cache` and `search_counters`, and `EXECUTE` on `kinne_take_tokens` and `kinne_trip_breaker` (`SECURITY DEFINER`, migration 0007: the site never writes the limiter tables directly). No DDL, no `DELETE` anywhere, no `UPDATE` on catalog or events.
   - `kinne_sync` (used by the daily job): read/write on catalog tables, plus `SELECT`/`DELETE` on the search state (`search_cache`, `rate_limit_buckets`, `search_counters`) for the daily purge and run summary.
+  - Accounts (migration `0010_accounts`, [docs/threats/accounts.md](threats/accounts.md)): `kinne_app` gets `EXECUTE` on the `kinne_*` account functions (`SECURITY DEFINER`; each acts on the session `token_hash` it receives and resolves the user inside, never a `user_id` from the app), `SELECT (id, created_at)` on `users` (never `email`; the profile reads it through `kinne_session_email(token_hash)`), and `SELECT` on `user_streamings`, `user_taste_signals`, `user_watched`, `user_onboarding` for the draw. No access to `sign_in_codes` or `user_sessions`. `kinne_sync` gets `SELECT (catalog_title_id)` on signals and watched (the purge must not delete a referenced title) and `EXECUTE` on `kinne_purge_expired_auth`.
   - Owner role: migrations and the RNF10 deletion of test events (the only role with `DELETE` on events), used from a developer machine, never stored in Vercel or in a file; see docs/release-checklist.md.
 - Preview deployments never receive production credentials.
 - Rotation: on any suspected leak, rotate the key first and investigate after. Rotation steps are documented per secret.
@@ -82,7 +83,7 @@ Security by design: every feature is specified, built and reviewed against these
 
 ## 9. Browser storage
 
-- `localStorage`/`sessionStorage` hold only non-sensitive data: anonymous browser id, marked titles, filter preferences.
+- `localStorage`/`sessionStorage` hold only non-sensitive data: anonymous browser id, marked titles, filter preferences. With an account, taste, "Já vi" and streamings live in the account; the browser deletes its copies on sign-in and on sign-out. The session token is only in the `__Host-kinne_session` cookie (`HttpOnly`), never in storage.
 - Never tokens, credentials or anything that grants access.
 - Everything read from storage is untrusted: parsed with a schema, and invalid data is discarded and reset.
 
@@ -114,16 +115,18 @@ Target: grade A+ on securityheaders.com and Mozilla Observatory.
 
 - Collect the minimum: no names, emails, IPs or device fingerprints in the guest mode.
 - Test events are deleted by the RNF10 deadline (`npm run events:delete`).
-- Retention, purpose and contact are stated in the privacy text before any account feature ships (LGPD).
+- Retention, purpose and contact are stated in the privacy text before any account feature ships (LGPD). `/privacidade` is a draft until the owner reviews it (US014 RNE003). Accounts keep an email (stored in plain only in `users`; pending sign-in codes keep only an HMAC of it), streamings, taste, "Já vi" and onboarding progress; the profile downloads and deletes them.
 
-## 13. Future authentication (magic link)
+## 13. Authentication (6-digit email code)
 
-Rules fixed now so the feature is designed against them:
+Implemented in US012; decisions and attack tests in [docs/threats/accounts.md](threats/accounts.md). No library, only Node `crypto`.
 
-- Single-use tokens, at least 32 random bytes, valid for 15 minutes, stored only as a hash.
-- Same response whether or not the email exists (no user enumeration).
-- Rate limits per email and per client on link requests.
-- Session cookies: `HttpOnly`, `Secure`, `SameSite=Lax`, short lifetime, rotated on sign-in, invalidated on sign-out.
+- Nothing secret in a URL: the email carries a 6-digit code (`crypto.randomInt`), valid for 10 minutes, stored only as an HMAC-SHA-256 keyed by `AUTH_SECRET` over code, purpose and email. Five wrong attempts lock it; a used code never works again; one live code per email.
+- Same response and same effect whether or not the email exists (no user enumeration); the account is created only when a code is confirmed.
+- Rate limits (all-or-nothing buckets, fail closed): per email 1/60 s and 5/hour, per client on requests and on confirmations, and a global daily cap on emails.
+- Session cookie `__Host-kinne_session`: `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, no `Domain`; 32 random bytes, only their SHA-256 in the database; a new token on every sign-in (no fixation); 30 days sliding with a 90-day cap; invalidated on sign-out and on "sign out everywhere"; at most 10 sessions per account.
+- Deleting the account needs a fresh code bound to that account.
+- The development mailer (console) cannot be selected in production (`NODE_ENV` or `VERCEL_ENV`); with no mailer, nobody signs in.
 - Server actions keep Next.js origin checking enabled; no custom endpoint skips it.
 
 ## 14. Verification
@@ -148,7 +151,7 @@ Every PR states which categories it touches and how the rules below are met.
 | A04 Cryptographic Failures                 | HTTPS only with HSTS; tokens from a CSPRNG and stored hashed; no homemade crypto                                                                                  | §10, §13     |
 | A05 Injection                              | Strict schemas, Drizzle bound parameters, no `dangerouslySetInnerHTML`, CSP                                                                                       | §5, §6, §10  |
 | A06 Insecure Design                        | Threat model, security section in every user story, abuse cases reviewed before build                                                                             | §2, §16      |
-| A07 Authentication Failures                | Magic-link rules fixed before the feature exists                                                                                                                  | §13          |
+| A07 Authentication Failures                | Email-code rules (§13) implemented in US012                                                                                                                       | §13          |
 | A08 Software or Data Integrity Failures    | Only CI-checked code reaches `main`; catalog sync validates TMDB data with a schema before writing; no unsigned remote scripts                                    | §5, §11      |
 | A09 Security Logging and Alerting Failures | Server-side logs for refused requests and rate-limit hits, without secrets or personal data; alert on sync failure                                                | §6, §7       |
 | A10 Mishandling of Exceptional Conditions  | Fail closed, generic messages, every external call has a timeout and a handled failure path                                                                       | §1, §6       |
