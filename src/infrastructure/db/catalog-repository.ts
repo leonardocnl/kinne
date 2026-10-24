@@ -31,17 +31,25 @@ import {
     titleCredits,
     titleNeighbors,
     tmdbRecommendations,
+    userTasteSignals,
+    userWatched,
 } from "./schema";
 
 // O drizzle não qualifica ${t.id} numa select de uma tabela só, e dentro do exists "id" viraria
 // o da tabela de eventos: o id do título vai escrito à mão. Os finalistas de uma sala de grupo
-// também contam: a chave do banco recusaria apagar o título enquanto a sala vive (US011).
+// também contam: a chave do banco recusaria apagar o título enquanto a sala vive (US011). O gosto e
+// o "Já vi" das contas também: sem cascade, o título que alguém marcou fica inativo em vez de sumir
+// do gosto da pessoa.
 export const titleReferenced = sql<boolean>`exists (select 1 from ${anonymousUsageEvents}
     where ${anonymousUsageEvents.catalogTitleId} = "catalog_titles"."id")
     or exists (select 1 from ${dailyPicks}
     where ${dailyPicks.catalogTitleId} = "catalog_titles"."id")
     or exists (select 1 from ${groupRoomFinalists}
-    where ${groupRoomFinalists.catalogTitleId} = "catalog_titles"."id")`;
+    where ${groupRoomFinalists.catalogTitleId} = "catalog_titles"."id")
+    or exists (select 1 from ${userTasteSignals}
+    where ${userTasteSignals.catalogTitleId} = "catalog_titles"."id")
+    or exists (select 1 from ${userWatched}
+    where ${userWatched.catalogTitleId} = "catalog_titles"."id")`;
 
 const COUNTRY = "BR";
 const CHUNK = 2000;
@@ -210,6 +218,15 @@ export class DrizzleCatalogRepository implements CatalogRepository {
             sql`with gone as (delete from group_rooms where expires_at <= now() returning 1)
                 select count(*) as n from gone`,
         );
+        return Number(r.rows[0].n);
+    }
+
+    /**
+     * Sessões vencidas e códigos de entrar com mais de um dia (accounts D3). Só conta quantas linhas
+     * saíram: nada de quem eram.
+     */
+    async purgeExpiredAuth(): Promise<number> {
+        const r = await this.db.execute<{ n: number }>(sql`select kinne_purge_expired_auth() as n`);
         return Number(r.rows[0].n);
     }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { tasteSignals } from "@/infrastructure/browser-storage";
+import { markSignal } from "./account/marks";
 import { showAnswered, useToast } from "./toast";
 import { Button } from "./ui/Button";
 import { Toast } from "./ui/Toast";
@@ -14,7 +14,8 @@ export function ToastHost() {
 
     function answer(signal: "liked" | "disliked") {
         if (asking === null) return;
-        tasteSignals.record(asking, signal);
+        // com a conta aberta grava na conta, sem ela no navegador (US015 C2); a resposta vale já
+        void markSignal(asking, signal);
         showAnswered();
     }
 

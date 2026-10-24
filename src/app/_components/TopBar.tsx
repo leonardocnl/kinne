@@ -1,19 +1,16 @@
+import { AccountButton } from "./account/AccountButton";
 import { SearchLauncher } from "./search/SearchLauncher";
-import { Button, ButtonLink } from "./ui/Button";
+import { ButtonLink } from "./ui/Button";
 import { Wordmark } from "./ui/Wordmark";
-
-// "Entrar" ainda não tem ação (04-mudancas): fica escondido no teste da semana 0 para não confundir
-// quem participa. Para voltar, basta trocar para true.
-export const SHOW_SIGN_IN = false;
 
 type TopBarProps = {
     /** data do dia; no celular ela sai daqui e vai para cima do título */
     date?: string;
-    /** "Voltar" no lugar de "Entrar"; no celular o voltar fica sobre a imagem */
+    /** "Voltar" ao lado do perfil; no celular o voltar fica sobre a imagem */
     back?: boolean;
 };
 
-/** Barra do topo: wordmark, data, busca e "Entrar" (se SHOW_SIGN_IN) ou "Voltar", fora da tela inicial. */
+/** Barra do topo: wordmark, data, busca, "Voltar" fora da tela inicial e "Entrar" ou o perfil (US012, US014). */
 export function TopBar({ date, back }: TopBarProps) {
     return (
         <header className="grid grid-cols-3 items-center gap-3 max-desktop:grid-cols-2">
@@ -23,7 +20,7 @@ export function TopBar({ date, back }: TopBarProps) {
             </p>
             <div className="flex items-center gap-2.5 justify-self-end">
                 <SearchLauncher />
-                {back ? (
+                {back && (
                     <ButtonLink
                         variant="ghost"
                         href="/"
@@ -32,9 +29,8 @@ export function TopBar({ date, back }: TopBarProps) {
                     >
                         Voltar<span className="sr-only"> ao início</span>
                     </ButtonLink>
-                ) : (
-                    SHOW_SIGN_IN && <Button variant="ghost">Entrar</Button>
                 )}
+                <AccountButton />
             </div>
         </header>
     );

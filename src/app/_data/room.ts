@@ -14,6 +14,7 @@ import { takeTokens } from "@/infrastructure/db/rate-limiter";
 import { hashToken, isMemberToken, ROOM_COOKIE } from "@/infrastructure/group-room-session";
 import { MemoryLimiter } from "@/infrastructure/memory-limiter";
 import { searchConfig } from "@/infrastructure/search-config";
+import { drawAccount } from "./account";
 import { idListSchema } from "./surprise";
 import { tasteSchema } from "./taste";
 
@@ -87,6 +88,33 @@ export const voteSchema = z.strictObject({
 export function parseWith<T>(schema: z.ZodType<T, unknown>, input: unknown): T | null {
     const parsed = schema.safeParse(input);
     return parsed.success ? parsed.data : null;
+}
+
+// ---------------------------------------------------------------------------------------------
+// A conta na sala (US015 C2, RNE003)
+
+/**
+ * Com sessão, o gosto, o "Já vi" e os streamings da pessoa vêm da conta, lidos no servidor pelo
+ * token; as listas do corpo do pedido são ignoradas, mesmo que venham vazias ou forjadas. Os
+ * gêneros são uma escolha da sala e seguem o pedido. Sem sessão, vale o que o navegador mandou.
+ * Se a conta existe mas não respondeu, a pessoa entra sem lista nenhuma, nunca com a do pedido.
+ */
+export async function memberFromAccount(member: MemberDetails): Promise<MemberDetails> {
+    const account = await drawAccount();
+    if (!account) return member;
+    return {
+        streamings: account.streamings,
+        genres: member.genres,
+        watched: account.watched.slice(-SURPRISE_MAX_EXCLUDED),
+        liked: account.taste.liked,
+        willWatch: account.taste.willWatch,
+        disliked: account.taste.disliked,
+    };
+}
+
+/** Os streamings da conta da sessão, ou nulo para visitante: na sala, quem tem conta não os muda. */
+export async function accountStreamings(): Promise<Streaming[] | null> {
+    return (await drawAccount())?.streamings ?? null;
 }
 
 // ---------------------------------------------------------------------------------------------

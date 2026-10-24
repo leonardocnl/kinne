@@ -87,6 +87,12 @@ async function main() {
             return null;
         });
 
+        // Sessões e códigos vencidos das contas (D3): falha na purga não desfaz a carga, mas falha o job.
+        const purged = await repository.purgeExpiredAuth().catch(() => {
+            exitCode = 1;
+            return null;
+        });
+
         const c = result.counts;
         const sizeRatio = size / NEON_FREE_BYTES;
         summary([
@@ -115,6 +121,10 @@ async function main() {
             rooms === null
                 ? "**Aviso:** limpeza das salas de grupo falhou."
                 : `Salas de grupo vencidas apagadas: ${rooms}.`,
+            purged === null
+                ? "**Aviso:** limpeza das contas falhou."
+                : `Contas: ${purged} sessões e códigos vencidos apagados.`,
+            "",
             ...(sizeRatio > SIZE_WARNING_RATIO
                 ? [`**Aviso:** banco em ${(sizeRatio * 100).toFixed(0)}% do limite do Neon.`]
                 : []),

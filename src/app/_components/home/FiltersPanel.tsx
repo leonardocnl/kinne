@@ -16,6 +16,7 @@ import {
 import { FEELING_LABELS, FEELINGS } from "@/domain/feelings";
 import { GENRE_LABELS, KINNE_GENRES } from "@/domain/genre";
 import { STREAMING_SERVICES } from "@/domain/streaming";
+import { EMPTY_TASTE } from "@/domain/taste-signals";
 import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
 import {
     filteredRun,
@@ -27,6 +28,9 @@ import {
 import { drawFiltered, filterCandidates } from "../../_actions/filters";
 import { personTitles } from "../../_actions/people";
 import { loadError } from "../StateScreen";
+import { saveStreamings } from "../../_actions/account";
+import { rememberReturn } from "../account/returnTo";
+import { setAccountStatus, useAccountStatus } from "../account/store";
 import { PersonField } from "./PersonField";
 import { goToTitle } from "../title/origin";
 import { Button } from "../ui/Button";
@@ -35,6 +39,7 @@ import { GlassPanel } from "../ui/GlassPanel";
 import { cx } from "../ui/cx";
 import { CloseIcon } from "../ui/icons";
 import { Skeleton } from "../ui/Skeleton";
+import { TextLink } from "../ui/TextLink";
 import { Digits, Slider } from "../ui/Slider";
 
 const TYPES: { value: TypeChoice; label: string }[] = [
@@ -91,8 +96,27 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
     const panelRef = useRef<HTMLDivElement>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
     const [more, setMore] = useState(false);
-    const [filters, setFilters] = useState(savedFilters);
-    const [watched] = useState(() => watchedTitles.read());
+    const [stored, setStored] = useState(savedFilters);
+    const status = useAccountStatus();
+    const account = status.state === "account" ? status.account : null;
+    // com a conta aberta o "Já vi" vem da conta; sem ela, do navegador (US015 C2)
+    const [browserWatched] = useState(() => watchedTitles.read());
+    const watched = useMemo(
+        () => (account ? account.watched.map((t) => t.titleId) : browserWatched),
+        [account, browserWatched],
+    );
+    // o convite de quem não tem conta ao tocar num sentimento (US015 C3)
+    const [invite, setInvite] = useState(false);
+    // O que a conta manda vale por cima do que a aba guardou: os streamings são os da conta, e sem
+    // conta não há sentimento (RNE005). Derivado, sem estado novo.
+    const filters = useMemo<Filters>(
+        () => ({
+            ...stored,
+            ...(account && { streamings: account.streamings }),
+            ...(status.state === "visitor" && stored.feeling !== null && { feeling: null }),
+        }),
+        [stored, account, status.state],
+    );
     const [candidates, setCandidates] = useState<FilterCandidate[] | "error" | null>(null);
     const [attempt, setAttempt] = useState(0);
     // os títulos da pessoa do filtro, para o contador; o sorteio deriva os seus no servidor (A7)
@@ -187,9 +211,17 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
     }, [filters.type]);
 
     function update(next: Filters) {
-        setFilters(next);
+        setStored(next);
         setDrawFailed(false);
-        saveFilters(next);
+        // com a conta aberta, os streamings vão para a conta e o navegador não guarda nenhum
+        saveFilters(next, !account);
+        if (account && next.streamings.join(",") !== filters.streamings.join(",")) {
+            const streamings = next.streamings;
+            void saveStreamings({ streamings }).then((answer) => {
+                if (answer.ok)
+                    setAccountStatus({ state: "account", account: { ...account, streamings } });
+            });
+        }
     }
 
     function retry() {
@@ -207,7 +239,8 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
                     filters: wireFilters(filters),
                     watched: request.watched,
                     seen: [],
-                    taste: tasteSignals.read(),
+                    // com a conta aberta o servidor lê tudo da conta e ignora estas listas (RNE003)
+                    taste: account ? EMPTY_TASTE : tasteSignals.read(),
                     round: 0,
                 });
                 if (slug) {
@@ -286,15 +319,25 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
                                             key={f}
                                             pressed={on}
                                             // um só por vez; tocar no marcado volta a "nenhum" (C2)
-                                            onClick={() =>
-                                                update({ ...filters, feeling: on ? null : f })
-                                            }
+                                            onClick={() => {
+                                                // sentimento é só de quem tem conta (US015 C3)
+                                                if (!account) return setInvite(true);
+                                                update({ ...filters, feeling: on ? null : f });
+                                            }}
                                         >
                                             {FEELING_LABELS[f]}
                                         </Chip>
                                     );
                                 })}
                             </div>
+                            {invite && !account && (
+                                <p role="status" className="text-data text-soft">
+                                    Crie sua conta para escolher pelo que sente.{" "}
+                                    <TextLink href="/entrar" onClick={rememberReturn}>
+                                        Entrar
+                                    </TextLink>
+                                </p>
+                            )}
                         </div>
 
                         <div className={section}>

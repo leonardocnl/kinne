@@ -10,8 +10,8 @@ const VISIBLE_ANSWERED_MS = 1800;
 
 export type ToastState = {
     text: string;
-    /** id do título de que se pergunta "Curtiu?" (US010 C1); null quando não há pergunta */
-    asking: number | null;
+    /** o título de que se pergunta "Curtiu?" (US010 C1); null quando não há pergunta */
+    asking: { id: number; slug: string } | null;
 };
 
 const EMPTY: ToastState = { text: "", asking: null };
@@ -29,7 +29,7 @@ function set(next: ToastState) {
  * Mostra o aviso por alguns segundos; texto vazio esconde na hora. Com `asking`, o aviso traz a
  * pergunta "Curtiu?" sobre esse título.
  */
-export function showToast(text: string, options: { asking?: number } = {}) {
+export function showToast(text: string, options: { asking?: { id: number; slug: string } } = {}) {
     clearTimeout(timer);
     const asking = text && options.asking !== undefined ? options.asking : null;
     set(text ? { text, asking } : EMPTY);

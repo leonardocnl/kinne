@@ -14,7 +14,7 @@ describe("título referenciado (catalog-sync B6)", () => {
             .select({ id: catalogTitles.id, referenced: titleReferenced })
             .from(catalogTitles)
             .toSQL();
-        expect(sql.match(/= "catalog_titles"\."id"/g)).toHaveLength(3);
+        expect(sql.match(/= "catalog_titles"\."id"/g)).toHaveLength(5);
         expect(sql).not.toMatch(/= "id"/);
     });
 
@@ -30,5 +30,18 @@ describe("título referenciado (catalog-sync B6)", () => {
         expect(sql).toMatch(
             /from "group_room_finalists"\s+where "catalog_title_id" = "catalog_titles"\."id"/,
         );
+    });
+
+    // As chaves de user_taste_signals e user_watched para catalog_titles não têm cascade: a carga que
+    // apagasse um título marcado por alguém falharia (23503) ou, pior, tiraria o título do gosto
+    // da pessoa. Referenciado, ele só fica inativo (contas, decisão de 24/10/2026).
+    it("conta o gosto e o 'Já vi' das contas como referência", () => {
+        const db = drizzle(neon("postgres://u:p@h/d"));
+        const { sql } = db
+            .select({ id: catalogTitles.id, referenced: titleReferenced })
+            .from(catalogTitles)
+            .toSQL();
+        expect(sql).toContain('from "user_taste_signals"');
+        expect(sql).toContain('from "user_watched"');
     });
 });

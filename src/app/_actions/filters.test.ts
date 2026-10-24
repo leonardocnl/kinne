@@ -4,6 +4,8 @@ import { DEFAULT_FILTERS, wireFilters } from "@/domain/filters";
 const candidates = vi.fn();
 const personTitleIds = vi.fn();
 const admit = vi.fn();
+const drawAccount = vi.fn();
+vi.mock("../_data/account", () => ({ drawAccount }));
 vi.mock("../_data/candidates", () => ({ candidates }));
 vi.mock("../_data/people", () => ({ personTitleIds }));
 vi.mock("../_data/person-limit", () => ({ admitPersonQuery: admit }));
@@ -32,6 +34,7 @@ const request = (extra: object = {}) => ({
 });
 
 beforeEach(() => {
+    drawAccount.mockReset().mockResolvedValue(null);
     candidates.mockReset().mockResolvedValue([1, 2, 3, 4].map((id) => title(id)));
     personTitleIds.mockReset().mockResolvedValue([3]);
     admit.mockReset().mockResolvedValue(true);
@@ -139,5 +142,60 @@ describe("filterCandidates (recommendation-rounds C1)", () => {
                 "votes",
             ].sort(),
         );
+    });
+});
+
+describe("drawFiltered com a conta aberta (US015 RNE003, ameaças A4, B2, B3)", () => {
+    const ACCOUNT = {
+        streamings: [],
+        watched: [],
+        taste: { liked: [], willWatch: [], disliked: [] },
+    };
+
+    it("sentimento sem sessão é recusado no servidor, mesmo chamando a ação direto (B3)", async () => {
+        const { drawFiltered } = await import("./filters");
+        await expect(
+            drawFiltered(request({ filters: { ...WIRE, feeling: "cry" } })),
+        ).rejects.toThrow("Pedido recusado");
+        expect(candidates).not.toHaveBeenCalled();
+    });
+
+    it("com sessão o sentimento passa", async () => {
+        drawAccount.mockResolvedValue(ACCOUNT);
+        const { drawFiltered } = await import("./filters");
+        await expect(
+            drawFiltered(request({ filters: { ...WIRE, feeling: "cry" } })),
+        ).resolves.toBeTruthy();
+    });
+
+    it("com sessão, o 'Já vi' do pedido não vale: vale o da conta (B2)", async () => {
+        // o pedido diz que todos foram vistos; a conta não viu nenhum
+        drawAccount.mockResolvedValue(ACCOUNT);
+        const { drawFiltered } = await import("./filters");
+        const answer = await drawFiltered(request({ watched: [1, 2, 3, 4] }));
+        expect(answer.slug).not.toBeNull();
+    });
+
+    it("com sessão, o 'Já vi' da conta vale mesmo que o pedido mande a lista vazia", async () => {
+        drawAccount.mockResolvedValue({ ...ACCOUNT, watched: [1, 2, 3, 4] });
+        const { drawFiltered } = await import("./filters");
+        const answer = await drawFiltered(request({ watched: [] }));
+        expect(answer.slug).toBeNull();
+    });
+
+    it("com sessão, os streamings da conta valem no lugar dos do pedido", async () => {
+        candidates.mockResolvedValue([title(1), { ...title(2), streamingTmdbIds: [307] }]);
+        drawAccount.mockResolvedValue({ ...ACCOUNT, streamings: ["globoplay"] });
+        const { drawFiltered } = await import("./filters");
+        const answer = await drawFiltered(
+            request({ filters: { ...WIRE, streamings: ["netflix"] } }),
+        );
+        expect(answer.slug).toBe("titulo-2");
+    });
+
+    it("sem sessão, as listas do pedido seguem valendo (visitante)", async () => {
+        const { drawFiltered } = await import("./filters");
+        const answer = await drawFiltered(request({ watched: [1, 2, 3, 4] }));
+        expect(answer.slug).toBeNull();
     });
 });

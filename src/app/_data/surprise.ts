@@ -1,9 +1,12 @@
 import { z } from "zod";
 import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
+import { MAX_TITLE_ID } from "@/domain/taste-signals";
 import { isStreaming, STREAMING_SERVICES } from "@/domain/streaming";
 import { tasteSchema } from "./taste";
 
-export const idListSchema = z.array(z.int().positive()).max(SURPRISE_MAX_EXCLUDED);
+export const idListSchema = z
+    .array(z.int().positive().max(MAX_TITLE_ID))
+    .max(SURPRISE_MAX_EXCLUDED);
 
 export const surpriseRequestSchema = z.strictObject({
     streamings: z.array(z.string().refine(isStreaming)).max(STREAMING_SERVICES.length),

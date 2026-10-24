@@ -15,7 +15,7 @@ Kinne · Requisitos da semana 0 · versão de 12/10/2026
 
 ### Decisões de produto
 
-- [ ] Definir o que o botão "Entrar" faz na semana 0, já que o login vem depois. Até lá, ele aparece sem ação.
+- [x] Definir o que o botão "Entrar" faz: abre o login por código no e-mail (US012, 23/10/2026).
 - [ ] Definir o tratamento de um título que deixa de passar no piso ou sai de todos os streamings (US007, RNE003).
 - [ ] Definir o prazo definitivo de retenção de eventos no texto de privacidade completo (LGPD).
 
@@ -91,3 +91,20 @@ Kinne · Requisitos da semana 0 · versão de 12/10/2026
 | ---------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Piso para quem tem sinais de gosto | Nota ≥ 6,4 e ≥ 500 votos em tudo (RNG001) | Nos títulos que o gosto alcança, sem nota mínima e com ≥ 100 votos; o Me surpreenda e o visitante sem sinais seguem com o piso (`docs/design/taste-graph.md` §8) |
 | Recomendação do TMDB no grafo      | Não existia                               | Vale 23% da proximidade, inteira só com obra em comum ≥ 0,30; abaixo disso, em proporção (§4.2)                                                                  |
+
+## Mudanças de 23/10/2026 (contas)
+
+| Ponto           | Antes                           | Agora                                                                                         |
+| --------------- | ------------------------------- | --------------------------------------------------------------------------------------------- |
+| Login           | Magic link (MVP)                | Código de 6 dígitos no e-mail: nada secreto na URL e nada que um leitor de link gaste (US012) |
+| Envio de e-mail | Não definido                    | Resend, com envio de desenvolvimento até o domínio existir (US012 RNE006)                     |
+| Onboarding      | Três passos com progresso salvo | Igual, pulável e já preenchido com o que o navegador tinha (US013)                            |
+| Sentimentos     | Para todos                      | Só com conta, com convite para o visitante (US015 C3)                                         |
+
+### Pendências das contas
+
+- [ ] Comprar o domínio kinne.com.br e configurar o Resend (registros SPF, DKIM e DMARC no DNS).
+- [ ] Revisar o rascunho do texto de privacidade antes de as contas irem ao ar (US014 RNE003).
+- [ ] Decidir se volta o botão "Não me interessa" (previsto no MVP, fora da etapa 2).
+- [ ] Definir `AUTH_SECRET`, `RESEND_API_KEY` e `AUTH_EMAIL_FROM` na Vercel; sem eles ninguém entra.
+- [x] Ligar a sala de grupo à conta (US015 C2): com sessão, a sala usa o gosto, o "Já vi" e os streamings da conta, lidos no servidor (24/10/2026).
