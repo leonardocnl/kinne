@@ -101,6 +101,18 @@ Eu, como visitante assistindo com outras pessoas, quero que cada um diga o que t
 **Então** o sistema me tira da sala e volta à tela inicial  
 **E** uma sala expira 3 horas depois de criada, ou 30 minutos depois do resultado; depois disso, quem abrir `/sala` vê "Esta sala terminou." e "Voltar ao início"
 
+### C11: Quem criou sai
+
+**Dado** que sou quem criou a sala e há outras pessoas nela  
+**Quando** aciono "Sair da sala"  
+**Então** o papel de quem criou passa, na mesma operação da saída, para a pessoa mais antiga ainda na sala (a de menor ordem de entrada, RNE004)  
+**E** essa pessoa passa a ver as ações de quem criou (começar, encerrar a votação, outra rodada)  
+**Dado** que sou a única pessoa na sala  
+**Quando** aciono "Sair da sala"  
+**Então** a sala encerra, e quem abrir `/sala` vê "Esta sala terminou." (C10)  
+**Dado** que duas pessoas saem ao mesmo tempo  
+**Então** a sala nunca fica sem quem criou enquanto restar alguém, e nunca fica com duas pessoas no papel (RNE010)
+
 ## Regras de negócio específicas
 
 - **RNE001 – Código.** 8 caracteres de um alfabeto de 31, sem os que se confundem (sem 0, O, 1, I, L), mostrados como `XXXX-XXXX` e aceitos com ou sem hífen, maiúsculas ou minúsculas. Gerado no servidor com gerador criptográfico. Cerca de 40 bits: adivinhar não é viável com o limite de tentativas (ameaças A1).
@@ -112,3 +124,4 @@ Eu, como visitante assistindo com outras pessoas, quero que cada um diga o que t
 - **RNE007 – Atualização.** Cada celular pergunta o estado da sala a cada 2,5 segundos enquanto a aba está visível, e para quando a aba some ou a sala termina (ameaças D2).
 - **RNE008 – Limites.** Até 8 pessoas por sala; até 3 rodadas por sala; um navegador cria no máximo 3 salas por hora.
 - **RNE009 – O que o servidor guarda.** Da pessoa, só o necessário para a sala: o hash do cookie, as preferências, os ids do "Já vi" e os sinais de gosto que o navegador mandou ao entrar, e os votos. Tudo é apagado quando a sala expira (ameaças C2).
+- **RNE010 – Passagem do papel.** Sair e passar o papel de quem criou acontecem numa instrução só no banco (aprovada em 23/10/2026): quem sai é marcado como saído, a pessoa seguinte vira quem criou e, se não restar ninguém, a sala expira na hora. Duas saídas ao mesmo tempo dão sempre um resultado válido. Quem sai perde o cookie de membro e os dados pessoais guardados na sala (RNE009).
