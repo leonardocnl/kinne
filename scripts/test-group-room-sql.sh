@@ -129,4 +129,9 @@ if psql -v ON_ERROR_STOP=1 -qAt -c "set role kinne_sync; delete from group_room_
     fail "kinne_sync não deveria apagar membros direto"
 fi
 
+if psql -v ON_ERROR_STOP=1 -qAt -c "set role kinne_sync; select position from group_room_finalists limit 1" >/dev/null 2>&1; then
+    fail "kinne_sync só deveria ler a coluna do título dos finalistas"
+fi
+psql -v ON_ERROR_STOP=1 -qAt -c "set role kinne_sync; select catalog_title_id from group_room_finalists limit 1" >/dev/null || fail "kinne_sync deveria ler catalog_title_id dos finalistas"
+
 echo "OK"

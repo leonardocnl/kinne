@@ -220,4 +220,7 @@ GRANT INSERT ON group_room_finalists TO kinne_app;--> statement-breakpoint
 GRANT INSERT ON group_room_votes TO kinne_app;--> statement-breakpoint
 GRANT UPDATE (approved) ON group_room_votes TO kinne_app;--> statement-breakpoint
 -- Limpeza diária (C2): apagar a sala leva as filhas pelo cascade.
-GRANT SELECT, DELETE ON group_rooms TO kinne_sync;
+GRANT SELECT, DELETE ON group_rooms TO kinne_sync;--> statement-breakpoint
+-- A carga só apaga um título que nada referencia (titleReferenced): os finalistas de uma sala viva
+-- contam, e para isso ela lê a coluna do título, nada mais.
+GRANT SELECT (catalog_title_id) ON group_room_finalists TO kinne_sync;

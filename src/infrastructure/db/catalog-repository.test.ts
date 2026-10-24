@@ -14,7 +14,21 @@ describe("título referenciado (catalog-sync B6)", () => {
             .select({ id: catalogTitles.id, referenced: titleReferenced })
             .from(catalogTitles)
             .toSQL();
-        expect(sql.match(/= "catalog_titles"\."id"/g)).toHaveLength(2);
+        expect(sql.match(/= "catalog_titles"\."id"/g)).toHaveLength(3);
         expect(sql).not.toMatch(/= "id"/);
+    });
+
+    // A chave group_room_finalists_catalog_title_id_catalog_titles_id_fk não tem cascade: um título
+    // que está entre os finalistas de uma sala viva não pode ser apagado pela carga (US011).
+    it("conta os finalistas de uma sala de grupo como referência", () => {
+        const db = drizzle(neon("postgres://u:p@h/d"));
+        const { sql } = db
+            .select({ id: catalogTitles.id, referenced: titleReferenced })
+            .from(catalogTitles)
+            .toSQL();
+        expect(sql).toContain('from "group_room_finalists"');
+        expect(sql).toMatch(
+            /from "group_room_finalists"\s+where "catalog_title_id" = "catalog_titles"\."id"/,
+        );
     });
 });

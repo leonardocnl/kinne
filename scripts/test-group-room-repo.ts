@@ -6,6 +6,10 @@
 import { execFileSync } from "node:child_process";
 import { PgDialect } from "drizzle-orm/pg-core";
 import type { SQL } from "drizzle-orm";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import { titleReferenced } from "@/infrastructure/db/catalog-repository";
+import { catalogTitles } from "@/infrastructure/db/schema";
 import * as q from "@/infrastructure/db/group-room-sql";
 
 const dialect = new PgDialect();
@@ -52,7 +56,7 @@ function check(name: string, ok: boolean, detail?: unknown) {
 
 const hash = (n: string) => n.padEnd(64, "0");
 const none = { streamings: [], genres: [], watched: [], liked: [], willWatch: [], disliked: [] };
-const TITLES = [9001, 9002, 9003, 9004, 9005, 9006];
+const TITLES = [9001, 9002, 9003, 9004, 9005, 9006, 9007];
 
 function setup() {
     admin("delete from group_rooms where creator_key_hash like 'repotest-%'");
@@ -315,6 +319,37 @@ try {
         ).length === 0 && state("creator")!.room.round === 3,
     );
 
+    console.log("# a carga do catálogo (titleReferenced, como kinne_sync)");
+    {
+        const { sql: text } = drizzle(neon("postgres://u:p@h/d"))
+            .select({ id: catalogTitles.id, referenced: titleReferenced })
+            .from(catalogTitles)
+            .toSQL();
+        const referenced = execFileSync(
+            "psql",
+            [
+                "-v",
+                "ON_ERROR_STOP=1",
+                "-qAt",
+                "-F",
+                ",",
+                "-c",
+                `set role kinne_sync; select * from (${text}) t where id between 9001 and 9007 order by id`,
+            ],
+            { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+        )
+            .split("\n")
+            .filter((l) => /^\d/.test(l))
+            .map((l) => l.split(","));
+        const flag = (id: number) => referenced.find((r) => Number(r[0]) === id)?.[1];
+        check(
+            "o título que é finalista de uma sala viva conta como referenciado",
+            flag(9001) === "t",
+            referenced,
+        );
+        check("o título que ninguém referencia continua apagável", flag(9007) === "f", referenced);
+    }
+
     console.log("# sala vencida e saída");
     const old = newRoom("CCCCCCC3", "b", "oldc", ["oldd"]);
     admin(
@@ -347,8 +382,8 @@ try {
     );
 } finally {
     admin("delete from group_rooms where creator_key_hash like 'repotest-%'");
-    admin("delete from group_room_finalists where catalog_title_id between 9001 and 9006");
-    admin("delete from catalog_titles where id between 9001 and 9006");
+    admin("delete from group_room_finalists where catalog_title_id between 9001 and 9007");
+    admin("delete from catalog_titles where id between 9001 and 9007");
 }
 
 if (failures > 0) {
