@@ -41,8 +41,8 @@ export function resendMailer(
  * Só fora de produção: o código aparece no terminal de quem roda o servidor. Recusa-se a existir
  * em produção, mesmo que alguém o chame por engano.
  */
-export function consoleMailer(config: Pick<AuthConfig, "production">): Mailer {
-    if (config.production) throw new Error("O envio de desenvolvimento não existe em produção");
+export function consoleMailer(config: Pick<AuthConfig, "devMail">): Mailer {
+    if (!config.devMail) throw new Error("O envio de desenvolvimento só existe em next dev");
     return {
         async send(to, message) {
             // é o propósito deste envio, e ele só existe fora de produção
@@ -59,6 +59,6 @@ export function consoleMailer(config: Pick<AuthConfig, "production">): Mailer {
  */
 export function selectMailer(config: AuthConfig = authConfig()): Mailer | null {
     if (config.resendApiKey && config.from) return resendMailer(config.resendApiKey, config.from);
-    if (config.production) return null;
+    if (!config.devMail) return null;
     return consoleMailer(config);
 }

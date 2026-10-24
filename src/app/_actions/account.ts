@@ -96,29 +96,34 @@ export async function verifyCode(input: unknown): Promise<VerifyAnswer> {
     }
 }
 
-/** "Sair" (C7): encerra a sessão no servidor e apaga o cookie. O navegador se limpa na tela. */
+/**
+ * "Sair" (C7): o banco encerra a sessão primeiro; só então o cookie some. Se o banco não responder,
+ * o cookie fica e a resposta é recusa: a tela não pode dizer que saiu enquanto a sessão vive (M5).
+ */
 export async function signOut(): Promise<Done> {
     const tokenHash = await cookieTokenHash();
-    await clearSessionCookie();
-    if (!tokenHash) return OK;
-    try {
-        await accountRepository().signOut(tokenHash);
-    } catch {
-        return REFUSED;
+    if (tokenHash) {
+        try {
+            await accountRepository().signOut(tokenHash);
+        } catch {
+            return REFUSED;
+        }
     }
+    await clearSessionCookie();
     return OK;
 }
 
 /** "Sair de todos os aparelhos" (US014 C3): todas as sessões da conta, esta inclusive. */
 export async function signOutAll(): Promise<Done> {
-    const session = await currentSession();
-    await clearSessionCookie();
-    if (!session) return OK;
-    try {
-        await accountRepository().signOutAll(session.tokenHash);
-    } catch {
-        return REFUSED;
+    const tokenHash = await cookieTokenHash();
+    if (tokenHash) {
+        try {
+            await accountRepository().signOutAll(tokenHash);
+        } catch {
+            return REFUSED;
+        }
     }
+    await clearSessionCookie();
     return OK;
 }
 

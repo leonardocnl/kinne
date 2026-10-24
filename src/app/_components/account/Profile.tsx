@@ -6,7 +6,6 @@ import { useEffect, useId, useState, type ReactNode } from "react";
 import type { AccountTitle, AccountView } from "@/application/accounts";
 import { hasSkippedStep } from "@/domain/accounts";
 import { STREAMING_SERVICES, type Streaming } from "@/domain/streaming";
-import { clearAccountKeys } from "@/infrastructure/browser-storage";
 import {
     deleteAccount,
     exportMyData,
@@ -22,7 +21,7 @@ import { Chip } from "../ui/Chip";
 import { RemovableChip } from "../ui/RemovableChip";
 import { TextLink } from "../ui/TextLink";
 import { GENERIC_ERROR, TOO_MANY } from "./messages";
-import { leaveAccount } from "./marks";
+import { afterAccountDeleted, leaveAccount } from "./marks";
 import { loadAccountStatus, setAccountStatus, useAccountStatus } from "./store";
 
 /** Perfil e "meus dados" (US014): o que o Kinne guarda, para ver, mudar, baixar e apagar. */
@@ -260,8 +259,7 @@ function MyData() {
         try {
             const answer = await deleteAccount({ code });
             if (answer === "deleted") {
-                clearAccountKeys();
-                setAccountStatus({ state: "visitor" });
+                afterAccountDeleted();
                 showToast("Sua conta foi apagada.");
                 router.replace("/");
                 return;
@@ -367,11 +365,18 @@ function Session() {
     const router = useRouter();
     const [confirming, setConfirming] = useState(false);
     const [busy, setBusy] = useState(false);
+    const [failed, setFailed] = useState(false);
 
     async function leave(everywhere?: typeof signOutAll) {
         setBusy(true);
-        await leaveAccount(everywhere);
-        router.replace("/");
+        setFailed(false);
+        if (await leaveAccount(everywhere)) {
+            router.replace("/");
+            return;
+        }
+        // o servidor não confirmou: a conta segue aberta e a pessoa pode tentar de novo (M5)
+        setFailed(true);
+        setBusy(false);
     }
 
     return (
@@ -386,6 +391,11 @@ function Session() {
                     </Button>
                 )}
             </div>
+            {failed && (
+                <p role="alert" className="max-w-measure text-data text-soft">
+                    Não conseguimos sair agora. Sua conta continua aberta; tente de novo.
+                </p>
+            )}
             {confirming && (
                 <div className="flex max-w-measure flex-col gap-3">
                     <p className="text-small text-soft">

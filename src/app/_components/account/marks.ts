@@ -1,4 +1,4 @@
-import { clearAccountKeys, tasteSignals, watchedTitles } from "@/infrastructure/browser-storage";
+import { clearAccountTraces, tasteSignals, watchedTitles } from "@/infrastructure/browser-storage";
 import type { AccountView } from "@/application/accounts";
 import { setSignal, setWatched, signOut } from "../../_actions/account";
 import { getAccountStatus, loadAccountStatus, setAccountStatus } from "./store";
@@ -78,13 +78,22 @@ export async function markWatched(title: Marked): Promise<boolean> {
 }
 
 /**
- * Sair (US012 C7, US015 RNE004): encerra a sessão no servidor e apaga do navegador o gosto, o
- * "Já vi" e os streamings, para o computador compartilhado não herdar nada.
+ * Sair (US012 C7, US015 RNE004): o servidor encerra a sessão, e só se ele confirmar o navegador
+ * apaga o gosto, o "Já vi", os streamings e o que a conta deixou na aba (M5, B1). Devolve false se o
+ * servidor recusou ou não respondeu: a pessoa continua com a conta aberta e pode tentar de novo.
  */
 export async function leaveAccount(
     everywhere: () => Promise<{ ok: boolean }> = signOut,
-): Promise<void> {
-    await everywhere().catch(() => undefined);
-    clearAccountKeys();
+): Promise<boolean> {
+    const answer = await everywhere().catch(() => ({ ok: false }));
+    if (!answer.ok) return false;
+    clearAccountTraces();
+    setAccountStatus({ state: "visitor" });
+    return true;
+}
+
+/** Depois de a conta ser apagada no servidor: o navegador volta a ser de um visitante do zero. */
+export function afterAccountDeleted() {
+    clearAccountTraces();
     setAccountStatus({ state: "visitor" });
 }

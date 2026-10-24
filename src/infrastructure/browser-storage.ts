@@ -72,6 +72,18 @@ export function clearAccountKeys() {
     remove("localStorage", "kinne:streamings");
 }
 
+/**
+ * Sair ou apagar a conta (revisão B1): além das chaves da conta, some o que ela deixou na aba, que
+ * o próximo visitante do mesmo computador herdaria: os filtros (com o sentimento), a sequência
+ * aberta (com o "Já vi" da conta) e os títulos já mostrados.
+ */
+export function clearAccountTraces() {
+    clearAccountKeys();
+    remove("sessionStorage", "kinne:filters");
+    remove("sessionStorage", "kinne:filtered-run");
+    remove("sessionStorage", "kinne:shown");
+}
+
 /** Títulos mostrados nesta aba, para a surpresa não repetir (US003 C3). */
 export const shownTitles = idList("sessionStorage", "kinne:shown");
 

@@ -27,7 +27,14 @@ vi.mock("next/server", () => ({
         afterTasks.push(task);
     },
 }));
-vi.mock("@/infrastructure/db/client", () => ({ createDb: () => localDb() }));
+// "banco fora do ar": a única forma de testar o que as ações fazem quando o banco não responde
+let dbDown = false;
+const downDb = {
+    execute: async () => {
+        throw new Error("banco fora do ar");
+    },
+};
+vi.mock("@/infrastructure/db/client", () => ({ createDb: () => (dbDown ? downDb : localDb()) }));
 vi.mock("../_data/candidates", () => ({ candidates: async () => [] }));
 vi.mock("../_data/taste-graph", () => ({ neighborGraphOrNull: async () => null }));
 vi.mock("../_data/feelings", () => ({ loadFeelingKit: async () => null }));
@@ -107,7 +114,8 @@ describe.skipIf(!dbTestsEnabled)("ataques às ações das contas", () => {
         requestHeaders = new Headers({ "x-real-ip": `203.0.113.${ipCounter % 250}` });
         vi.stubEnv("VERCEL", "1");
         vi.stubEnv("AUTH_SECRET", SECRET);
-        vi.stubEnv("NODE_ENV", "test");
+        vi.stubEnv("NODE_ENV", "development");
+        dbDown = false;
         vi.stubEnv("RESEND_API_KEY", "");
         vi.stubEnv("VERCEL_ENV", "");
         vi.spyOn(console, "info").mockImplementation(devMail);
@@ -625,8 +633,40 @@ describe.skipIf(!dbTestsEnabled)("ataques às ações das contas", () => {
 
         it("o envio de desenvolvimento recusa nascer em produção", async () => {
             const { consoleMailer } = await import("@/infrastructure/auth/mailer");
-            expect(() => consoleMailer({ production: true })).toThrow();
-            expect(() => consoleMailer({ production: false })).not.toThrow();
+            expect(() => consoleMailer({ devMail: false })).toThrow();
+            expect(() => consoleMailer({ devMail: true })).not.toThrow();
+        });
+
+        // B3: o envio de desenvolvimento é uma lista de permissão, não de negação
+        it.each(["test", "staging", "preview", "", "Development", "dev"])(
+            "NODE_ENV=%j: nada é enviado nem impresso",
+            async (nodeEnv) => {
+                vi.stubEnv("NODE_ENV", nodeEnv);
+                expect(await actions.requestCode({ email: "lista@ataque.test" })).toBe(
+                    "unavailable",
+                );
+                await flush();
+                expect(devMail).not.toHaveBeenCalled();
+                expect(Number(admin("select count(*) from sign_in_codes"))).toBe(0);
+            },
+        );
+
+        it.each(["preview", "development", "production"])(
+            "VERCEL_ENV=%s, mesmo com NODE_ENV=development, não imprime código (B3)",
+            async (vercelEnv) => {
+                vi.stubEnv("VERCEL_ENV", vercelEnv);
+                expect(await actions.requestCode({ email: "vercel-env@ataque.test" })).toBe(
+                    "unavailable",
+                );
+                await flush();
+                expect(devMail).not.toHaveBeenCalled();
+            },
+        );
+
+        it("só NODE_ENV=development sem VERCEL_ENV imprime o código", async () => {
+            expect(await actions.requestCode({ email: "dev@ataque.test" })).toBe("sent");
+            await flush();
+            expect(devMail).toHaveBeenCalledOnce();
         });
 
         it("com RESEND_API_KEY e remetente, o envio vai ao Resend, sem imprimir o código", async () => {
@@ -1128,6 +1168,41 @@ describe.skipIf(!dbTestsEnabled)("ataques às ações das contas", () => {
             cookieJar.clear();
             admin("update rate_limit_buckets set tokens = 1 where key like 'auth:email:cool:%'");
             expect(await actions.requestCode({ email })).toBe("sent");
+        });
+    });
+    // -----------------------------------------------------------------------------------------
+    describe("M5. sair só vale depois de o banco confirmar", () => {
+        it("com o banco fora do ar, sair recusa e o cookie fica; com o banco de volta, sai", async () => {
+            const { cookie } = await signUp("sair-falha@ataque.test");
+            cookieWrites.length = 0;
+            dbDown = true;
+            expect(await actions.signOut()).toEqual({ ok: false });
+            expect(cookieJar.get(COOKIE)).toBe(cookie);
+            expect(cookieWrites.filter((w) => w.name === COOKIE)).toEqual([]);
+            dbDown = false;
+            expect((await actions.accountState()).signedIn).toBe(true);
+            expect(await actions.signOut()).toEqual({ ok: true });
+            expect(cookieJar.has(COOKIE)).toBe(false);
+            expect((await actions.accountState()).signedIn).toBe(false);
+        });
+
+        it("o mesmo para sair de todos os aparelhos", async () => {
+            const { cookie } = await signUp("sair-todos-falha@ataque.test");
+            dbDown = true;
+            expect(await actions.signOutAll()).toEqual({ ok: false });
+            expect(cookieJar.get(COOKIE)).toBe(cookie);
+            dbDown = false;
+            expect((await actions.accountState()).signedIn).toBe(true);
+            expect(await actions.signOutAll()).toEqual({ ok: true });
+            expect(cookieJar.has(COOKIE)).toBe(false);
+        });
+
+        it("sem cookie ou com cookie de formato errado, sair é inofensivo e não depende do banco", async () => {
+            dbDown = true;
+            expect(await actions.signOut()).toEqual({ ok: true });
+            cookieJar.set(COOKIE, "lixo");
+            expect(await actions.signOut()).toEqual({ ok: true });
+            expect(cookieJar.has(COOKIE)).toBe(false);
         });
     });
 });

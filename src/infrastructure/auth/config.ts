@@ -11,8 +11,8 @@ export type AuthConfig = {
     resendApiKey: string | null;
     /** remetente dos e-mails, do domínio do Kinne (RNE006) */
     from: string | null;
-    /** produção de verdade: nada de envio de desenvolvimento (C3) */
-    production: boolean;
+    /** o envio de desenvolvimento (código no terminal) pode existir: só em `next dev` (C3, B3) */
+    devMail: boolean;
 };
 
 export function authConfig(env: Record<string, string | undefined> = process.env): AuthConfig {
@@ -21,7 +21,9 @@ export function authConfig(env: Record<string, string | undefined> = process.env
         secret: secret && secret.length >= MIN_SECRET_LENGTH ? secret : null,
         resendApiKey: env.RESEND_API_KEY?.trim() || null,
         from: env.AUTH_EMAIL_FROM?.trim() || null,
-        // a Vercel marca produção em VERCEL_ENV; fora dela, NODE_ENV (next start já é production)
-        production: env.NODE_ENV === "production" || env.VERCEL_ENV === "production",
+        // lista de permissão: só NODE_ENV=development, e nunca na Vercel (qualquer VERCEL_ENV, até
+        // "development" e "preview"). Qualquer outro valor ("test", "staging", vazio, grafia
+        // diferente) fica sem envio de desenvolvimento.
+        devMail: env.NODE_ENV === "development" && !env.VERCEL_ENV,
     };
 }
