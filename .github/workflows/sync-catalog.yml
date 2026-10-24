@@ -20,30 +20,32 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: main
+          # TEMPORÁRIO (security §17): develop em vez de main. Volta a main no lançamento.
+          ref: develop
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # TEMPORÁRIO, até o lançamento: aponta para o banco develop porque a produção ainda está na
+      # migration 0001. Na virada, voltar para SYNC_TARGET: production e secrets.SYNC_DATABASE_URL.
       # Só a carga; migrations continuam manuais.
       # Só a conexão do papel kinne_sync (C1). Resumo só com contagens (D7); nenhum artifact.
       - run: npm run catalog:sync
         env:
-          SYNC_TARGET: production
+          SYNC_TARGET: develop
           TMDB_TOKEN: ${{ secrets.TMDB_TOKEN }}
-          SYNC_DATABASE_URL: ${{ secrets.SYNC_DATABASE_URL }}
-          REVALIDATE_ORIGIN: ${{ secrets.REVALIDATE_ORIGIN }}
-          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+          SYNC_DATABASE_URL: ${{ secrets.SYNC_DEVELOP_DATABASE_URL }}
+          # REVALIDATE_ORIGIN e REVALIDATE_SECRET ficam de fora até o lançamento: o banco é o
+          # develop e não deve invalidar o cache do site de produção. Voltam junto com production.
       # Indicações de hoje e de amanhã, com o catálogo recém-atualizado.
       - run: npm run daily:pick
         env:
-          DATABASE_URL_POOLED: ${{ secrets.SYNC_DATABASE_URL }}
+          DATABASE_URL_POOLED: ${{ secrets.SYNC_DEVELOP_DATABASE_URL }}
       # Grafo de gosto com o catálogo recém-atualizado (docs/design/taste-graph.md §9). Por último:
       # se falhar, as indicações do dia já saíram e o grafo de ontem continua (taste-graph-data C4).
+      # TEMPORÁRIO, até o lançamento: mesmo banco develop do catalog:sync (ver o comentário acima).
       - run: npm run graph:build
         env:
-          SYNC_TARGET: production
-          SYNC_DATABASE_URL: ${{ secrets.SYNC_DATABASE_URL }}
-          REVALIDATE_ORIGIN: ${{ secrets.REVALIDATE_ORIGIN }}
-          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+          SYNC_TARGET: develop
+          SYNC_DATABASE_URL: ${{ secrets.SYNC_DEVELOP_DATABASE_URL }}

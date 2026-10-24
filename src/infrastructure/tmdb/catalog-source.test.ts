@@ -63,3 +63,27 @@ describe("TmdbCatalogSource.discover (B3)", () => {
         expect(last[0]).toBe(last[1]);
     });
 });
+
+describe("TmdbCatalogSource.changedIds", () => {
+    const window = [new Date("2026-10-11T00:00:00Z"), new Date("2026-10-23T00:00:00Z")] as const;
+    const sourceWith = (total_pages: number) => {
+        const get = vi.fn(async () => ({
+            page: 1,
+            total_pages,
+            total_results: 1,
+            results: [{ id: 7 }],
+        }));
+        return { source: new TmdbCatalogSource({ get } as unknown as TmdbClient), get };
+    };
+
+    it("junta os ids das páginas", async () => {
+        const { source } = sourceWith(2);
+        expect(await source.changedIds("movie", ...window)).toEqual(new Set([7]));
+    });
+
+    it("devolve null, sem pedir mais páginas, acima de 500 páginas", async () => {
+        const { source, get } = sourceWith(501);
+        expect(await source.changedIds("movie", ...window)).toBeNull();
+        expect(get).toHaveBeenCalledTimes(1);
+    });
+});

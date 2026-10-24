@@ -177,6 +177,14 @@ describe("syncCatalog", () => {
         expect(source.fetched.sort()).toEqual([2, 6]);
     });
 
+    it("janela com páginas demais no /changes vira carga completa", async () => {
+        const { repo } = fakeRepository(range(5).map((tmdbId) => ({ tmdbId })));
+        const source = fakeSource(range(6));
+        source.changedIds = async () => null;
+        await syncCatalog(source, repo, { start: new Date("2026-10-11T00:00:00Z"), end: full.end });
+        expect(source.fetched.sort()).toEqual([1, 2, 3, 4, 5, 6]);
+    });
+
     it("apaga quem saiu e não é referenciado; inativa quem é (B6)", async () => {
         const seed = range(100).map((tmdbId) => ({ tmdbId, referenced: tmdbId === 2 }));
         const { repo, rows } = fakeRepository(seed);
