@@ -137,6 +137,9 @@ Added by the review of PR #34 (all call the real actions or the real `kinne_*` f
 16. Concurrency: 20 simultaneous wrong guesses spend exactly 5 attempts; 10 simultaneous right codes open one session; right and wrong guesses at the limit never both succeed and lock.
 17. Tooling guard: `PGHOST` lists, `PGHOSTADDR`, `PGSERVICE` and URI-like `PGDATABASE` are refused by the test helper and by `apply-migrations-local.sh` before any connection.
 
+18. Group room (US015 C2, RNE003): a member with a session who sends forged taste, watched and streaming lists when creating or joining a room, or forged streamings in `updatePreferences`, ends up stored with the account's lists (the room result is computed from the stored rows); an account with nothing stored gets empty lists, never the forged ones; without a session the browser's lists still apply. Genres stay a per-room choice.
+19. Schema: `kinne_app` has no `CREATE` on `public`, directly or through `PUBLIC` (migration 0011 revokes it; PostgreSQL 14 and older grant it by default).
+
 ## Accepted risks
 
 - Whoever controls the person's inbox controls the account (as with any passwordless sign-in).

@@ -107,4 +107,4 @@ Kinne · Requisitos da semana 0 · versão de 12/10/2026
 - [ ] Revisar o rascunho do texto de privacidade antes de as contas irem ao ar (US014 RNE003).
 - [ ] Decidir se volta o botão "Não me interessa" (previsto no MVP, fora da etapa 2).
 - [ ] Definir `AUTH_SECRET`, `RESEND_API_KEY` e `AUTH_EMAIL_FROM` na Vercel; sem eles ninguém entra.
-- [ ] Ligar a sala de grupo à conta (US015 C2) quando o PR da sala for mesclado.
+- [x] Ligar a sala de grupo à conta (US015 C2): com sessão, a sala usa o gosto, o "Já vi" e os streamings da conta, lidos no servidor (24/10/2026).

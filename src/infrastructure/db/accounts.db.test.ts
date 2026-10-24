@@ -888,6 +888,26 @@ describe.skipIf(!dbTestsEnabled)("funções de conta contra um PostgreSQL de ver
             expect(first(app(q.loadTaste(a)))).toBeNull();
         });
 
+        it("o kinne_app não tem CREATE no esquema public, nem herdado de PUBLIC", () => {
+            expect(admin("select has_schema_privilege('kinne_app', 'public', 'CREATE')")).toBe("f");
+            expect(
+                admin(
+                    `select count(*) from pg_namespace n, aclexplode(n.nspacl) a
+                     where n.nspname = 'public' and a.grantee = 0 and a.privilege_type = 'CREATE'`,
+                ),
+            ).toBe("0");
+            // e na prática: nenhum objeto novo (uma função, uma tabela ou uma visão no lugar de
+            // um nome que as funções do site resolvem por search_path)
+            for (const statement of [
+                "create table public.invasora (a int)",
+                "create view public.invasora as select 1 as a",
+                "create function public.invasora() returns int language sql as 'select 1'",
+                "create type public.invasora as enum ('a')",
+            ]) {
+                expect(() => runScript("kinne_app", `${statement};`), statement).toThrow();
+            }
+        });
+
         it("as funções internas não são do site, e a limpeza é só do kinne_sync", () => {
             denied("kinne_app", "select kinne_user_of('x')");
             denied("kinne_app", "select kinne_trim_user(1)");

@@ -632,4 +632,9 @@ BEGIN
     EXECUTE format('REVOKE TEMPORARY ON DATABASE %I FROM PUBLIC', current_database());
     EXECUTE format('REVOKE TEMPORARY ON DATABASE %I FROM kinne_app', current_database());
 END
-$$;
+$$;--> statement-breakpoint
+
+-- Nenhum objeto novo no esquema public pelo site: o kinne_app não herda CREATE de PUBLIC (bancos
+-- do PostgreSQL 14 ou anterior o concedem por padrão; o 0006 só o tirava do próprio kinne_app).
+REVOKE CREATE ON SCHEMA public FROM PUBLIC;--> statement-breakpoint
+REVOKE CREATE ON SCHEMA public FROM kinne_app;
