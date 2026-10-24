@@ -61,6 +61,17 @@ export const tasteSignals = {
     },
 };
 
+/**
+ * Sair da conta ou apagá-la (US015 RNE004): o navegador não guarda mais gosto, "Já vi" nem
+ * streamings, e a pessoa volta a ser visitante do zero. O código do navegador, a marca da equipe e
+ * os filtros da sessão ficam (RNE001).
+ */
+export function clearAccountKeys() {
+    remove("localStorage", "kinne:taste");
+    remove("localStorage", "kinne:watched");
+    remove("localStorage", "kinne:streamings");
+}
+
 /** Títulos mostrados nesta aba, para a surpresa não repetir (US003 C3). */
 export const shownTitles = idList("sessionStorage", "kinne:shown");
 
@@ -83,8 +94,9 @@ export function savedFilters(): Filters {
     return parseFilters({ ...saved, streamings }) ?? { ...DEFAULT_FILTERS, streamings };
 }
 
-export function saveFilters({ streamings, ...rest }: Filters) {
-    write("localStorage", "kinne:streamings", streamings);
+export function saveFilters({ streamings, ...rest }: Filters, persistStreamings = true) {
+    // com a conta aberta os streamings são da conta, e o navegador não guarda nenhum (US015 RNE004)
+    if (persistStreamings) write("localStorage", "kinne:streamings", streamings);
     write("sessionStorage", "kinne:filters", rest);
 }
 

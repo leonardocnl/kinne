@@ -22,6 +22,8 @@ import {
 
 const COUNTRY = "BR";
 
+export type PopularTitle = { slug: string; title: string; year: number | null; poster: string };
+
 const streamingTmdbIds = sql<number[]>`coalesce(array_agg(distinct ${streamingServices.tmdbId})
     filter (where ${streamingServices.tmdbId} is not null), '{}')`;
 
@@ -135,6 +137,32 @@ export class DrizzleTitlesRepository implements TitlesRepository {
                 certification,
             ),
         }));
+    }
+
+    /**
+     * Os títulos mais conhecidos do catálogo para a grade do onboarding (US013 C2): recomendáveis,
+     * com cartaz e sem classificação 18, pelos votos. Só dados do catálogo, iguais para todos.
+     */
+    async popularTitles(limit: number): Promise<PopularTitle[]> {
+        const rows = await this.db
+            .select({
+                slug: catalogTitles.slug,
+                title: catalogTitles.displayTitle,
+                year: catalogTitles.releaseYear,
+                poster: catalogTitles.posterImagePath,
+            })
+            .from(catalogTitles)
+            .where(
+                and(
+                    eq(catalogTitles.isRecommendable, true),
+                    eq(catalogTitles.isBlocked, false),
+                    sql`${catalogTitles.posterImagePath} is not null`,
+                    sql`${catalogTitles.certificationBr} <> ${ADULT_CERTIFICATION}`,
+                ),
+            )
+            .orderBy(sql`${catalogTitles.tmdbVoteCount} desc`, asc(catalogTitles.id))
+            .limit(limit);
+        return rows.map((r) => ({ ...r, poster: r.poster! }));
     }
 
     /**

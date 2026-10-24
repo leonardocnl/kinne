@@ -9,12 +9,15 @@ afterEach(() => {
 
 describe("aviso com a pergunta Curtiu? (US010)", () => {
     it("C1: o aviso do Já vi traz a pergunta sobre o título", () => {
-        showToast("Anotado: você já viu Corra!", { asking: 42 });
-        expect(readToast()).toEqual({ text: "Anotado: você já viu Corra!", asking: 42 });
+        showToast("Anotado: você já viu Corra!", { asking: { id: 42, slug: "corra-2017" } });
+        expect(readToast()).toEqual({
+            text: "Anotado: você já viu Corra!",
+            asking: { id: 42, slug: "corra-2017" },
+        });
     });
 
     it("C2: responder troca a pergunta por Anotado. e some logo", () => {
-        showToast("Anotado: você já viu Corra!", { asking: 42 });
+        showToast("Anotado: você já viu Corra!", { asking: { id: 42, slug: "corra-2017" } });
         showAnswered();
         expect(readToast()).toEqual({ text: "Anotado.", asking: null });
         vi.advanceTimersByTime(2000);
@@ -22,7 +25,7 @@ describe("aviso com a pergunta Curtiu? (US010)", () => {
     });
 
     it("C3: sem resposta, a pergunta some sozinha e não deixa sinal", () => {
-        showToast("Anotado: você já viu Corra!", { asking: 42 });
+        showToast("Anotado: você já viu Corra!", { asking: { id: 42, slug: "corra-2017" } });
         vi.advanceTimersByTime(9000);
         expect(readToast()).toEqual({ text: "", asking: null });
     });
@@ -33,8 +36,8 @@ describe("aviso com a pergunta Curtiu? (US010)", () => {
     });
 
     it("texto vazio esconde a pergunta também", () => {
-        showToast("x", { asking: 1 });
-        showToast("", { asking: 1 });
+        showToast("x", { asking: { id: 1, slug: "x" } });
+        showToast("", { asking: { id: 1, slug: "x" } });
         expect(readToast()).toEqual({ text: "", asking: null });
     });
 });

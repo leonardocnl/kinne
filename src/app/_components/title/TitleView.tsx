@@ -3,15 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { nextRoundLabel, roundEndHeading } from "@/domain/rounds";
-import {
-    filteredRun,
-    filtersOnArrival,
-    shownTitles,
-    tasteSignals,
-    watchedTitles,
-} from "@/infrastructure/browser-storage";
+import { filteredRun, filtersOnArrival, shownTitles } from "@/infrastructure/browser-storage";
 import type { TitleScreen } from "../../_data/title";
 import { screenMain } from "../layout";
+import { markSignal, markWatched } from "../account/marks";
 import { track } from "../measure";
 import { StateScreen } from "../StateScreen";
 import { showToast } from "../toast";
@@ -87,8 +82,10 @@ export function TitleView({ title, daily }: TitleViewProps) {
     }
 
     function markSeen() {
-        watchedTitles.add(title.id);
-        showToast(`Anotado: você já viu ${title.title}.`, { asking: title.id });
+        void markWatched({ id: title.id, slug: title.slug });
+        showToast(`Anotado: você já viu ${title.title}.`, {
+            asking: { id: title.id, slug: title.slug },
+        });
         // fora das recomendações não há próxima opção: a tela fica onde está
         if (title.recommendable) next("seen");
         track("already_watched_clicked", { titleId: title.id });
@@ -96,7 +93,7 @@ export function TitleView({ title, daily }: TitleViewProps) {
 
     function watch() {
         // "Vou assistir" também é sinal de gosto (US009 RNE001)
-        tasteSignals.record(title.id, "will_watch");
+        void markSignal({ id: title.id, slug: title.slug }, "will_watch");
         showToast("");
         setDone(true);
         track("will_watch_clicked", { titleId: title.id });
