@@ -123,6 +123,8 @@ export type AccountDeps = {
         limiterKey: (email: string, secret: string) => string;
     };
     now: () => Date;
+    /** aviso para o log quando um teto diário acaba; nunca leva e-mail, IP nem código */
+    alert: (event: "daily-cap-anonymous" | "daily-cap-members") => void;
 };
 
 export type RequestCodeOutcome =
@@ -154,10 +156,18 @@ export async function requestSignInCode(
             ],
             [`auth:email:hour:${key}`, LIMITS.emailHour.capacity, LIMITS.emailHour.perSecond],
             [`auth:ip:req:${input.ipKey}`, LIMITS.ipRequests.capacity, LIMITS.ipRequests.perSecond],
-            [`auth:day:${utcDay(deps.now())}`, LIMITS.dailyEmails, 0],
+            [`auth:ip:day:${input.ipKey}`, LIMITS.ipDaily.capacity, LIMITS.ipDaily.perSecond],
         ])
         .catch(() => false);
     if (!admitted) return { kind: "limited" };
+    // o teto do dia vem por último e sozinho, para o alerta saber que foi ele que acabou (D1)
+    const day = utcDay(deps.now());
+    if (
+        !(await deps.take([[`auth:day:anon:${day}`, LIMITS.dailyAnonymous, 0]]).catch(() => false))
+    ) {
+        deps.alert("daily-cap-anonymous");
+        return { kind: "limited" };
+    }
 
     const code = deps.hashes.newCode();
     const stored = await deps.repository.requestCode({
@@ -238,20 +248,29 @@ export async function requestDeleteCode(
     if (!deps.secret || !deps.mailer || !input.ipKey) return { kind: "unavailable" };
     const email = await deps.repository.sessionEmail(input.tokenHash);
     if (!email) return { kind: "no-session" };
+    // baldes próprios do código de apagar, por conta (M2): quem pede códigos de entrar para este
+    // e-mail, ou o contrário, não gasta os baldes do outro
     const key = deps.hashes.limiterKey(email, deps.secret);
     const admitted = await deps
         .take([
             [
-                `auth:email:cool:${key}`,
-                LIMITS.emailCooldown.capacity,
-                LIMITS.emailCooldown.perSecond,
+                `auth:del:cool:${key}`,
+                LIMITS.accountCooldown.capacity,
+                LIMITS.accountCooldown.perSecond,
             ],
-            [`auth:email:hour:${key}`, LIMITS.emailHour.capacity, LIMITS.emailHour.perSecond],
-            [`auth:ip:req:${input.ipKey}`, LIMITS.ipRequests.capacity, LIMITS.ipRequests.perSecond],
-            [`auth:day:${utcDay(deps.now())}`, LIMITS.dailyEmails, 0],
+            [`auth:del:hour:${key}`, LIMITS.accountHour.capacity, LIMITS.accountHour.perSecond],
+            [`auth:ip:del:${input.ipKey}`, LIMITS.ipDelete.capacity, LIMITS.ipDelete.perSecond],
         ])
         .catch(() => false);
     if (!admitted) return { kind: "limited" };
+    // a parte do teto diário reservada a quem já tem sessão (A1)
+    const day = utcDay(deps.now());
+    if (
+        !(await deps.take([[`auth:day:member:${day}`, LIMITS.dailyMembers, 0]]).catch(() => false))
+    ) {
+        deps.alert("daily-cap-members");
+        return { kind: "limited" };
+    }
     const code = deps.hashes.newCode();
     const stored = await deps.repository.requestDeleteCode(
         input.tokenHash,

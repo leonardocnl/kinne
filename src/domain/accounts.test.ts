@@ -145,7 +145,8 @@ describe("limites (RNE004)", () => {
         expect(LIMITS.emailCooldown.perSecond).toBeCloseTo(1 / 60);
         expect(LIMITS.emailHour.capacity).toBe(5);
         expect(LIMITS.emailHour.perSecond).toBeCloseTo(5 / 3600);
-        expect(LIMITS.dailyEmails).toBeLessThan(100);
+        expect(LIMITS.dailyAnonymous + LIMITS.dailyMembers).toBeLessThanOrEqual(100);
+        expect(LIMITS.dailyMembers).toBeGreaterThan(0);
     });
 });
 

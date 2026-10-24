@@ -689,16 +689,6 @@ describe.skipIf(!dbTestsEnabled)("ataques às ações das contas", () => {
             expect(answers.filter((a) => a === "limited")).toHaveLength(2);
         });
 
-        it("o teto diário global fica abaixo dos 100 do plano gratuito", async () => {
-            admin(
-                "insert into rate_limit_buckets (key, tokens, updated_at) values ('auth:day:" +
-                    new Date().toISOString().slice(0, 10) +
-                    "', 0, now())",
-            );
-            expect(await actions.requestCode({ email: "teto@ataque.test" })).toBe("limited");
-            expect(devMail).not.toHaveBeenCalled();
-        });
-
         it("e-mail inválido é recusado sem gastar ficha nem gravar código", async () => {
             for (const email of ["", "sem-arroba", "a@b", "x".repeat(300) + "@b.co"]) {
                 expect(await actions.requestCode({ email })).toBe("invalid-email");
@@ -1045,6 +1035,99 @@ describe.skipIf(!dbTestsEnabled)("ataques às ações das contas", () => {
             expect((await actions.verifyCode({ email, code, browser: NO_BROWSER })).kind).toBe(
                 "ok",
             );
+        });
+    });
+    // -----------------------------------------------------------------------------------------
+    describe("A1 e M2. o teto diário não é de quem chega primeiro", () => {
+        const today = () => new Date().toISOString().slice(0, 10);
+        /** Esvazia o balde diário dos anônimos (e o único balde global da versão antiga). */
+        const drainAnonymousPool = () => {
+            for (const key of [`auth:day:${today()}`, `auth:day:anon:${today()}`]) {
+                admin(
+                    `insert into rate_limit_buckets (key, tokens, updated_at) values ('${key}', 0, now())
+                     on conflict (key) do update set tokens = 0`,
+                );
+            }
+        };
+
+        it("um IP não pede mais de 15 códigos por dia, nem esperando o balde de 10 minutos", async () => {
+            const answers: string[] = [];
+            for (let i = 0; i < 18; i++) {
+                admin("update rate_limit_buckets set tokens = 10 where key like 'auth:ip:req:%'");
+                answers.push(await actions.requestCode({ email: `dia${i}@ataque.test` }));
+            }
+            expect(answers.filter((a) => a === "sent")).toHaveLength(15);
+            expect(answers.slice(15)).toEqual(["limited", "limited", "limited"]);
+            // outro IP não paga pelo primeiro
+            requestHeaders = new Headers({ "x-real-ip": "198.51.100.77" });
+            expect(await actions.requestCode({ email: "outro-ip@ataque.test" })).toBe("sent");
+        });
+
+        it("com o teto dos anônimos esgotado, quem tem sessão ainda recebe o código de apagar", async () => {
+            await signUp("reserva@ataque.test");
+            drainAnonymousPool();
+            expect(await actions.requestCode({ email: "novo-dia@ataque.test" })).toBe("limited");
+            devMail.mockClear();
+            expect(await actions.requestDeleteCode()).toBe("sent");
+            await flush();
+            expect(devMail).toHaveBeenCalledOnce();
+        });
+
+        it("o teto soma menos que os 100 e-mails do plano gratuito", async () => {
+            const { LIMITS } = await import("@/domain/accounts");
+            expect(LIMITS.dailyAnonymous + LIMITS.dailyMembers).toBeLessThanOrEqual(100);
+            expect(LIMITS.dailyMembers).toBeGreaterThan(0);
+            expect(LIMITS.ipDaily.capacity).toBeLessThan(LIMITS.dailyAnonymous);
+        });
+
+        it("atingir o teto escreve um alerta no log, uma vez, sem e-mail, IP nem código", async () => {
+            const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+            drainAnonymousPool();
+            for (const email of ["alerta1@ataque.test", "alerta2@ataque.test"]) {
+                expect(await actions.requestCode({ email })).toBe("limited");
+            }
+            expect(warn).toHaveBeenCalledTimes(1);
+            const logged = JSON.stringify(warn.mock.calls);
+            expect(logged).toMatch(/teto diário/i);
+            expect(logged).not.toMatch(/@|ataque|203\.0\.113|\d{6}/);
+        });
+
+        it("quem esgota os pedidos de entrada de um e-mail não impede a pessoa de pedir o código de apagar (M2)", async () => {
+            const email = "trava@ataque.test";
+            await signUp(email);
+            const owner = new Map(cookieJar);
+            const ownerHeaders = requestHeaders;
+            // um anônimo, de outro IP e outro navegador, gasta o balde por hora do e-mail
+            cookieJar.clear();
+            requestHeaders = new Headers({ "x-real-ip": "198.51.100.9" });
+            for (let i = 0; i < 6; i++) {
+                admin(
+                    "update rate_limit_buckets set tokens = 1 where key like 'auth:email:cool:%'",
+                );
+                await actions.requestCode({ email });
+            }
+            admin("update rate_limit_buckets set tokens = 1 where key like 'auth:email:cool:%'");
+            expect(await actions.requestCode({ email })).toBe("limited");
+            // a pessoa, com a sessão dela
+            cookieJar.clear();
+            for (const [name, value] of owner) cookieJar.set(name, value);
+            requestHeaders = ownerHeaders;
+            expect(await actions.requestDeleteCode()).toBe("sent");
+        });
+
+        it("e quem pede muito o código de apagar não trava a entrada do mesmo e-mail (M2)", async () => {
+            const email = "inunda@ataque.test";
+            await signUp(email);
+            for (let i = 0; i < 6; i++) {
+                admin("update rate_limit_buckets set tokens = 1 where key like 'auth:del:cool:%'");
+                admin(
+                    "update rate_limit_buckets set tokens = 1 where key like 'auth:email:cool:%'",
+                );
+                await actions.requestDeleteCode();
+            }
+            cookieJar.clear();
+            admin("update rate_limit_buckets set tokens = 1 where key like 'auth:email:cool:%'");
+            expect(await actions.requestCode({ email })).toBe("sent");
         });
     });
 });

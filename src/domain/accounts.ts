@@ -73,8 +73,16 @@ export const LIMITS = {
     // por IP: pedidos de código e tentativas de confirmar
     ipRequests: { capacity: 10, perSecond: 10 / 600 },
     ipVerifies: { capacity: 20, perSecond: 20 / 600 },
-    // todos juntos, por dia (UTC), abaixo dos 100 do plano gratuito do Resend
-    dailyEmails: 80,
+    // por IP e por dia: um IP só nunca esgota sozinho o teto dos anônimos (revisão A1)
+    ipDaily: { capacity: 15, perSecond: 0 },
+    // código de apagar: balde por conta e por finalidade, e por IP (revisão M2)
+    accountCooldown: { capacity: 1, perSecond: 1 / 60 },
+    accountHour: { capacity: 5, perSecond: 5 / 3600 },
+    ipDelete: { capacity: 5, perSecond: 5 / 600 },
+    // todos juntos, por dia (UTC), abaixo dos 100 do plano gratuito do Resend: 60 para quem pede
+    // um código de entrar e 20 reservados a quem já tem sessão (código de apagar a conta)
+    dailyAnonymous: 60,
+    dailyMembers: 20,
 } as const;
 
 // ---------------------------------------------------------------------------------------------

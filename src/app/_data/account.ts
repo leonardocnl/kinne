@@ -196,6 +196,21 @@ const memberLimiter = new MemoryLimiter(
 );
 export const admitSession = (tokenHash: string) => memberLimiter.take(`account:${tokenHash}`);
 
+// O aviso de teto diário (D1) vai ao log do servidor no máximo uma vez por hora por instância, e só
+// diz qual teto acabou: nada de e-mail, IP nem código.
+const ALERT_EVERY_MS = 60 * 60 * 1000;
+const lastAlert = new Map<string, number>();
+function dailyCapAlert(event: "daily-cap-anonymous" | "daily-cap-members") {
+    const now = Date.now();
+    if (now - (lastAlert.get(event) ?? 0) < ALERT_EVERY_MS) return;
+    lastAlert.set(event, now);
+    console.warn(
+        event === "daily-cap-anonymous"
+            ? "Teto diário de e-mails de entrada atingido: ninguém novo recebe código até meia-noite UTC"
+            : "Teto diário reservado a quem tem sessão atingido: ninguém recebe código de apagar até meia-noite UTC",
+    );
+}
+
 export async function accountDeps(): Promise<{ deps: AccountDeps; ipKey: string | null }> {
     const config = authConfig();
     const ipKey = clientKey(getClientIp(await headers()), config.secret ?? undefined, new Date());
@@ -208,6 +223,7 @@ export async function accountDeps(): Promise<{ deps: AccountDeps; ipKey: string 
         defer: (task) => after(task),
         hashes: { email: emailHash, code: codeHash, newCode: newLoginCode, limiterKey },
         now: () => new Date(),
+        alert: dailyCapAlert,
     };
     return { deps, ipKey };
 }
