@@ -16,13 +16,15 @@ const list = <T>(items: readonly T[], cast: string): SQL =>
 const ints = (items: readonly number[]) => list(items, "integer[]");
 const texts = (items: readonly string[]) => list(items, "text[]");
 
-export const requestCode = (p: { emailHash: string; codeHash: string }) =>
-    sql`select kinne_request_code(${p.emailHash}, ${p.codeHash}) as result`;
+export const requestCode = (p: { emailHash: string; codeHash: string; challengeHash: string }) =>
+    sql`select kinne_request_code(${p.emailHash}, ${p.codeHash}, ${p.challengeHash}) as result`;
 
 export const signIn = (p: {
     emailHash: string;
     email: string;
     codeHash: string;
+    // nulo quando o navegador não traz o cookie de desafio: o banco responde "invalid" e não conta
+    challengeHash: string | null;
     tokenHash: string;
     streamings: readonly string[];
     watched: readonly number[];
@@ -30,7 +32,7 @@ export const signIn = (p: {
     willWatch: readonly number[];
     disliked: readonly number[];
 }) =>
-    sql`select kinne_sign_in(${p.emailHash}, ${p.email}, ${p.codeHash}, ${p.tokenHash}, ${texts(p.streamings)}, ${ints(p.watched)}, ${ints(p.liked)}, ${ints(p.willWatch)}, ${ints(p.disliked)}) as result`;
+    sql`select kinne_sign_in(${p.emailHash}, ${p.email}, ${p.codeHash}, ${p.challengeHash}, ${p.tokenHash}, ${texts(p.streamings)}, ${ints(p.watched)}, ${ints(p.liked)}, ${ints(p.willWatch)}, ${ints(p.disliked)}) as result`;
 
 export const sessionUser = (tokenHash: string) =>
     sql`select kinne_session_user(${tokenHash}) as result`;

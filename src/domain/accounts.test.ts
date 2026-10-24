@@ -41,9 +41,47 @@ describe("normalizeEmail (US012 RNE001)", () => {
     });
 
     it("aceita 254 caracteres e recusa 255", () => {
-        const local = "a".repeat(254 - "@b.co".length);
-        expect(normalizeEmail(`${local}@b.co`)).toHaveLength(254);
-        expect(normalizeEmail(`${local}a@b.co`)).toBeNull();
+        const domain = (last: number) =>
+            [`${"b".repeat(63)}`, `${"c".repeat(63)}`, "d".repeat(last)].join(".") + ".co";
+        const local = "a".repeat(64);
+        expect(normalizeEmail(`${local}@${domain(58)}`)).toHaveLength(254);
+        expect(normalizeEmail(`${local}@${domain(59)}`)).toBeNull();
+    });
+
+    it("recusa local com mais de 64 caracteres e rótulo com mais de 63", () => {
+        expect(normalizeEmail(`${"a".repeat(65)}@b.co`)).toBeNull();
+        expect(normalizeEmail(`a@${"b".repeat(64)}.co`)).toBeNull();
+    });
+
+    // revisão B4: um endereço só, no mesmo critério do CHECK users_email_check
+    it.each([
+        ["lista com vírgula", "a@x.com,b@y.com"],
+        ["lista com ponto e vírgula", "a@x.com;b@y.com"],
+        ["endereço entre < e >", "<a@b.com>"],
+        ["aspas duplas", '"a"@b.com'],
+        ["aspas simples", "a'b@x.com"],
+        ["ponto duplo no local", "a..b@x.com"],
+        ["ponto no começo do local", ".a@x.com"],
+        ["ponto no fim do local", "a.@x.com"],
+        ["sublinhado no domínio", "a@x_y.com"],
+        ["rótulo começando com hífen", "a@-x.com"],
+        ["ponto duplo no domínio", "a@x..com"],
+        ["caractere não ASCII", "joão@exemplo.com"],
+        ["domínio de uma letra no fim", "a@b.c"],
+        ["domínio só com números (IP)", "a@1.2"],
+        ["quebra de linha no meio", "a@b.com\nc@d.com"],
+        ["tabulação", "a@b.com\tx"],
+    ])("recusa %s", (_, input) => {
+        expect(normalizeEmail(input)).toBeNull();
+    });
+
+    it.each([
+        "ana.silva+kinne@exemplo.com.br",
+        "a_b-c@sub.dominio.co",
+        "x@xn--e1afmkfd.xn--p1ai",
+        "o=k@exemplo.com",
+    ])("aceita %s", (input) => {
+        expect(normalizeEmail(input)).toBe(input);
     });
 
     it("recusa texto gigante sem o processar", () => {

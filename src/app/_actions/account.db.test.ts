@@ -185,6 +185,7 @@ describe.skipIf(!dbTestsEnabled)("ataques às ações das contas", () => {
     describe("3. código de um e-mail usado em outro", () => {
         it("o código emitido para A não entra na conta de B", async () => {
             const codeA = await codeFor("a@ataque.test");
+            const challengeA = cookieJar.get("__Host-kinne_challenge")!;
             const codeB = await codeFor("b@ataque.test");
             expect(codeA).not.toBe(codeB);
             const attack = await actions.verifyCode({
@@ -196,6 +197,7 @@ describe.skipIf(!dbTestsEnabled)("ataques às ações das contas", () => {
             expect(cookieJar.has(COOKIE)).toBe(false);
             expect(userCount("b@ataque.test")).toBe(0);
             // o código de A continua valendo para A, com o e-mail em outra caixa e com espaços
+            cookieJar.set("__Host-kinne_challenge", challengeA);
             const real = await actions.verifyCode({
                 email: "  A@Ataque.TEST ",
                 code: codeA,
@@ -710,7 +712,7 @@ describe.skipIf(!dbTestsEnabled)("ataques às ações das contas", () => {
     describe("cookie, sessão e leitura (A2, US012 RNE005)", () => {
         it("o cookie é __Host-, HttpOnly, Secure, SameSite=Lax, Path=/, sem Domain, com 43 caracteres", async () => {
             await signUp("cookie-attrs@ataque.test");
-            const set = cookieWrites.find((w) => w.value !== "")!;
+            const set = cookieWrites.find((w) => w.name === COOKIE && w.value !== "")!;
             expect(set.name).toBe("__Host-kinne_session");
             expect(set.value).toMatch(/^[A-Za-z0-9_-]{43}$/);
             expect(set.options).toMatchObject({
@@ -863,6 +865,186 @@ describe.skipIf(!dbTestsEnabled)("ataques às ações das contas", () => {
             for (const extra of [{ userId: 1 }, { email: "a@b.co" }, { accountId: 3 }]) {
                 expect(parseUsageEvent({ ...base, ...extra })).toBeNull();
             }
+        });
+    });
+    // -----------------------------------------------------------------------------------------
+    // Revisão de segurança do PR #34
+    describe("M1. o código só vale no navegador que o pediu", () => {
+        const CHALLENGE = "__Host-kinne_challenge";
+        const WRONG = ["000001", "000002", "000003", "000004", "000005", "000006", "000007"];
+        const verify = (email: string, code: string) =>
+            actions.verifyCode({ email, code, browser: NO_BROWSER });
+        const wrongFor = (code: string) => WRONG.filter((c) => c !== code);
+        /** Gasta as 5 tentativas do código vivo e o deixa queimado. */
+        async function burn(email: string) {
+            resetLimits();
+            const code = await codeFor(email);
+            for (const guess of wrongFor(code).slice(0, 5)) await verify(email, guess);
+        }
+
+        it("quem só sabe o e-mail não gasta as tentativas do código", async () => {
+            const email = "amarrado@ataque.test";
+            const code = await codeFor(email);
+            const mine = cookieJar.get(CHALLENGE);
+            expect(mine, "o pedido devolve o cookie do desafio").toBeDefined();
+            cookieJar.delete(CHALLENGE);
+            // outro navegador: 7 palpites errados, e nenhum conta nem vira "locked"
+            for (const guess of wrongFor(code)) {
+                expect((await verify(email, guess)).kind).toBe("invalid");
+            }
+            expect(admin("select max(attempts) from sign_in_codes")).toBe("0");
+            cookieJar.set(CHALLENGE, mine!);
+            expect((await verify(email, code)).kind).toBe("ok");
+        });
+
+        it("o código certo, sem o cookie do desafio, não abre a conta", async () => {
+            const email = "sem-cookie@ataque.test";
+            const code = await codeFor(email);
+            const mine = cookieJar.get(CHALLENGE);
+            expect(mine).toBeDefined();
+            cookieJar.delete(CHALLENGE);
+            expect((await verify(email, code)).kind).toBe("invalid");
+            expect(cookieJar.has(COOKIE)).toBe(false);
+            expect(userCount(email)).toBe(0);
+            cookieJar.set(CHALLENGE, mine!);
+            expect((await verify(email, code)).kind).toBe("ok");
+        });
+
+        it("o cookie de outro pedido não serve", async () => {
+            const code = await codeFor("a-desafio@ataque.test");
+            const cookieA = cookieJar.get(CHALLENGE);
+            cookieJar.clear();
+            resetLimits();
+            const codeB = await codeFor("b-desafio@ataque.test");
+            expect(cookieA).toBeDefined();
+            cookieJar.set(CHALLENGE, cookieA!);
+            expect((await verify("b-desafio@ataque.test", codeB)).kind).toBe("invalid");
+            expect((await verify("a-desafio@ataque.test", code)).kind).toBe("ok");
+        });
+
+        it("o cookie é __Host-, HttpOnly, Secure, Lax, Path=/ e dura 10 minutos; o banco guarda só o hash", async () => {
+            await codeFor("atributos@ataque.test");
+            const set = cookieWrites.find((w) => w.name === CHALLENGE)!;
+            expect(set).toBeDefined();
+            expect(set.value).toMatch(/^[A-Za-z0-9_-]{43}$/);
+            expect(set.options).toMatchObject({
+                httpOnly: true,
+                secure: true,
+                sameSite: "lax",
+                path: "/",
+                maxAge: 600,
+            });
+            expect(set.options).not.toHaveProperty("domain");
+            const stored = admin("select challenge_hash from sign_in_codes");
+            expect(stored).toMatch(/^[0-9a-f]{64}$/);
+            expect(stored).not.toBe(set.value);
+            expect(
+                admin(`select count(*) from sign_in_codes where challenge_hash = '${set.value}'`),
+            ).toBe("0");
+        });
+
+        it("responde igual para e-mail com conta e sem conta, e entrar apaga o cookie do desafio", async () => {
+            await signUp("existe-desafio@ataque.test");
+            cookieJar.clear();
+            resetLimits();
+            expect(await actions.requestCode({ email: "existe-desafio@ataque.test" })).toBe("sent");
+            const known = cookieWrites.filter((w) => w.name === CHALLENGE).length;
+            expect(await actions.requestCode({ email: "nunca-vi@ataque.test" })).toBe("sent");
+            expect(cookieWrites.filter((w) => w.name === CHALLENGE).length).toBe(known + 1);
+            await flush();
+            const code = lastCode();
+            expect((await verify("nunca-vi@ataque.test", code)).kind).toBe("ok");
+            expect(cookieJar.has(CHALLENGE)).toBe(false);
+        });
+
+        it("3 códigos queimados em 24 h: o pedido seguinte espera 1 hora, depois 2, e assim por diante", async () => {
+            const email = "queimado@ataque.test";
+            for (let i = 0; i < 3; i++) await burn(email);
+            devMail.mockClear();
+            resetLimits();
+            expect(await actions.requestCode({ email })).toBe("limited");
+            await flush();
+            expect(devMail).not.toHaveBeenCalled();
+            // 61 minutos depois do último código queimado: libera
+            admin(
+                "update sign_in_codes set used_at = now() - interval '61 minutes' where attempts >= 5",
+            );
+            resetLimits();
+            expect(await actions.requestCode({ email })).toBe("sent");
+            // queimando o quarto, a espera dobra: 61 minutos já não bastam
+            const code4 = (await flush(), lastCode());
+            for (const guess of wrongFor(code4).slice(0, 5)) await verify(email, guess);
+            admin(
+                "update sign_in_codes set used_at = now() - interval '61 minutes' where attempts >= 5",
+            );
+            resetLimits();
+            expect(await actions.requestCode({ email })).toBe("limited");
+            admin(
+                "update sign_in_codes set used_at = now() - interval '121 minutes' where attempts >= 5",
+            );
+            resetLimits();
+            expect(await actions.requestCode({ email })).toBe("sent");
+        });
+
+        it("a espera vale para qualquer e-mail, com ou sem conta, e não pega os outros", async () => {
+            for (let i = 0; i < 3; i++) await burn("espera@ataque.test");
+            resetLimits();
+            expect(await actions.requestCode({ email: "outro-alvo@ataque.test" })).toBe("sent");
+        });
+    });
+
+    // -----------------------------------------------------------------------------------------
+    describe("B4. só um endereço de e-mail, e um só", () => {
+        const EVIL = [
+            "a@x.com,b@y.com",
+            "a@x.com;b@y.com",
+            "<a@b.com>",
+            '"a"@b.com',
+            "a'b@x.com",
+            "a@x.com b@y.com",
+            "a..b@x.com",
+            ".a@x.com",
+            "a.@x.com",
+            "a@x_y.com",
+            "a@-x.com",
+            "a@x..com",
+            "joão@exemplo.com",
+            "a@b.c",
+            `${"l".repeat(65)}@x.com`,
+        ];
+
+        it("o servidor recusa lista de endereços, aspas, <>, ponto duplo e afins, sem enviar nada", async () => {
+            for (const email of EVIL) {
+                expect(await actions.requestCode({ email }), email).toBe("invalid-email");
+            }
+            await flush();
+            expect(devMail).not.toHaveBeenCalled();
+            expect(Number(admin("select count(*) from sign_in_codes"))).toBe(0);
+            expect(Number(admin("select count(*) from rate_limit_buckets"))).toBe(0);
+        });
+
+        it("endereços normais passam, com maiúsculas e espaços nas pontas", async () => {
+            for (const email of [
+                " Ana.Silva+kinne@Exemplo.com.br ",
+                "a_b-c@sub.dominio.co",
+                "x@xn--e1afmkfd.xn--p1ai",
+            ]) {
+                resetLimits();
+                expect(await actions.requestCode({ email }), email).toBe("sent");
+            }
+        });
+    });
+
+    // -----------------------------------------------------------------------------------------
+    describe("B5. ids fora do tamanho do banco", () => {
+        it("o navegador não leva id gigante ao entrar: recusado antes de gastar o código", async () => {
+            const email = "gigante@ataque.test";
+            const code = await codeFor(email);
+            const huge = { ...NO_BROWSER, watched: [2 ** 40] };
+            expect((await actions.verifyCode({ email, code, browser: huge })).kind).toBe("invalid");
+            expect((await actions.verifyCode({ email, code, browser: NO_BROWSER })).kind).toBe(
+                "ok",
+            );
         });
     });
 });

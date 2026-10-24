@@ -8,7 +8,12 @@ import {
     type AccountView,
     type BrowserData,
 } from "@/application/accounts";
-import { SESSION_COOKIE, SESSION_ABSOLUTE_MS } from "@/domain/accounts";
+import {
+    CHALLENGE_COOKIE,
+    CODE_TTL_MS,
+    SESSION_COOKIE,
+    SESSION_ABSOLUTE_MS,
+} from "@/domain/accounts";
 import { isSlug } from "@/domain/catalog";
 import { isStreaming, STREAMING_SERVICES, type Streaming } from "@/domain/streaming";
 import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
@@ -155,6 +160,26 @@ export async function setSessionCookie(token: string) {
         ...secureCookie,
         expires: new Date(Date.now() + SESSION_ABSOLUTE_MS),
     });
+}
+
+/**
+ * O desafio do código (M1): 32 bytes aleatórios no cookie do navegador que pediu o código; o banco
+ * guarda só o hash. Quem só sabe o e-mail não tem o cookie e não gasta as tentativas do código.
+ */
+export async function setChallengeCookie(token: string) {
+    (await cookies()).set(CHALLENGE_COOKIE, token, {
+        ...secureCookie,
+        maxAge: CODE_TTL_MS / 1000,
+    });
+}
+
+export async function challengeHash(): Promise<string | null> {
+    const value = (await cookies()).get(CHALLENGE_COOKIE)?.value;
+    return isSessionToken(value) ? hashSessionToken(value) : null;
+}
+
+export async function clearChallengeCookie() {
+    (await cookies()).set(CHALLENGE_COOKIE, "", { ...secureCookie, maxAge: 0 });
 }
 
 export async function clearSessionCookie() {

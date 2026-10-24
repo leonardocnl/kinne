@@ -24,14 +24,15 @@ export class DrizzleAccountsRepository implements AccountsRepository {
         return rows[0]?.result ?? null;
     }
 
-    async requestCode(input: { emailHash: string; codeHash: string }) {
-        await this.one(q.requestCode(input));
+    async requestCode(input: { emailHash: string; codeHash: string; challengeHash: string }) {
+        return (await this.one<string>(q.requestCode(input))) === "ok" ? "ok" : "wait";
     }
 
     async signIn(input: {
         emailHash: string;
         email: string;
         codeHash: string;
+        challengeHash: string | null;
         tokenHash: string;
         browser: BrowserData;
     }) {

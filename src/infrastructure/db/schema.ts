@@ -1,4 +1,5 @@
 import { sql } from "drizzle-orm";
+import { EMAIL_PATTERN } from "../../domain/accounts";
 import {
     bigint,
     bigserial,
@@ -393,10 +394,12 @@ export const users = pgTable(
     },
     (t) => [
         unique("users_email_unique").on(t.email),
+        // o mesmo critério de normalizeEmail (domain/accounts.ts), revisão B4: um endereço só
         check(
             "users_email_check",
             sql`${t.email} = lower(btrim(${t.email})) and char_length(${t.email}) between 3 and 254
-                and ${t.email} ~ '^[^@[:space:]]+@[^@[:space:]]+\\.[^@[:space:]]+$'`,
+                and char_length(split_part(${t.email}, '@', 1)) <= 64
+                and ${t.email} ~ ${sql.raw(`'${EMAIL_PATTERN}'`)}`,
         ),
     ],
 );
@@ -412,6 +415,8 @@ export const signInCodes = pgTable(
         emailHash: char("email_hash", { length: 64 }),
         userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }),
         codeHash: char("code_hash", { length: 64 }).notNull(),
+        // SHA-256 do cookie de desafio do navegador que pediu o código (M1); só entrar tem
+        challengeHash: char("challenge_hash", { length: 64 }),
         attempts: smallint("attempts").notNull().default(0),
         createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
         expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
@@ -421,8 +426,10 @@ export const signInCodes = pgTable(
         check("sign_in_codes_purpose_check", sql`${t.purpose} in ('sign_in', 'delete_account')`),
         check(
             "sign_in_codes_target_check",
-            sql`(${t.purpose} = 'sign_in' and ${t.emailHash} is not null and ${t.userId} is null)
-                or (${t.purpose} = 'delete_account' and ${t.userId} is not null and ${t.emailHash} is null)`,
+            sql`(${t.purpose} = 'sign_in' and ${t.emailHash} is not null and ${t.userId} is null
+                    and ${t.challengeHash} is not null)
+                or (${t.purpose} = 'delete_account' and ${t.userId} is not null
+                    and ${t.emailHash} is null and ${t.challengeHash} is null)`,
         ),
         check("sign_in_codes_attempts_check", sql`${t.attempts} between 0 and 5`),
         check("sign_in_codes_expiry_check", sql`${t.expiresAt} > ${t.createdAt}`),

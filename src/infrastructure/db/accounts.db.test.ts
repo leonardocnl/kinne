@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { sql } from "drizzle-orm";
-import { mergeBrowserIntoAccount, type AccountTaste } from "@/domain/accounts";
+import { mergeBrowserIntoAccount, normalizeEmail, type AccountTaste } from "@/domain/accounts";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { admin, dbTestsEnabled, renderSql, runAs, runScript } from "@/test/local-pg";
@@ -19,6 +19,9 @@ const first = <T = unknown>(rows: Record<string, unknown>[]) => rows[0]?.result 
 
 const TITLES = Array.from({ length: 30 }, (_, i) => 9101 + i);
 
+// o hash do cookie de desafio do navegador que pediu o código (M1)
+const CHALLENGE = sessionTokenHash("desafio-do-navegador");
+
 const hashes = (
     email: string,
     code: string,
@@ -26,6 +29,7 @@ const hashes = (
 ) => ({
     emailHash: emailHash(email, SECRET),
     codeHash: codeHash(purpose, email, code, SECRET),
+    challengeHash: CHALLENGE,
 });
 
 let counter = 0;
@@ -167,6 +171,7 @@ describe.skipIf(!dbTestsEnabled)("funções de conta contra um PostgreSQL de ver
                         emailHash: emailHash("b@accounts.test", SECRET),
                         email: "b@accounts.test",
                         codeHash: codeHash("sign_in", "a@accounts.test", "482913", SECRET),
+                        challengeHash: CHALLENGE,
                         tokenHash: newToken(),
                         streamings: [],
                         watched: [],
@@ -332,7 +337,6 @@ describe.skipIf(!dbTestsEnabled)("funções de conta contra um PostgreSQL de ver
                 willWatch: [],
                 disliked: [9101],
             });
-            const user = userIdOf(token);
             const data = stored(token);
             const of = (signal: string) =>
                 data.signals
@@ -468,7 +472,6 @@ describe.skipIf(!dbTestsEnabled)("funções de conta contra um PostgreSQL de ver
     describe("o que a conta muda (US014 C2, US013)", () => {
         it("sinal, já vi, streamings e onboarding gravam na conta da sessão", () => {
             const token = account("muda@accounts.test");
-            const user = userIdOf(token);
             expect(first(app(q.setSignal(token, 9101, "liked")))).toBe(true);
             expect(first(app(q.setSignal(token, 9102, "disliked")))).toBe(true);
             expect(first(app(q.setSignal(token, 9101, "disliked")))).toBe(true);
@@ -490,7 +493,6 @@ describe.skipIf(!dbTestsEnabled)("funções de conta contra um PostgreSQL de ver
 
         it("onboarding: concluir grava 3 sinais; pular só registra; o que falta é o primeiro sem linha", () => {
             const token = account("onboard@accounts.test");
-            const user = userIdOf(token);
             const step = (
                 n: number,
                 status: string,
@@ -1066,6 +1068,145 @@ describe.skipIf(!dbTestsEnabled)("funções de conta contra um PostgreSQL de ver
                 "0",
             );
             expect(admin(`select count(*) from users where email = '${email}'`)).toBe("0");
+        });
+    });
+    describe("B4. o banco também recusa o que não é um endereço", () => {
+        const insert = (email: string) => {
+            const quoted = email.replaceAll("'", "''");
+            admin(`delete from users where email = '${quoted}'`);
+            admin(`insert into users (email) values ('${quoted}')`);
+        };
+        it("lista de endereços, aspas, <>, ponto duplo, não ASCII e local longo violam o CHECK", () => {
+            for (const email of [
+                "a@x.com,b@y.com",
+                "a@x.com;b@y.com",
+                "<a@b.com>",
+                '"a"@b.com',
+                "a'b@x.com",
+                "a..b@x.com",
+                ".a@x.com",
+                "a.@x.com",
+                "a@x_y.com",
+                "a@-x.com",
+                "a@x..com",
+                "joão@exemplo.com",
+                "a@b.c",
+                `${"l".repeat(65)}@x.com`,
+            ]) {
+                expect(() => insert(email), email).toThrow();
+            }
+        });
+
+        it("o mesmo critério do servidor: o que normalizeEmail aceita o banco aceita, e vice-versa", () => {
+            for (const raw of [
+                "ana@accounts.test",
+                "ana.silva+k@accounts.test",
+                "a_b-c@sub.accounts.test",
+                "x@xn--e1afmkfd.xn--p1ai",
+                "a@b.co",
+                "a@b.c",
+                "a b@accounts.test",
+                "a@@accounts.test",
+                "a@accounts..test",
+            ]) {
+                const email = normalizeEmail(raw);
+                let accepted = true;
+                try {
+                    insert(raw.trim().toLowerCase());
+                } catch {
+                    accepted = false;
+                }
+                expect(accepted, raw).toBe(email !== null);
+            }
+            admin("delete from users where email like '%@accounts.test'");
+        });
+    });
+    describe("M1. o desafio do navegador (banco)", () => {
+        const attemptsOf = (email: string) =>
+            admin(
+                `select attempts from sign_in_codes where email_hash = '${emailHash(email, SECRET)}' and purpose = 'sign_in' order by id desc limit 1`,
+            );
+
+        it("sem o desafio, ou com outro, nada conta e nada entra, nem com o código certo", () => {
+            const email = "desafio-db@accounts.test";
+            request(email, "123456");
+            for (const challengeHash of [null, sessionTokenHash("outro"), "", "x".repeat(64)]) {
+                for (const code of ["000000", "123456"]) {
+                    const answer = first<SignInResult>(
+                        app(
+                            q.signIn({
+                                ...hashes(email, code),
+                                challengeHash,
+                                email,
+                                tokenHash: newToken(),
+                                streamings: [],
+                                watched: [],
+                                liked: [],
+                                willWatch: [],
+                                disliked: [],
+                            }),
+                        ),
+                    );
+                    expect(answer.status, `${challengeHash} ${code}`).toBe("invalid");
+                }
+            }
+            expect(attemptsOf(email)).toBe("0");
+            expect(admin(`select count(*) from users where email = '${email}'`)).toBe("0");
+            expect(signIn(email, "123456", newToken()).status).toBe("ok");
+        });
+
+        it("quem não tem o desafio nem descobre que o código foi queimado", () => {
+            const email = "queimado-db@accounts.test";
+            request(email, "123456");
+            for (let i = 0; i < 5; i++) signIn(email, "000000", newToken());
+            expect(signIn(email, "123456", newToken()).status).toBe("locked");
+            const stranger = first<SignInResult>(
+                app(
+                    q.signIn({
+                        ...hashes(email, "123456"),
+                        challengeHash: sessionTokenHash("estranho"),
+                        email,
+                        tokenHash: newToken(),
+                        streamings: [],
+                        watched: [],
+                        liked: [],
+                        willWatch: [],
+                        disliked: [],
+                    }),
+                ),
+            );
+            expect(stranger.status).toBe("invalid");
+        });
+
+        it("a espera cresce com os códigos queimados e só pega o mesmo e-mail", () => {
+            const email = "espera-db@accounts.test";
+            const wait = () => first<string>(app(q.requestCode({ ...hashes(email, "111111") })));
+            for (let i = 0; i < 3; i++) {
+                expect(wait()).toBe("ok");
+                for (let j = 0; j < 5; j++) signIn(email, "000000", newToken());
+            }
+            expect(wait()).toBe("wait");
+            expect(
+                first<string>(
+                    app(q.requestCode({ ...hashes("outra-espera@accounts.test", "111111") })),
+                ),
+            ).toBe("ok");
+            admin(
+                "update sign_in_codes set used_at = now() - interval '61 minutes' where attempts >= 5",
+            );
+            expect(wait()).toBe("ok");
+        });
+
+        it("códigos queimados há mais de 24 h não contam", () => {
+            const email = "velho-queimado@accounts.test";
+            for (let i = 0; i < 3; i++) {
+                first(app(q.requestCode({ ...hashes(email, "111111") })));
+                for (let j = 0; j < 5; j++) signIn(email, "000000", newToken());
+            }
+            admin(
+                `update sign_in_codes set created_at = now() - interval '25 hours', expires_at = now() - interval '24 hours 50 minutes', used_at = now() - interval '24 hours 55 minutes' where email_hash = '${emailHash(email, SECRET)}'`,
+            );
+            expect(first<string>(app(q.requestCode({ ...hashes(email, "111111") })))).toBe("ok");
         });
     });
 });

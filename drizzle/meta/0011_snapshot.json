@@ -1,5 +1,5 @@
 {
-  "id": "b154137b-189b-457c-8b57-c2720f708fa0",
+  "id": "a205b52d-d4d8-48ad-94f6-054a7534ef45",
   "prevId": "2eb924c7-2dd9-4ba1-82cf-a13ec53abc51",
   "version": "7",
   "dialect": "postgresql",
@@ -1029,6 +1029,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "challenge_hash": {
+          "name": "challenge_hash",
+          "type": "char(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
         "attempts": {
           "name": "attempts",
           "type": "smallint",
@@ -1130,7 +1136,7 @@
         },
         "sign_in_codes_target_check": {
           "name": "sign_in_codes_target_check",
-          "value": "(\"sign_in_codes\".\"purpose\" = 'sign_in' and \"sign_in_codes\".\"email_hash\" is not null and \"sign_in_codes\".\"user_id\" is null)\n                or (\"sign_in_codes\".\"purpose\" = 'delete_account' and \"sign_in_codes\".\"user_id\" is not null and \"sign_in_codes\".\"email_hash\" is null)"
+          "value": "(\"sign_in_codes\".\"purpose\" = 'sign_in' and \"sign_in_codes\".\"email_hash\" is not null and \"sign_in_codes\".\"user_id\" is null\n                    and \"sign_in_codes\".\"challenge_hash\" is not null)\n                or (\"sign_in_codes\".\"purpose\" = 'delete_account' and \"sign_in_codes\".\"user_id\" is not null\n                    and \"sign_in_codes\".\"email_hash\" is null and \"sign_in_codes\".\"challenge_hash\" is null)"
         },
         "sign_in_codes_attempts_check": {
           "name": "sign_in_codes_attempts_check",
@@ -2220,7 +2226,7 @@
       "checkConstraints": {
         "users_email_check": {
           "name": "users_email_check",
-          "value": "\"users\".\"email\" = lower(btrim(\"users\".\"email\")) and char_length(\"users\".\"email\") between 3 and 254\n                and \"users\".\"email\" ~ '^[^@[:space:]]+@[^@[:space:]]+\\.[^@[:space:]]+$'"
+          "value": "\"users\".\"email\" = lower(btrim(\"users\".\"email\")) and char_length(\"users\".\"email\") between 3 and 254\n                and char_length(split_part(\"users\".\"email\", '@', 1)) <= 64\n                and \"users\".\"email\" ~ '^[a-z0-9!#$%&*+/=?^_{|}~-]+(?:\\.[a-z0-9!#$%&*+/=?^_{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z](?:[a-z0-9-]{0,61}[a-z0-9])$'"
         }
       },
       "isRLSEnabled": false

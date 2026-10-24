@@ -14,6 +14,8 @@ import {
     accountDeps,
     accountRepository,
     admitSession,
+    challengeHash as cookieChallengeHash,
+    clearChallengeCookie,
     clearSessionCookie,
     currentSession,
     deleteSchema,
@@ -22,6 +24,7 @@ import {
     parseWith,
     requestCodeSchema,
     sessionTokenHash as cookieTokenHash,
+    setChallengeCookie,
     setSessionCookie,
     type Session,
     signalRequestSchema,
@@ -49,7 +52,15 @@ export async function requestCode(input: unknown): Promise<RequestCodeAnswer> {
     if (!request) return "invalid-email";
     try {
         const { deps, ipKey } = await accountDeps();
-        return (await requestSignInCode(deps, { email: request.email, ipKey })).kind;
+        // o desafio nasce aqui e só o navegador que pediu o código o tem (M1)
+        const challenge = newSessionToken();
+        const outcome = await requestSignInCode(deps, {
+            email: request.email,
+            ipKey,
+            challengeHash: sessionTokenHash(challenge),
+        });
+        if (outcome.kind === "sent") await setChallengeCookie(challenge);
+        return outcome.kind;
     } catch {
         return "unavailable";
     }
@@ -72,11 +83,13 @@ export async function verifyCode(input: unknown): Promise<VerifyAnswer> {
             email: request.email,
             code: request.code,
             ipKey,
+            challengeHash: await cookieChallengeHash(),
             tokenHash: sessionTokenHash(token),
             browser: request.browser,
         });
         if (outcome.kind !== "ok") return { kind: outcome.kind };
         await setSessionCookie(token);
+        await clearChallengeCookie();
         return { kind: "ok", isNew: outcome.isNew };
     } catch {
         return { kind: "unavailable" };

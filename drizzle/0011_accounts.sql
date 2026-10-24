@@ -4,13 +4,16 @@ CREATE TABLE "sign_in_codes" (
 	"email_hash" char(64),
 	"user_id" integer,
 	"code_hash" char(64) NOT NULL,
+	"challenge_hash" char(64),
 	"attempts" smallint DEFAULT 0 NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"expires_at" timestamp with time zone NOT NULL,
 	"used_at" timestamp with time zone,
 	CONSTRAINT "sign_in_codes_purpose_check" CHECK ("sign_in_codes"."purpose" in ('sign_in', 'delete_account')),
-	CONSTRAINT "sign_in_codes_target_check" CHECK (("sign_in_codes"."purpose" = 'sign_in' and "sign_in_codes"."email_hash" is not null and "sign_in_codes"."user_id" is null)
-                or ("sign_in_codes"."purpose" = 'delete_account' and "sign_in_codes"."user_id" is not null and "sign_in_codes"."email_hash" is null)),
+	CONSTRAINT "sign_in_codes_target_check" CHECK (("sign_in_codes"."purpose" = 'sign_in' and "sign_in_codes"."email_hash" is not null and "sign_in_codes"."user_id" is null
+                    and "sign_in_codes"."challenge_hash" is not null)
+                or ("sign_in_codes"."purpose" = 'delete_account' and "sign_in_codes"."user_id" is not null
+                    and "sign_in_codes"."email_hash" is null and "sign_in_codes"."challenge_hash" is null)),
 	CONSTRAINT "sign_in_codes_attempts_check" CHECK ("sign_in_codes"."attempts" between 0 and 5),
 	CONSTRAINT "sign_in_codes_expiry_check" CHECK ("sign_in_codes"."expires_at" > "sign_in_codes"."created_at")
 );
@@ -66,7 +69,8 @@ CREATE TABLE "users" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "users_email_unique" UNIQUE("email"),
 	CONSTRAINT "users_email_check" CHECK ("users"."email" = lower(btrim("users"."email")) and char_length("users"."email") between 3 and 254
-                and "users"."email" ~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$')
+                and char_length(split_part("users"."email", '@', 1)) <= 64
+                and "users"."email" ~ '^[a-z0-9!#$%&*+/=?^_{|}~-]+(?:\.[a-z0-9!#$%&*+/=?^_{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z](?:[a-z0-9-]{0,61}[a-z0-9])$')
 );
 --> statement-breakpoint
 ALTER TABLE "sign_in_codes" ADD CONSTRAINT "sign_in_codes_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -163,25 +167,42 @@ BEGIN
 END
 $$;--> statement-breakpoint
 
--- Pede um código de entrar: anula o anterior do mesmo e-mail e grava o novo (RNE002). Os limites de
--- pedido ficam no token bucket, fora daqui.
-CREATE OR REPLACE FUNCTION kinne_request_code(p_email_hash text, p_code_hash text) RETURNS boolean
+-- Pede um código de entrar: anula o anterior do mesmo e-mail e grava o novo, amarrado ao cookie de
+-- desafio de quem pediu (revisão M1). Os limites de pedido ficam no token bucket, fora daqui; aqui
+-- fica a espera que cresce com os códigos queimados (5 erros) do mesmo e-mail em 24 h: a partir do
+-- 3º, 1 hora, e dobra a cada um, até 24 horas. Devolve 'ok' ou 'wait'.
+CREATE OR REPLACE FUNCTION kinne_request_code(
+    p_email_hash text, p_code_hash text, p_challenge_hash text
+) RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
+DECLARE
+    v_burned integer;
+    v_last timestamptz;
 BEGIN
     PERFORM pg_advisory_xact_lock(hashtextextended(p_email_hash, 1));
+    SELECT count(*), max(used_at) INTO v_burned, v_last FROM public.sign_in_codes
+        WHERE purpose = 'sign_in' AND email_hash = p_email_hash AND attempts >= 5
+            AND created_at > now() - interval '24 hours';
+    IF v_burned >= 3
+        AND v_last > now() - least(interval '24 hours', interval '1 hour' * power(2, v_burned - 3))
+    THEN
+        RETURN 'wait';
+    END IF;
     UPDATE public.sign_in_codes SET used_at = now()
         WHERE purpose = 'sign_in' AND email_hash = p_email_hash AND used_at IS NULL;
-    INSERT INTO public.sign_in_codes (purpose, email_hash, code_hash, expires_at)
-        VALUES ('sign_in', p_email_hash, p_code_hash, now() + interval '10 minutes');
-    RETURN true;
+    INSERT INTO public.sign_in_codes (purpose, email_hash, code_hash, challenge_hash, expires_at)
+        VALUES ('sign_in', p_email_hash, p_code_hash, p_challenge_hash, now() + interval '10 minutes');
+    RETURN 'ok';
 END
 $$;--> statement-breakpoint
 
 -- Confirma o código e entra (US012 C4, C5). Numa transação só: confere validade e tentativas,
 -- marca o uso, abre a conta se for a primeira vez, cria uma sessão nova (nunca reaproveita uma) e
--- leva o que o navegador tinha. Devolve {status: ok | invalid | locked, isNew}.
+-- leva o que o navegador tinha. Só o navegador que pediu o código (o hash do cookie de desafio
+-- bate) gasta tentativas ou entra; quem só sabe o e-mail recebe 'invalid' sem mudar nada (M1).
+-- Devolve {status: ok | invalid | locked, isNew}.
 CREATE OR REPLACE FUNCTION kinne_sign_in(
-    p_email_hash text, p_email text, p_code_hash text, p_token_hash text,
+    p_email_hash text, p_email text, p_code_hash text, p_challenge_hash text, p_token_hash text,
     p_streamings text[], p_watched integer[],
     p_liked integer[], p_will_watch integer[], p_disliked integer[]
 ) RETURNS jsonb
@@ -201,10 +222,14 @@ BEGIN
         IF EXISTS (
             SELECT 1 FROM public.sign_in_codes
             WHERE purpose = 'sign_in' AND email_hash = p_email_hash
+                AND challenge_hash = p_challenge_hash
                 AND attempts >= 5 AND expires_at > now()
         ) THEN
             RETURN jsonb_build_object('status', 'locked');
         END IF;
+        RETURN jsonb_build_object('status', 'invalid');
+    END IF;
+    IF v_code.challenge_hash IS DISTINCT FROM p_challenge_hash THEN
         RETURN jsonb_build_object('status', 'invalid');
     END IF;
     IF v_code.code_hash <> p_code_hash THEN
@@ -533,8 +558,8 @@ $$;--> statement-breakpoint
 REVOKE ALL ON FUNCTION kinne_user_of(text) FROM PUBLIC;--> statement-breakpoint
 REVOKE ALL ON FUNCTION kinne_trim_user(integer) FROM PUBLIC;--> statement-breakpoint
 REVOKE ALL ON FUNCTION kinne_merge_browser(integer, text[], integer[], integer[], integer[], integer[]) FROM PUBLIC;--> statement-breakpoint
-REVOKE ALL ON FUNCTION kinne_request_code(text, text) FROM PUBLIC;--> statement-breakpoint
-REVOKE ALL ON FUNCTION kinne_sign_in(text, text, text, text, text[], integer[], integer[], integer[], integer[]) FROM PUBLIC;--> statement-breakpoint
+REVOKE ALL ON FUNCTION kinne_request_code(text, text, text) FROM PUBLIC;--> statement-breakpoint
+REVOKE ALL ON FUNCTION kinne_sign_in(text, text, text, text, text, text[], integer[], integer[], integer[], integer[]) FROM PUBLIC;--> statement-breakpoint
 REVOKE ALL ON FUNCTION kinne_session_user(text) FROM PUBLIC;--> statement-breakpoint
 REVOKE ALL ON FUNCTION kinne_session_email(text) FROM PUBLIC;--> statement-breakpoint
 REVOKE ALL ON FUNCTION kinne_sign_out(text) FROM PUBLIC;--> statement-breakpoint
@@ -549,8 +574,8 @@ REVOKE ALL ON FUNCTION kinne_purge_expired_auth() FROM PUBLIC;--> statement-brea
 REVOKE ALL ON FUNCTION kinne_load_account(text) FROM PUBLIC;--> statement-breakpoint
 REVOKE ALL ON FUNCTION kinne_load_taste(text) FROM PUBLIC;--> statement-breakpoint
 
-GRANT EXECUTE ON FUNCTION kinne_request_code(text, text) TO kinne_app;--> statement-breakpoint
-GRANT EXECUTE ON FUNCTION kinne_sign_in(text, text, text, text, text[], integer[], integer[], integer[], integer[]) TO kinne_app;--> statement-breakpoint
+GRANT EXECUTE ON FUNCTION kinne_request_code(text, text, text) TO kinne_app;--> statement-breakpoint
+GRANT EXECUTE ON FUNCTION kinne_sign_in(text, text, text, text, text, text[], integer[], integer[], integer[], integer[]) TO kinne_app;--> statement-breakpoint
 GRANT EXECUTE ON FUNCTION kinne_session_user(text) TO kinne_app;--> statement-breakpoint
 GRANT EXECUTE ON FUNCTION kinne_session_email(text) TO kinne_app;--> statement-breakpoint
 GRANT EXECUTE ON FUNCTION kinne_sign_out(text) TO kinne_app;--> statement-breakpoint

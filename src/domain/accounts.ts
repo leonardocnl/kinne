@@ -14,12 +14,23 @@ export const CODE_TTL_MS = 10 * 60 * 1000;
 // 5 erros e o código deixa de valer (RNE004, A1)
 export const MAX_CODE_ATTEMPTS = 5;
 
-/** Minúsculas, sem espaços nas pontas, algo@algo.algo e até 254 caracteres; senão, null. */
+// Um subconjunto estrito de dot-atom (RFC 5322) em minúsculas e ASCII: sem vírgula, ponto e vírgula,
+// <>, aspas, espaço nem ponto duplo, e o último rótulo do domínio começa por letra. É o mesmo
+// critério do CHECK users_email_check (revisão B4): o que chega ao Resend é sempre um endereço só.
+const ATOM = "[a-z0-9!#$%&*+/=?^_{|}~-]+";
+const LABEL = "[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?";
+const TLD = "[a-z](?:[a-z0-9-]{0,61}[a-z0-9])";
+export const EMAIL_PATTERN = `^${ATOM}(?:\\.${ATOM})*@(?:${LABEL}\\.)+${TLD}$`;
+const EMAIL = new RegExp(EMAIL_PATTERN);
+export const MAX_EMAIL_LOCAL_LENGTH = 64;
+
+/** Minúsculas, sem espaços nas pontas, um endereço dot-atom só e até 254 caracteres; senão, null. */
 export function normalizeEmail(input: unknown): string | null {
     if (typeof input !== "string" || input.length > MAX_EMAIL_LENGTH + 64) return null;
     const email = input.trim().toLowerCase();
     if (email.length < 3 || email.length > MAX_EMAIL_LENGTH) return null;
-    return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) ? email : null;
+    if (email.indexOf("@") > MAX_EMAIL_LOCAL_LENGTH) return null;
+    return EMAIL.test(email) ? email : null;
 }
 
 /** O código como a pessoa digita: 6 dígitos, com ou sem espaço ou hífen no meio. */
@@ -76,6 +87,8 @@ export const SESSION_RENEW_AFTER_MS = 60 * 60 * 1000;
 export const MAX_SESSIONS = 10;
 
 export const SESSION_COOKIE = "__Host-kinne_session";
+// o desafio do código (M1): o navegador que pediu o código é o único que o confirma
+export const CHALLENGE_COOKIE = "__Host-kinne_challenge";
 
 /** Até quando a sessão vale, ao usar agora: 30 dias, sem passar de 90 desde o login. */
 export function sessionExpiry(createdAt: Date, now: Date): Date {

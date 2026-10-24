@@ -57,11 +57,17 @@ export type StoredTaste = {
 };
 
 export interface AccountsRepository {
-    requestCode(input: { emailHash: string; codeHash: string }): Promise<void>;
+    // "wait": o e-mail teve códigos demais queimados em 24 h e a espera ainda não acabou
+    requestCode(input: {
+        emailHash: string;
+        codeHash: string;
+        challengeHash: string;
+    }): Promise<"ok" | "wait">;
     signIn(input: {
         emailHash: string;
         email: string;
         codeHash: string;
+        challengeHash: string | null;
         tokenHash: string;
         browser: BrowserData;
     }): Promise<{ status: SignInStatus; isNew: boolean }>;
@@ -131,7 +137,7 @@ const utcDay = (now: Date) => now.toISOString().slice(0, 10);
  */
 export async function requestSignInCode(
     deps: AccountDeps,
-    input: { email: unknown; ipKey: string | null },
+    input: { email: unknown; ipKey: string | null; challengeHash: string },
 ): Promise<RequestCodeOutcome> {
     const email = normalizeEmail(input.email);
     if (!email) return { kind: "invalid-email" };
@@ -154,10 +160,13 @@ export async function requestSignInCode(
     if (!admitted) return { kind: "limited" };
 
     const code = deps.hashes.newCode();
-    await deps.repository.requestCode({
+    const stored = await deps.repository.requestCode({
         emailHash: deps.hashes.email(email, deps.secret),
         codeHash: deps.hashes.code("sign_in", email, code, deps.secret),
+        challengeHash: input.challengeHash,
     });
+    // espera por códigos queimados (M1): a mesma resposta dos outros limites, sem enviar nada
+    if (stored === "wait") return { kind: "limited" };
     const mailer = deps.mailer;
     // falha no envio não muda a resposta: a pessoa pede de novo (e o limite protege a caixa)
     deps.defer(() => mailer.send(email, signInEmail(code)).catch(() => undefined));
@@ -181,6 +190,8 @@ export async function verifySignInCode(
         email: unknown;
         code: unknown;
         ipKey: string | null;
+        // hash do cookie de desafio; nulo se o navegador não o trouxe (M1)
+        challengeHash: string | null;
         tokenHash: string;
         browser: BrowserData;
     },
@@ -205,6 +216,7 @@ export async function verifySignInCode(
         emailHash: deps.hashes.email(email, deps.secret),
         email,
         codeHash: deps.hashes.code("sign_in", email, code, deps.secret),
+        challengeHash: input.challengeHash,
         tokenHash: input.tokenHash,
         browser: {
             streamings: cleanStreamings(input.browser.streamings),
