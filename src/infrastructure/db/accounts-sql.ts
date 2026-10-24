@@ -1,6 +1,6 @@
 import { sql, type SQL } from "drizzle-orm";
 
-// As chamadas das contas (migration 0010_accounts). Toda escrita é uma função kinne_* que recebe o
+// As chamadas das contas (migration 0011_accounts). Toda escrita é uma função kinne_* que recebe o
 // hash do token da sessão: o banco acha a conta lá dentro, e nenhuma delas aceita um id de
 // usuário (docs/threats/accounts.md, decisões de 2026-10-24). As leituras são só das tabelas de
 // gosto, filtradas pelo id que kinne_session_user devolveu. Sem imports do Next: o teste de ataque

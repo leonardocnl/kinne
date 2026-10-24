@@ -63,3 +63,25 @@ export function runAs(role: string, statement: SQL): Record<string, unknown>[] {
             .join(""),
     );
 }
+
+/** O SQL de uma instrução já com os parâmetros no lugar, para montar roteiros de várias instruções. */
+export function renderSql(statement: SQL): string {
+    const { sql, params } = dialect.sqlToQuery(statement);
+    return sql.replace(/\$(\d+)/g, (_, n) => literal(params[Number(n) - 1]));
+}
+
+/**
+ * Um roteiro de várias instruções numa sessão só (tabelas temporárias vivem na sessão), com o papel
+ * dado. Devolve o que a última consulta imprimiu.
+ */
+export function runScript(role: string, script: string): string {
+    const out = execFileSync("psql", ["-v", "ON_ERROR_STOP=1", "-qAt", "-f", "-"], {
+        input: `set role ${role};\n${script}`,
+        encoding: "utf8",
+        stdio: ["pipe", "pipe", "pipe"],
+    });
+    return out
+        .split("\n")
+        .filter((l) => l !== "SET" && l !== "")
+        .join("\n");
+}

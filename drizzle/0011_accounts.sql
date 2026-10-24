@@ -83,7 +83,7 @@ CREATE INDEX "sign_in_codes_expires_at_idx" ON "sign_in_codes" USING btree ("exp
 CREATE INDEX "user_sessions_user_idx" ON "user_sessions" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "user_sessions_expires_at_idx" ON "user_sessions" USING btree ("expires_at");--> statement-breakpoint
 CREATE INDEX "user_taste_signals_recent_idx" ON "user_taste_signals" USING btree ("user_id","signal","updated_at");--> statement-breakpoint
-CREATE INDEX "user_watched_recent_idx" ON "user_watched" USING btree ("user_id","created_at");--> statement-breakpoint
+CREATE INDEX "user_watched_recent_idx" ON "user_watched" USING btree ("user_id","created_at");
 
 -- Contas (docs/threats/accounts.md, decisões de 2026-10-24).
 -- O site (kinne_app) não toca em sign_in_codes nem em user_sessions, não escreve em tabela de
@@ -94,33 +94,33 @@ CREATE INDEX "user_watched_recent_idx" ON "user_watched" USING btree ("user_id",
 
 -- Interna: a conta dona de uma sessão viva, ou nulo. Ninguém além do dono chama.
 CREATE OR REPLACE FUNCTION kinne_user_of(p_token text) RETURNS integer
-    LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public AS $$
-    SELECT user_id FROM user_sessions
+    LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
+    SELECT user_id FROM public.user_sessions
     WHERE token_hash = p_token AND expires_at > now() AND absolute_expires_at > now()
 $$;--> statement-breakpoint
 
 -- Interna: corta cada lista nos mais recentes (200 por sinal, 2000 "Já vi") e as sessões em 10.
 CREATE OR REPLACE FUNCTION kinne_trim_user(p_user integer) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
 BEGIN
-    DELETE FROM user_taste_signals s
+    DELETE FROM public.user_taste_signals s
     USING (
         SELECT catalog_title_id, signal,
             row_number() OVER (PARTITION BY signal ORDER BY updated_at DESC, catalog_title_id DESC) AS n
-        FROM user_taste_signals WHERE user_id = p_user
+        FROM public.user_taste_signals WHERE user_id = p_user
     ) r
     WHERE s.user_id = p_user AND s.catalog_title_id = r.catalog_title_id AND r.n > 200;
-    DELETE FROM user_watched w
+    DELETE FROM public.user_watched w
     USING (
         SELECT catalog_title_id,
             row_number() OVER (ORDER BY created_at DESC, catalog_title_id DESC) AS n
-        FROM user_watched WHERE user_id = p_user
+        FROM public.user_watched WHERE user_id = p_user
     ) r
     WHERE w.user_id = p_user AND w.catalog_title_id = r.catalog_title_id AND r.n > 2000;
-    DELETE FROM user_sessions x
+    DELETE FROM public.user_sessions x
     USING (
         SELECT id, row_number() OVER (ORDER BY created_at DESC, id DESC) AS n
-        FROM user_sessions WHERE user_id = p_user
+        FROM public.user_sessions WHERE user_id = p_user
     ) r
     WHERE x.id = r.id AND r.n > 10;
 END
@@ -133,21 +133,21 @@ CREATE OR REPLACE FUNCTION kinne_merge_browser(
     p_user integer, p_streamings text[], p_watched integer[],
     p_liked integer[], p_will_watch integer[], p_disliked integer[]
 ) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM user_streamings WHERE user_id = p_user) THEN
-        INSERT INTO user_streamings (user_id, streaming)
+    IF NOT EXISTS (SELECT 1 FROM public.user_streamings WHERE user_id = p_user) THEN
+        INSERT INTO public.user_streamings (user_id, streaming)
             SELECT DISTINCT p_user, s FROM unnest(p_streamings) AS s
             ON CONFLICT DO NOTHING;
     END IF;
     -- do mais antigo ao mais novo: a ordem da lista vira a ordem do tempo, e os do navegador ficam
     -- depois de tudo o que a conta já tinha
-    INSERT INTO user_watched (user_id, catalog_title_id, created_at)
+    INSERT INTO public.user_watched (user_id, catalog_title_id, created_at)
         SELECT p_user, w.id, now() + w.n * interval '1 microsecond'
         FROM unnest(p_watched) WITH ORDINALITY AS w(id, n)
-        WHERE EXISTS (SELECT 1 FROM catalog_titles t WHERE t.id = w.id)
+        WHERE EXISTS (SELECT 1 FROM public.catalog_titles t WHERE t.id = w.id)
         ON CONFLICT DO NOTHING;
-    INSERT INTO user_taste_signals (user_id, catalog_title_id, signal, updated_at)
+    INSERT INTO public.user_taste_signals (user_id, catalog_title_id, signal, updated_at)
         SELECT p_user, x.id, x.signal, now() + x.n * interval '1 microsecond'
         FROM (
             SELECT id, n, 'liked' AS signal FROM unnest(p_liked) WITH ORDINALITY AS a(id, n)
@@ -156,22 +156,22 @@ BEGIN
             UNION ALL
             SELECT id, n, 'disliked' FROM unnest(p_disliked) WITH ORDINALITY AS c(id, n)
         ) x
-        WHERE EXISTS (SELECT 1 FROM catalog_titles t WHERE t.id = x.id)
+        WHERE EXISTS (SELECT 1 FROM public.catalog_titles t WHERE t.id = x.id)
         ON CONFLICT (user_id, catalog_title_id)
         DO UPDATE SET signal = excluded.signal, updated_at = excluded.updated_at;
-    PERFORM kinne_trim_user(p_user);
+    PERFORM public.kinne_trim_user(p_user);
 END
 $$;--> statement-breakpoint
 
 -- Pede um código de entrar: anula o anterior do mesmo e-mail e grava o novo (RNE002). Os limites de
 -- pedido ficam no token bucket, fora daqui.
 CREATE OR REPLACE FUNCTION kinne_request_code(p_email_hash text, p_code_hash text) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
 BEGIN
     PERFORM pg_advisory_xact_lock(hashtextextended(p_email_hash, 1));
-    UPDATE sign_in_codes SET used_at = now()
+    UPDATE public.sign_in_codes SET used_at = now()
         WHERE purpose = 'sign_in' AND email_hash = p_email_hash AND used_at IS NULL;
-    INSERT INTO sign_in_codes (purpose, email_hash, code_hash, expires_at)
+    INSERT INTO public.sign_in_codes (purpose, email_hash, code_hash, expires_at)
         VALUES ('sign_in', p_email_hash, p_code_hash, now() + interval '10 minutes');
     RETURN true;
 END
@@ -185,21 +185,21 @@ CREATE OR REPLACE FUNCTION kinne_sign_in(
     p_streamings text[], p_watched integer[],
     p_liked integer[], p_will_watch integer[], p_disliked integer[]
 ) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
-    v_code sign_in_codes%ROWTYPE;
+    v_code public.sign_in_codes%ROWTYPE;
     v_user integer;
     v_new boolean := false;
 BEGIN
     PERFORM pg_advisory_xact_lock(hashtextextended(p_email_hash, 1));
-    SELECT * INTO v_code FROM sign_in_codes
+    SELECT * INTO v_code FROM public.sign_in_codes
         WHERE purpose = 'sign_in' AND email_hash = p_email_hash
             AND used_at IS NULL AND expires_at > now()
         FOR UPDATE;
     IF NOT FOUND THEN
         -- depois do 5º erro o código já não vale: a mensagem pede um novo (RNE004)
         IF EXISTS (
-            SELECT 1 FROM sign_in_codes
+            SELECT 1 FROM public.sign_in_codes
             WHERE purpose = 'sign_in' AND email_hash = p_email_hash
                 AND attempts >= 5 AND expires_at > now()
         ) THEN
@@ -208,7 +208,7 @@ BEGIN
         RETURN jsonb_build_object('status', 'invalid');
     END IF;
     IF v_code.code_hash <> p_code_hash THEN
-        UPDATE sign_in_codes
+        UPDATE public.sign_in_codes
             SET attempts = attempts + 1,
                 used_at = CASE WHEN attempts + 1 >= 5 THEN now() END
             WHERE id = v_code.id;
@@ -216,20 +216,20 @@ BEGIN
             'status', CASE WHEN v_code.attempts + 1 >= 5 THEN 'locked' ELSE 'invalid' END);
     END IF;
     -- de uso único: só quem muda used_at de nulo segue (A5)
-    UPDATE sign_in_codes SET used_at = now() WHERE id = v_code.id AND used_at IS NULL;
+    UPDATE public.sign_in_codes SET used_at = now() WHERE id = v_code.id AND used_at IS NULL;
     IF NOT FOUND THEN
         RETURN jsonb_build_object('status', 'invalid');
     END IF;
-    INSERT INTO users (email) VALUES (p_email) ON CONFLICT (email) DO NOTHING RETURNING id INTO v_user;
+    INSERT INTO public.users (email) VALUES (p_email) ON CONFLICT (email) DO NOTHING RETURNING id INTO v_user;
     IF v_user IS NOT NULL THEN
         v_new := true;
     ELSE
-        SELECT id INTO v_user FROM users WHERE email = p_email;
+        SELECT id INTO v_user FROM public.users WHERE email = p_email;
     END IF;
-    INSERT INTO user_sessions (user_id, token_hash, expires_at, absolute_expires_at)
+    INSERT INTO public.user_sessions (user_id, token_hash, expires_at, absolute_expires_at)
         VALUES (v_user, p_token_hash, now() + interval '30 days', now() + interval '90 days');
-    PERFORM kinne_merge_browser(v_user, p_streamings, p_watched, p_liked, p_will_watch, p_disliked);
-    PERFORM kinne_trim_user(v_user);
+    PERFORM public.kinne_merge_browser(v_user, p_streamings, p_watched, p_liked, p_will_watch, p_disliked);
+    PERFORM public.kinne_trim_user(v_user);
     RETURN jsonb_build_object('status', 'ok', 'isNew', v_new);
 END
 $$;--> statement-breakpoint
@@ -237,17 +237,17 @@ $$;--> statement-breakpoint
 -- A conta da sessão, renovando-a: 30 dias a cada uso, sem passar de 90 desde o login, e no máximo
 -- uma escrita por hora (US012 RNE005). Nulo se a sessão não vale.
 CREATE OR REPLACE FUNCTION kinne_session_user(p_token text) RETURNS integer
-    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
-    v_session user_sessions%ROWTYPE;
+    v_session public.user_sessions%ROWTYPE;
 BEGIN
-    SELECT * INTO v_session FROM user_sessions
+    SELECT * INTO v_session FROM public.user_sessions
         WHERE token_hash = p_token AND expires_at > now() AND absolute_expires_at > now();
     IF NOT FOUND THEN
         RETURN NULL;
     END IF;
     IF v_session.last_used_at < now() - interval '1 hour' THEN
-        UPDATE user_sessions
+        UPDATE public.user_sessions
             SET last_used_at = now(),
                 expires_at = least(now() + interval '30 days', absolute_expires_at)
             WHERE id = v_session.id;
@@ -258,29 +258,29 @@ $$;--> statement-breakpoint
 
 -- O e-mail da conta da sessão, para o perfil e a exportação: o kinne_app não lê users.email.
 CREATE OR REPLACE FUNCTION kinne_session_email(p_token text) RETURNS text
-    LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public AS $$
-    SELECT u.email FROM users u WHERE u.id = kinne_user_of(p_token)
+    LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
+    SELECT u.email FROM public.users u WHERE u.id = public.kinne_user_of(p_token)
 $$;--> statement-breakpoint
 
 -- Sair (US012 C7): encerra só esta sessão. Sair de todos os aparelhos: todas as da conta.
 CREATE OR REPLACE FUNCTION kinne_sign_out(p_token text) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
 BEGIN
-    DELETE FROM user_sessions WHERE token_hash = p_token;
+    DELETE FROM public.user_sessions WHERE token_hash = p_token;
     RETURN FOUND;
 END
 $$;--> statement-breakpoint
 
 CREATE OR REPLACE FUNCTION kinne_sign_out_all(p_token text) RETURNS integer
-    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
-    v_user integer := kinne_user_of(p_token);
+    v_user integer := public.kinne_user_of(p_token);
     v_count integer;
 BEGIN
     IF v_user IS NULL THEN
         RETURN 0;
     END IF;
-    DELETE FROM user_sessions WHERE user_id = v_user;
+    DELETE FROM public.user_sessions WHERE user_id = v_user;
     GET DIAGNOSTICS v_count = ROW_COUNT;
     RETURN v_count;
 END
@@ -288,15 +288,15 @@ $$;--> statement-breakpoint
 
 -- Streamings da conta (US014 C2): troca o conjunto inteiro.
 CREATE OR REPLACE FUNCTION kinne_set_streamings(p_token text, p_streamings text[]) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
-    v_user integer := kinne_user_of(p_token);
+    v_user integer := public.kinne_user_of(p_token);
 BEGIN
     IF v_user IS NULL THEN
         RETURN false;
     END IF;
-    DELETE FROM user_streamings WHERE user_id = v_user;
-    INSERT INTO user_streamings (user_id, streaming)
+    DELETE FROM public.user_streamings WHERE user_id = v_user;
+    INSERT INTO public.user_streamings (user_id, streaming)
         SELECT DISTINCT v_user, s FROM unnest(p_streamings) AS s;
     RETURN true;
 END
@@ -305,49 +305,49 @@ $$;--> statement-breakpoint
 -- Um sinal de gosto (US010, US009, US014 C2): curti, vou assistir ou não curti; nulo tira o título
 -- da lista. O título precisa existir no catálogo.
 CREATE OR REPLACE FUNCTION kinne_set_signal(p_token text, p_title integer, p_signal text) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
-    v_user integer := kinne_user_of(p_token);
+    v_user integer := public.kinne_user_of(p_token);
 BEGIN
     IF v_user IS NULL THEN
         RETURN false;
     END IF;
     IF p_signal IS NULL THEN
-        DELETE FROM user_taste_signals WHERE user_id = v_user AND catalog_title_id = p_title;
+        DELETE FROM public.user_taste_signals WHERE user_id = v_user AND catalog_title_id = p_title;
         RETURN true;
     END IF;
     IF p_signal NOT IN ('liked', 'will_watch', 'disliked')
-        OR NOT EXISTS (SELECT 1 FROM catalog_titles WHERE id = p_title) THEN
+        OR NOT EXISTS (SELECT 1 FROM public.catalog_titles WHERE id = p_title) THEN
         RETURN false;
     END IF;
-    INSERT INTO user_taste_signals (user_id, catalog_title_id, signal)
+    INSERT INTO public.user_taste_signals (user_id, catalog_title_id, signal)
         VALUES (v_user, p_title, p_signal)
         ON CONFLICT (user_id, catalog_title_id)
         DO UPDATE SET signal = excluded.signal, updated_at = now();
-    PERFORM kinne_trim_user(v_user);
+    PERFORM public.kinne_trim_user(v_user);
     RETURN true;
 END
 $$;--> statement-breakpoint
 
 -- "Já vi" (US005, US014 C2): marca ou tira.
 CREATE OR REPLACE FUNCTION kinne_set_watched(p_token text, p_title integer, p_on boolean) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
-    v_user integer := kinne_user_of(p_token);
+    v_user integer := public.kinne_user_of(p_token);
 BEGIN
     IF v_user IS NULL THEN
         RETURN false;
     END IF;
     IF NOT p_on THEN
-        DELETE FROM user_watched WHERE user_id = v_user AND catalog_title_id = p_title;
+        DELETE FROM public.user_watched WHERE user_id = v_user AND catalog_title_id = p_title;
         RETURN true;
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM catalog_titles WHERE id = p_title) THEN
+    IF NOT EXISTS (SELECT 1 FROM public.catalog_titles WHERE id = p_title) THEN
         RETURN false;
     END IF;
-    INSERT INTO user_watched (user_id, catalog_title_id) VALUES (v_user, p_title)
+    INSERT INTO public.user_watched (user_id, catalog_title_id) VALUES (v_user, p_title)
         ON CONFLICT DO NOTHING;
-    PERFORM kinne_trim_user(v_user);
+    PERFORM public.kinne_trim_user(v_user);
     RETURN true;
 END
 $$;--> statement-breakpoint
@@ -357,30 +357,30 @@ $$;--> statement-breakpoint
 CREATE OR REPLACE FUNCTION kinne_onboarding_step(
     p_token text, p_step integer, p_status text, p_titles integer[], p_streamings text[]
 ) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
-    v_user integer := kinne_user_of(p_token);
+    v_user integer := public.kinne_user_of(p_token);
     v_ids integer[];
 BEGIN
     IF v_user IS NULL OR p_step NOT BETWEEN 1 AND 3 OR p_status NOT IN ('done', 'skipped') THEN
         RETURN false;
     END IF;
     IF p_status = 'done' AND p_step IN (1, 2) THEN
-        SELECT array_agg(DISTINCT t.id) INTO v_ids FROM catalog_titles t WHERE t.id = ANY(p_titles);
+        SELECT array_agg(DISTINCT t.id) INTO v_ids FROM public.catalog_titles t WHERE t.id = ANY(p_titles);
         IF coalesce(cardinality(v_ids), 0) <> 3 OR cardinality(p_titles) <> 3 THEN
             RETURN false;
         END IF;
-        INSERT INTO user_taste_signals (user_id, catalog_title_id, signal)
+        INSERT INTO public.user_taste_signals (user_id, catalog_title_id, signal)
             SELECT v_user, id, CASE p_step WHEN 1 THEN 'liked' ELSE 'disliked' END FROM unnest(v_ids) AS id
             ON CONFLICT (user_id, catalog_title_id)
             DO UPDATE SET signal = excluded.signal, updated_at = now();
-        PERFORM kinne_trim_user(v_user);
+        PERFORM public.kinne_trim_user(v_user);
     ELSIF p_status = 'done' THEN
-        DELETE FROM user_streamings WHERE user_id = v_user;
-        INSERT INTO user_streamings (user_id, streaming)
+        DELETE FROM public.user_streamings WHERE user_id = v_user;
+        INSERT INTO public.user_streamings (user_id, streaming)
             SELECT DISTINCT v_user, s FROM unnest(p_streamings) AS s;
     END IF;
-    INSERT INTO user_onboarding (user_id, step, status) VALUES (v_user, p_step, p_status)
+    INSERT INTO public.user_onboarding (user_id, step, status) VALUES (v_user, p_step, p_status)
         ON CONFLICT (user_id, step) DO UPDATE SET status = excluded.status, updated_at = now();
     RETURN true;
 END
@@ -389,17 +389,17 @@ $$;--> statement-breakpoint
 -- Código para apagar a conta (US014 C5, B4): só quem tem sessão pede, e ele fica ligado a esta
 -- conta; pedir outro anula o anterior.
 CREATE OR REPLACE FUNCTION kinne_request_delete_code(p_token text, p_code_hash text) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
-    v_user integer := kinne_user_of(p_token);
+    v_user integer := public.kinne_user_of(p_token);
 BEGIN
     IF v_user IS NULL THEN
         RETURN false;
     END IF;
     PERFORM pg_advisory_xact_lock(hashtextextended('delete:' || v_user, 1));
-    UPDATE sign_in_codes SET used_at = now()
+    UPDATE public.sign_in_codes SET used_at = now()
         WHERE purpose = 'delete_account' AND user_id = v_user AND used_at IS NULL;
-    INSERT INTO sign_in_codes (purpose, user_id, code_hash, expires_at)
+    INSERT INTO public.sign_in_codes (purpose, user_id, code_hash, expires_at)
         VALUES ('delete_account', v_user, p_code_hash, now() + interval '10 minutes');
     RETURN true;
 END
@@ -408,22 +408,22 @@ $$;--> statement-breakpoint
 -- Apagar a conta (US014 C5, RNE001, RNE002): precisa da sessão e do código novo; apaga a conta e
 -- tudo que é dela de uma vez (cascade). Devolve ok, invalid, locked ou no_session.
 CREATE OR REPLACE FUNCTION kinne_delete_account(p_token text, p_code_hash text) RETURNS text
-    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
-    v_user integer := kinne_user_of(p_token);
-    v_code sign_in_codes%ROWTYPE;
+    v_user integer := public.kinne_user_of(p_token);
+    v_code public.sign_in_codes%ROWTYPE;
 BEGIN
     IF v_user IS NULL THEN
         RETURN 'no_session';
     END IF;
     PERFORM pg_advisory_xact_lock(hashtextextended('delete:' || v_user, 1));
-    SELECT * INTO v_code FROM sign_in_codes
+    SELECT * INTO v_code FROM public.sign_in_codes
         WHERE purpose = 'delete_account' AND user_id = v_user
             AND used_at IS NULL AND expires_at > now()
         FOR UPDATE;
     IF NOT FOUND THEN
         IF EXISTS (
-            SELECT 1 FROM sign_in_codes
+            SELECT 1 FROM public.sign_in_codes
             WHERE purpose = 'delete_account' AND user_id = v_user
                 AND attempts >= 5 AND expires_at > now()
         ) THEN
@@ -432,31 +432,31 @@ BEGIN
         RETURN 'invalid';
     END IF;
     IF v_code.code_hash <> p_code_hash THEN
-        UPDATE sign_in_codes
+        UPDATE public.sign_in_codes
             SET attempts = attempts + 1,
                 used_at = CASE WHEN attempts + 1 >= 5 THEN now() END
             WHERE id = v_code.id;
         RETURN CASE WHEN v_code.attempts + 1 >= 5 THEN 'locked' ELSE 'invalid' END;
     END IF;
-    UPDATE sign_in_codes SET used_at = now() WHERE id = v_code.id AND used_at IS NULL;
+    UPDATE public.sign_in_codes SET used_at = now() WHERE id = v_code.id AND used_at IS NULL;
     IF NOT FOUND THEN
         RETURN 'invalid';
     END IF;
-    DELETE FROM users WHERE id = v_user;
+    DELETE FROM public.users WHERE id = v_user;
     RETURN 'ok';
 END
 $$;--> statement-breakpoint
 
 -- Limpeza diária (D3): sessões vencidas, códigos com mais de um dia. Só o kinne_sync chama.
 CREATE OR REPLACE FUNCTION kinne_purge_expired_auth() RETURNS integer
-    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+    LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
     v_sessions integer;
     v_codes integer;
 BEGIN
-    DELETE FROM user_sessions WHERE expires_at <= now() OR absolute_expires_at <= now();
+    DELETE FROM public.user_sessions WHERE expires_at <= now() OR absolute_expires_at <= now();
     GET DIAGNOSTICS v_sessions = ROW_COUNT;
-    DELETE FROM sign_in_codes WHERE created_at < now() - interval '1 day';
+    DELETE FROM public.sign_in_codes WHERE created_at < now() - interval '1 day';
     GET DIAGNOSTICS v_codes = ROW_COUNT;
     RETURN v_sessions + v_codes;
 END
@@ -502,3 +502,41 @@ GRANT SELECT (id, created_at) ON users TO kinne_app;--> statement-breakpoint
 GRANT SELECT ON user_streamings, user_taste_signals, user_watched, user_onboarding TO kinne_app;--> statement-breakpoint
 -- A carga do catálogo mantém inativo o título que alguém referencia (titleReferenced).
 GRANT SELECT (catalog_title_id) ON user_taste_signals, user_watched TO kinne_sync;
+
+-- Revisão de segurança do PR #34 (C1): tabela temporária no lugar de tabela real.
+-- Sem pg_temp na lista, o Postgres procura primeiro no esquema temporário da sessão, e quem executa
+-- SQL como kinne_app (credencial vazada, injeção) cria user_sessions ou sign_in_codes falsas para
+-- as funções definer lerem. As funções acima já nascem com pg_catalog, pg_temp e objetos
+-- qualificados. As que já estão aplicadas não podem ser reescritas (as migrations aplicadas não
+-- mudam): ganham pg_temp por último com ALTER FUNCTION. O corpo delas não qualifica nada, então
+-- ficam com public no meio.
+ALTER FUNCTION kinne_take_tokens(text[], double precision[], double precision[], text)
+    SET search_path = pg_catalog, public, pg_temp;--> statement-breakpoint
+ALTER FUNCTION kinne_trip_breaker(text, interval)
+    SET search_path = pg_catalog, public, pg_temp;--> statement-breakpoint
+-- A sala de grupo (0010_group_room, PR #28) pode ou não estar nesta branch do banco.
+DO $$
+DECLARE
+    f text;
+BEGIN
+    FOREACH f IN ARRAY ARRAY[
+        'kinne_purge_group_rooms()',
+        'kinne_create_group_room(text, text, text, text[], text[], integer[], integer[], integer[], integer[])',
+        'kinne_join_group_room(text, text, text[], text[], integer[], integer[], integer[], integer[])',
+        'kinne_leave_group_room(text)'
+    ] LOOP
+        IF to_regprocedure('public.' || f) IS NOT NULL THEN
+            EXECUTE 'ALTER FUNCTION public.' || f || ' SET search_path = pg_catalog, public, pg_temp';
+        END IF;
+    END LOOP;
+END
+$$;--> statement-breakpoint
+
+-- Defesa em profundidade: o site nem cria tabela temporária. O banco muda de nome por ambiente,
+-- por isso o SQL dinâmico.
+DO $$
+BEGIN
+    EXECUTE format('REVOKE TEMPORARY ON DATABASE %I FROM PUBLIC', current_database());
+    EXECUTE format('REVOKE TEMPORARY ON DATABASE %I FROM kinne_app', current_database());
+END
+$$;

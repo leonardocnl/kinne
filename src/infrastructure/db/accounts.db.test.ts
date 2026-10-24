@@ -3,7 +3,7 @@ import { sql } from "drizzle-orm";
 import { mergeBrowserIntoAccount, type AccountTaste } from "@/domain/accounts";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { admin, dbTestsEnabled, runAs } from "@/test/local-pg";
+import { admin, dbTestsEnabled, renderSql, runAs, runScript } from "@/test/local-pg";
 import { titleReferenced } from "./catalog-repository";
 import { catalogTitles } from "./schema";
 import { codeHash, emailHash, sessionTokenHash } from "../auth/crypto";
@@ -934,6 +934,115 @@ describe.skipIf(!dbTestsEnabled)("funções de conta contra um PostgreSQL de ver
                         "'",
                 ),
             ).toBe("1");
+        });
+    });
+    // Revisão de segurança do PR #34 (C1): sem pg_temp no fim do search_path, quem executa SQL como
+    // kinne_app põe uma tabela temporária no lugar de user_sessions ou sign_in_codes e as funções
+    // definer passam a ler as linhas falsas.
+    describe("funções definer não confiam em tabelas temporárias (C1)", () => {
+        const database = () => admin("select current_database()");
+        const withTempGranted = <T>(run: () => T): T => {
+            admin(`grant temporary on database ${database()} to kinne_app`);
+            try {
+                return run();
+            } finally {
+                admin(`revoke temporary on database ${database()} from kinne_app`);
+            }
+        };
+        const searchPaths = () =>
+            admin(
+                `select p.proname || '|' || coalesce((select c from unnest(p.proconfig) c where c like 'search_path=%'), '')
+                 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                 where n.nspname = 'public' and p.prosecdef order by 1`,
+            )
+                .split("\n")
+                .map((line) => line.split("|") as [string, string]);
+
+        it("toda função SECURITY DEFINER tem pg_temp por último no search_path", () => {
+            const rows = searchPaths();
+            expect(rows.length).toBeGreaterThan(15);
+            const wrong = rows.filter(([, path]) => !/^search_path=.*, pg_temp$/.test(path));
+            expect(wrong.map(([name]) => name)).toEqual([]);
+        });
+
+        it("as funções novas das contas não enxergam o esquema public sem qualificar", () => {
+            const accounts = searchPaths().filter(
+                ([name]) =>
+                    name.startsWith("kinne_") &&
+                    !["kinne_take_tokens", "kinne_trip_breaker"].includes(name) &&
+                    !name.includes("group_room"),
+            );
+            expect(accounts.length).toBeGreaterThan(12);
+            expect(
+                accounts.filter(([, path]) => path !== "search_path=pg_catalog, pg_temp"),
+            ).toEqual([]);
+        });
+
+        it("o site não pode criar tabela temporária (REVOKE TEMP de PUBLIC e kinne_app)", () => {
+            expect(
+                admin(
+                    `select has_database_privilege('kinne_app', current_database(), 'TEMPORARY')`,
+                ),
+            ).toBe("f");
+            expect(() =>
+                runScript("kinne_app", "create temp table qualquer_coisa (a int);"),
+            ).toThrow();
+        });
+
+        it("ataque: user_sessions temporária com linha falsa não faz kinne_session_email devolver o e-mail alheio", () => {
+            const victim = account("vitima-temp@accounts.test");
+            const victimId = userIdOf(victim);
+            const fake = "f".repeat(64);
+            const out = withTempGranted(() =>
+                runScript(
+                    "kinne_app",
+                    `create temp table user_sessions (id int, user_id int, token_hash char(64),
+                        created_at timestamptz, last_used_at timestamptz,
+                        expires_at timestamptz, absolute_expires_at timestamptz);
+                     insert into user_sessions values (1, ${victimId}, '${fake}', now(), now(),
+                        now() + interval '1 day', now() + interval '1 day');
+                     select coalesce(kinne_session_email('${fake}'), 'NULO');`,
+                ),
+            );
+            expect(out).toBe("NULO");
+        });
+
+        it("ataque: sign_in_codes temporária com código falso não deixa kinne_sign_in abrir sessão", () => {
+            const email = "alvo-temp@accounts.test";
+            const code = "424242";
+            const token = newToken();
+            const columns = admin(
+                `select string_agg(attname || ' ' || format_type(atttypid, atttypmod), ', ' order by attnum)
+                 from pg_attribute where attrelid = 'public.sign_in_codes'::regclass
+                 and attnum > 0 and not attisdropped`,
+            );
+            const call = renderSql(
+                q.signIn({
+                    ...hashes(email, code),
+                    email,
+                    tokenHash: token,
+                    streamings: [],
+                    watched: [],
+                    liked: [],
+                    willWatch: [],
+                    disliked: [],
+                }),
+            );
+            const out = withTempGranted(() =>
+                runScript(
+                    "kinne_app",
+                    `create temp table sign_in_codes (${columns});
+                     insert into sign_in_codes (id, purpose, email_hash, code_hash, attempts, created_at, expires_at)
+                        values (1, 'sign_in', '${hashes(email, code).emailHash}', '${hashes(email, code).codeHash}',
+                        0, now(), now() + interval '10 minutes');
+                     select (result::jsonb)->>'status' from (${call}) t;`,
+                ),
+            );
+            expect(out).not.toBe("ok");
+            expect(admin(`select count(*) from user_sessions where token_hash = '${token}'`)).toBe(
+                "0",
+            );
+            expect(admin(`select count(*) from users where email = '${email}'`)).toBe("0");
         });
     });
 });
