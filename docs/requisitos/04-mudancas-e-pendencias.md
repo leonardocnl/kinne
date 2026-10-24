@@ -108,3 +108,11 @@ Kinne · Requisitos da semana 0 · versão de 12/10/2026
 - [ ] Decidir se volta o botão "Não me interessa" (previsto no MVP, fora da etapa 2).
 - [ ] Definir `AUTH_SECRET`, `RESEND_API_KEY` e `AUTH_EMAIL_FROM` na Vercel; sem eles ninguém entra.
 - [x] Ligar a sala de grupo à conta (US015 C2): com sessão, a sala usa o gosto, o "Já vi" e os streamings da conta, lidos no servidor (24/10/2026).
+
+## Mudanças de 24/10/2026 (congelamento de deploys)
+
+| Ponto            | Antes                                                                             | Agora                                                                                                       |
+| ---------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Deploys no teste | Congelamento de 26/10 a 01/11/2026: sem deploy, sem migration, sem mudança de env | Sem congelamento (decisão do dono: não há mais teste a proteger); o checklist de lançamento não o cita mais |
+
+As datas do teste em `00-visao-geral.md`, `02-requisitos-nao-funcionais.md` e `03-medicao-da-semana-0.md` descrevem a janela de medição e o prazo de compatibilidade, não um congelamento, e ficam como estão até o dono decidir o que fazer com o teste.
