@@ -3,6 +3,7 @@
 // navegadores sem módulos ES baixam. Roda depois de `npm run build`. Uso: npm run bundle:check
 import { appendFileSync, readFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
+import { scanDirectory } from "./bundle-secrets.mjs";
 
 const BUDGET_KB = 150;
 const PAGE = ".next/server/app/index.html";
@@ -39,3 +40,12 @@ if (!ok) {
     console.error(`Home JS over budget by ${(total - BUDGET_KB).toFixed(1)} KB.`);
     process.exit(1);
 }
+
+// Nenhum segredo no JS do navegador, de nenhuma página (ameaças de contas E1)
+const leaks = scanDirectory(".next/static");
+if (leaks.length > 0) {
+    for (const leak of leaks)
+        console.error(`Segredo no JS do cliente: ${leak.file}: ${leak.found.join(", ")}`);
+    process.exit(1);
+}
+console.log("Nenhum nome de segredo nem chave no JS do cliente.");

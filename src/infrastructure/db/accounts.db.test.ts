@@ -3,7 +3,16 @@ import { sql } from "drizzle-orm";
 import { mergeBrowserIntoAccount, normalizeEmail, type AccountTaste } from "@/domain/accounts";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { admin, dbTestsEnabled, renderSql, runAs, runScript } from "@/test/local-pg";
+import {
+    admin,
+    dbTestsEnabled,
+    renderSql,
+    runAs,
+    localDb,
+    runAsAsync,
+    runScript,
+} from "@/test/local-pg";
+import { DrizzleCatalogRepository } from "./catalog-repository";
 import { titleReferenced } from "./catalog-repository";
 import { catalogTitles } from "./schema";
 import { codeHash, emailHash, sessionTokenHash } from "../auth/crypto";
@@ -1207,6 +1216,111 @@ describe.skipIf(!dbTestsEnabled)("funções de conta contra um PostgreSQL de ver
                 `update sign_in_codes set created_at = now() - interval '25 hours', expires_at = now() - interval '24 hours 50 minutes', used_at = now() - interval '24 hours 55 minutes' where email_hash = '${emailHash(email, SECRET)}'`,
             );
             expect(first<string>(app(q.requestCode({ ...hashes(email, "111111") })))).toBe("ok");
+        });
+    });
+    // Revisão B6: o limite de 5 tentativas e o uso único do código dependem do lock do banco; só
+    // várias conexões de verdade, ao mesmo tempo, mostram se ele segura.
+    describe("B6. concorrência de verdade (várias conexões)", () => {
+        const call = (email: string, code: string) =>
+            runAsAsync(
+                "kinne_app",
+                q.signIn({
+                    ...hashes(email, code),
+                    email,
+                    tokenHash: newToken(),
+                    streamings: [],
+                    watched: [],
+                    liked: [],
+                    willWatch: [],
+                    disliked: [],
+                }),
+            ).then((rows) => first<SignInResult>(rows).status);
+        const attempts = (email: string) =>
+            Number(
+                admin(
+                    `select attempts from sign_in_codes where email_hash = '${emailHash(email, SECRET)}' order by id desc limit 1`,
+                ),
+            );
+
+        it("20 palpites errados ao mesmo tempo gastam exatamente 5 tentativas, e o código morre", async () => {
+            const email = "corrida-erros@accounts.test";
+            request(email, "123456");
+            const statuses = await Promise.all(
+                Array.from({ length: 20 }, () => call(email, "000000")),
+            );
+            expect(attempts(email)).toBe(5);
+            expect(statuses.filter((s) => s === "invalid")).toHaveLength(4);
+            expect(statuses.filter((s) => s === "locked")).toHaveLength(16);
+            expect(await call(email, "123456")).toBe("locked");
+        });
+
+        it("10 confirmações certas ao mesmo tempo abrem uma sessão só", async () => {
+            const email = "corrida-certo@accounts.test";
+            request(email, "123456");
+            const statuses = await Promise.all(
+                Array.from({ length: 10 }, () => call(email, "123456")),
+            );
+            expect(statuses.filter((s) => s === "ok")).toHaveLength(1);
+            expect(statuses.filter((s) => s === "invalid")).toHaveLength(9);
+            expect(
+                admin(
+                    `select count(*) from user_sessions s join users u on u.id = s.user_id where u.email = '${email}'`,
+                ),
+            ).toBe("1");
+        });
+
+        it("o certo e os errados no limite das 5 tentativas: ou entra um, ou o código morre, nunca os dois", async () => {
+            for (let round = 0; round < 6; round++) {
+                const email = `corrida-limite${round}@accounts.test`;
+                request(email, "123456");
+                for (let i = 0; i < 4; i++) await call(email, "000000");
+                const statuses = await Promise.all([
+                    call(email, "123456"),
+                    ...Array.from({ length: 6 }, () => call(email, "000000")),
+                ]);
+                const oks = statuses.filter((s) => s === "ok").length;
+                expect(attempts(email), `rodada ${round}`).toBeLessThanOrEqual(5);
+                expect(oks + (attempts(email) === 5 ? 1 : 0), `rodada ${round}`).toBe(1);
+            }
+        });
+
+        it("pedidos de código ao mesmo tempo deixam um código vivo só", async () => {
+            const email = "corrida-pedidos@accounts.test";
+            await Promise.all(
+                Array.from({ length: 12 }, (_, i) =>
+                    runAsAsync("kinne_app", q.requestCode({ ...hashes(email, `10000${i % 10}`) })),
+                ),
+            );
+            expect(
+                admin(
+                    `select count(*) from sign_in_codes where email_hash = '${emailHash(email, SECRET)}' and used_at is null`,
+                ),
+            ).toBe("1");
+        });
+    });
+
+    describe("B2. a carga diária purga sessões e códigos vencidos", () => {
+        it("DrizzleCatalogRepository.purgeExpiredAuth, como kinne_sync, apaga só o vencido", async () => {
+            const live = account("purga-viva@accounts.test");
+            const dead = account("purga-morta@accounts.test");
+            admin(
+                `update user_sessions set expires_at = now() - interval '1 second' where token_hash = '${dead}'`,
+            );
+            request("purga-codigo@accounts.test", "111111");
+            admin(
+                `update sign_in_codes set created_at = now() - interval '2 days', expires_at = now() - interval '2 days' + interval '10 minutes' where email_hash = '${emailHash("purga-codigo@accounts.test", SECRET)}'`,
+            );
+            const repository = new DrizzleCatalogRepository(localDb("kinne_sync") as never);
+            expect(await repository.purgeExpiredAuth()).toBeGreaterThanOrEqual(2);
+            expect(first(app(q.sessionUser(live)))).not.toBeNull();
+            expect(admin(`select count(*) from user_sessions where token_hash = '${dead}'`)).toBe(
+                "0",
+            );
+            expect(
+                admin(
+                    `select count(*) from sign_in_codes where email_hash = '${emailHash("purga-codigo@accounts.test", SECRET)}'`,
+                ),
+            ).toBe("0");
         });
     });
 });

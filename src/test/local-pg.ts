@@ -1,6 +1,7 @@
 import "server-only";
 import { execFileSync } from "node:child_process";
 import { PgDialect } from "drizzle-orm/pg-core";
+import { localDatabaseProblem } from "./local-guard";
 import type { SQL } from "drizzle-orm";
 
 // Banco de verdade para os testes de ataque das contas (docs/threats/accounts.md): as funções
@@ -18,7 +19,16 @@ function literal(value: unknown): string {
     return `'${String(value).replaceAll("'", "''")}'`;
 }
 
+/** Antes de qualquer comando: o ambiente tem de apontar para esta máquina (B7). */
+function assertLocalDatabase() {
+    const problem = localDatabaseProblem();
+    if (problem) {
+        throw new Error(`Banco recusado: ${problem}. Os testes de banco só rodam localmente.`);
+    }
+}
+
 function psql(text: string): string {
+    assertLocalDatabase();
     return execFileSync("psql", ["-v", "ON_ERROR_STOP=1", "-qAt", "-c", text], {
         encoding: "utf8",
         stdio: ["ignore", "pipe", "pipe"],
@@ -75,6 +85,7 @@ export function renderSql(statement: SQL): string {
  * dado. Devolve o que a última consulta imprimiu.
  */
 export function runScript(role: string, script: string): string {
+    assertLocalDatabase();
     const out = execFileSync("psql", ["-v", "ON_ERROR_STOP=1", "-qAt", "-f", "-"], {
         input: `set role ${role};\n${script}`,
         encoding: "utf8",
@@ -84,4 +95,29 @@ export function runScript(role: string, script: string): string {
         .split("\n")
         .filter((l) => l !== "SET" && l !== "")
         .join("\n");
+}
+
+/** Como `runAs`, mas sem travar o processo: várias conexões ao mesmo tempo (testes de corrida). */
+export async function runAsAsync(role: string, statement: SQL): Promise<Record<string, unknown>[]> {
+    assertLocalDatabase();
+    const { promisify } = await import("node:util");
+    const { execFile } = await import("node:child_process");
+    const text = renderSql(statement);
+    const { stdout } = await promisify(execFile)(
+        "psql",
+        [
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-qAt",
+            "-c",
+            `set role ${role}; select coalesce(json_agg(t), '[]'::json) from (${text}) t`,
+        ],
+        { encoding: "utf8" },
+    );
+    return JSON.parse(
+        stdout
+            .split("\n")
+            .filter((l) => l !== "SET" && l !== "")
+            .join(""),
+    );
 }

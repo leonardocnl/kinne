@@ -204,6 +204,15 @@ export class DrizzleCatalogRepository implements CatalogRepository {
         return { cacheRows, counters: counters.rows };
     }
 
+    /**
+     * Sessões vencidas e códigos de entrar com mais de um dia (accounts D3). Só conta quantas linhas
+     * saíram: nada de quem eram.
+     */
+    async purgeExpiredAuth(): Promise<number> {
+        const r = await this.db.execute<{ n: number }>(sql`select kinne_purge_expired_auth() as n`);
+        return Number(r.rows[0].n);
+    }
+
     async databaseSizeBytes(): Promise<number> {
         const r = await this.db.execute<{ size: string }>(
             sql`select pg_database_size(current_database()) as size`,
