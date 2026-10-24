@@ -2,7 +2,7 @@
 
 For the owner, in order. Every command is copy-paste ready; replace only the `<...>` placeholders. Secrets go straight from a password manager into the dashboard, or into the terminal through `read -rs` (no echo, no shell history): never typed inline in a command, never into a file, a chat or a PR. `unset` them when the step is done.
 
-**Dates.** Release cut-off **22/10/2026**: everything for the test is merged into `develop` and promoted to `main` by then. Deploy freeze **26/10–01/11/2026** (user test): no deploys, no migrations, no env changes, except an emergency rollback (step 10).
+**Dates.** Release cut-off **22/10/2026**: everything for the test is merged into `develop` and promoted to `main` by then.
 
 ## 1. Merge and verify `develop`
 
@@ -165,6 +165,6 @@ Then reload the home: it must still render (the lists were rebuilt). The third c
 ## 10. Rollback
 
 - **App:** Vercel → Deployments → the last good Production deployment → Instant Rollback (or Promote). The schema changes in 0002–0008 are additive, so the previous build runs on the current database.
-- **Search misbehaving during the freeze:** set `SEARCH_TMDB_FALLBACK=off` and redeploy the same build (title-search I2).
+- **Search misbehaving (TMDB or its budget):** set `SEARCH_TMDB_FALLBACK=off` and redeploy the same build (title-search I2).
 - **Sync misbehaving:** Actions → Sync catalog → ⋯ → Disable workflow. The site keeps serving the last good catalog from its cache and database. The safety valve already aborts a run that would remove more than 5% of active titles (catalog-sync B1).
 - **Suspected secret leak:** rotate first, investigate after (security §4): new `kinne_app` / `kinne_sync` password (`\password <role>` in `psql`), update Vercel or GitHub, redeploy; new `REVALIDATE_SECRET` in both places; new `RATE_LIMIT_SECRET` in Vercel.
