@@ -87,7 +87,8 @@ export const MAX_WATCHED_SENT = SURPRISE_MAX_EXCLUDED;
 // ---------------------------------------------------------------------------------------------
 // Quem pede: o cookie de sessão é a única identidade (A2, A4).
 
-export type Session = { tokenHash: string; userId: number };
+// O site não guarda id de usuário: o banco acha a conta pelo hash do token em cada chamada.
+export type Session = { tokenHash: string };
 
 /** O hash do cookie de sessão, ou null se falta ou não tem o formato. Não confere o banco. */
 export async function sessionTokenHash(): Promise<string | null> {
@@ -100,8 +101,8 @@ export async function currentSession(): Promise<Session | null> {
     const tokenHash = await sessionTokenHash();
     if (!tokenHash) return null;
     try {
-        const userId = await accountRepository().sessionUser(tokenHash);
-        return userId === null ? null : { tokenHash, userId };
+        const alive = await accountRepository().sessionUser(tokenHash);
+        return alive === null ? null : { tokenHash };
     } catch {
         // sem resposta do banco, vale como visitante: o sorteio segue com o que o pedido trouxe
         return null;
@@ -119,7 +120,8 @@ export async function drawAccount(): Promise<DrawAccount | null> {
     const session = await currentSession();
     if (!session) return null;
     try {
-        const stored = await accountRepository().loadTaste(session.userId);
+        const stored = await accountRepository().loadTaste(session.tokenHash);
+        if (!stored) return null;
         return {
             streamings: stored.streamings,
             watched: stored.watched,
@@ -140,9 +142,9 @@ export async function loadAccountView(session: Session): Promise<AccountView | n
     const repository = accountRepository();
     const [email, stored] = await Promise.all([
         repository.sessionEmail(session.tokenHash),
-        repository.load(session.userId),
+        repository.load(session.tokenHash),
     ]);
-    return email ? toAccountView(email, stored) : null;
+    return email && stored ? toAccountView(email, stored) : null;
 }
 
 const secureCookie = { httpOnly: true, secure: true, sameSite: "lax" as const, path: "/" };

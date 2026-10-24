@@ -88,8 +88,9 @@ export interface AccountsRepository {
         tokenHash: string,
         codeHash: string,
     ): Promise<"ok" | "invalid" | "locked" | "no_session">;
-    load(userId: number): Promise<StoredAccount>;
-    loadTaste(userId: number): Promise<StoredTaste>;
+    // nulos se o token não é de uma sessão viva
+    load(tokenHash: string): Promise<StoredAccount | null>;
+    loadTaste(tokenHash: string): Promise<StoredTaste | null>;
 }
 
 export type Bucket = [key: string, capacity: number, perSecond: number];

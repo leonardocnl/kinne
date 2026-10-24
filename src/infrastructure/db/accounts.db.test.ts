@@ -74,13 +74,13 @@ function account(email: string, browser: Parameters<typeof signIn>[3] = {}) {
 }
 
 const userIdOf = (tokenHash: string) => Number(first<number>(app(q.sessionUser(tokenHash))));
-const stored = (userId: number) =>
+const stored = (tokenHash: string) =>
     first<{
         streamings: string[];
         signals: { titleId: number; signal: string }[];
         watched: { titleId: number }[];
         onboarding: { step: number; status: string }[];
-    }>(app(q.loadAccount(userId)));
+    }>(app(q.loadAccount(tokenHash)));
 
 describe.skipIf(!dbTestsEnabled)("funções de conta contra um PostgreSQL de verdade", () => {
     beforeAll(() => {
@@ -333,7 +333,7 @@ describe.skipIf(!dbTestsEnabled)("funções de conta contra um PostgreSQL de ver
                 disliked: [9101],
             });
             const user = userIdOf(token);
-            const data = stored(user);
+            const data = stored(token);
             const of = (signal: string) =>
                 data.signals
                     .filter((s) => s.signal === signal)
@@ -348,7 +348,7 @@ describe.skipIf(!dbTestsEnabled)("funções de conta contra um PostgreSQL de ver
 
         it("a conta sem streamings fica com os do navegador", () => {
             const token = account("sem-stream@accounts.test", { streamings: ["max", "globoplay"] });
-            expect(stored(userIdOf(token)).streamings).toEqual(["globoplay", "max"]);
+            expect(stored(token).streamings).toEqual(["globoplay", "max"]);
         });
 
         it("ids que não estão no catálogo são ignorados (B1)", () => {
@@ -356,7 +356,7 @@ describe.skipIf(!dbTestsEnabled)("funções de conta contra um PostgreSQL de ver
                 watched: [9101, 99999999],
                 liked: [88888888, 9102],
             });
-            const data = stored(userIdOf(token));
+            const data = stored(token);
             expect(data.watched.map((w) => w.titleId)).toEqual([9101]);
             expect(data.signals.map((s) => s.titleId)).toEqual([9102]);
         });
@@ -418,7 +418,7 @@ describe.skipIf(!dbTestsEnabled)("funções de conta contra um PostgreSQL de ver
                     willWatch: c.browser.signals.willWatch,
                     disliked: c.browser.signals.disliked,
                 });
-                const data = stored(userIdOf(token));
+                const data = stored(token);
                 const expected = mergeBrowserIntoAccount(c.account, c.browser);
                 const ids = (signal: string) =>
                     data.signals.filter((s) => s.signal === signal).map((s) => s.titleId);
@@ -475,7 +475,7 @@ describe.skipIf(!dbTestsEnabled)("funções de conta contra um PostgreSQL de ver
             expect(first(app(q.setSignal(token, 9102, null)))).toBe(true);
             expect(first(app(q.setWatched(token, 9103, true)))).toBe(true);
             expect(first(app(q.setStreamings(token, ["max", "netflix"])))).toBe(true);
-            const data = stored(user);
+            const data = stored(token);
             expect(data.signals).toMatchObject([{ titleId: 9101, signal: "disliked" }]);
             expect(data.watched.map((w) => w.titleId)).toEqual([9103]);
             expect(data.streamings).toEqual(["max", "netflix"]);
@@ -511,11 +511,11 @@ describe.skipIf(!dbTestsEnabled)("funções de conta contra um PostgreSQL de ver
             expect(step(1, "done", [9101, 9102])).toBe(false);
             expect(step(1, "done", [9101, 9102, 9102])).toBe(false);
             expect(step(1, "done", [9101, 9102, 99999999])).toBe(false);
-            expect(stored(user).onboarding).toEqual([]);
+            expect(stored(token).onboarding).toEqual([]);
             expect(step(1, "done", [9101, 9102, 9103])).toBe(true);
             expect(step(2, "skipped")).toBe(true);
             expect(step(3, "done", [], ["globoplay"])).toBe(true);
-            const data = stored(user);
+            const data = stored(token);
             expect(data.signals.map((s) => [s.titleId, s.signal]).sort()).toEqual([
                 [9101, "liked"],
                 [9102, "liked"],
@@ -703,7 +703,7 @@ describe.skipIf(!dbTestsEnabled)("funções de conta contra um PostgreSQL de ver
 
             const snapshot = () =>
                 JSON.stringify({
-                    data: stored(bUser),
+                    data: stored(b),
                     sessions: admin(`select count(*) from user_sessions where user_id = ${bUser}`),
                     deleteCode: admin(
                         `select attempts || ' ' || coalesce(used_at::text, 'vivo') from sign_in_codes where user_id = ${bUser}`,
@@ -758,7 +758,7 @@ describe.skipIf(!dbTestsEnabled)("funções de conta contra um PostgreSQL de ver
         it("token vazio, nulo ou com cara de injeção não age sobre ninguém", () => {
             const token = account("alvo@accounts.test", { liked: [9101] });
             const user = userIdOf(token);
-            const before = JSON.stringify(stored(user));
+            const before = JSON.stringify(stored(token));
             for (const bad of [
                 "",
                 "' or '1'='1",
@@ -793,7 +793,7 @@ describe.skipIf(!dbTestsEnabled)("funções de conta contra um PostgreSQL de ver
             expect(
                 first(runAs("kinne_app", sql`select kinne_set_signal(null, 9101, null) as result`)),
             ).toBe(false);
-            expect(JSON.stringify(stored(user))).toBe(before);
+            expect(JSON.stringify(stored(token))).toBe(before);
             expect(first(app(q.sessionUser(token)))).toBe(user);
         });
     });
@@ -836,22 +836,45 @@ describe.skipIf(!dbTestsEnabled)("funções de conta contra um PostgreSQL de ver
             );
         });
 
-        it("o site lê o gosto, o já vi, os streamings e o onboarding, e só as colunas livres de users", () => {
+        it("o site não lê direto nenhuma tabela de conta, nem as colunas livres de users (M4)", () => {
             const token = account("leitura@accounts.test", { liked: [9101] });
             const user = userIdOf(token);
-            expect(
-                runAs("kinne_app", sql.raw(`select id, created_at from users where id = ${user}`)),
-            ).toHaveLength(1);
             for (const table of [
                 "user_streamings",
                 "user_taste_signals",
                 "user_watched",
                 "user_onboarding",
             ]) {
-                expect(() =>
-                    runAs("kinne_app", sql.raw(`select * from ${table} where user_id = ${user}`)),
-                ).not.toThrow();
+                denied("kinne_app", `select * from ${table} where user_id = ${user}`);
+                denied("kinne_app", `select user_id from ${table}`);
             }
+            denied("kinne_app", `select id, created_at from users where id = ${user}`);
+            denied("kinne_app", "select id from users");
+            denied("kinne_app", "select count(*) from users");
+        });
+
+        it("kinne_load_account e kinne_load_taste devolvem só a conta do token (M4)", () => {
+            const a = account("le-a@accounts.test", { liked: [9101], watched: [9102] });
+            const b = account("le-b@accounts.test", { disliked: [9103], streamings: ["max"] });
+            const dataA = stored(a);
+            const dataB = stored(b);
+            expect(dataA.signals.map((s) => s.titleId)).toEqual([9101]);
+            expect(dataA.watched.map((w) => w.titleId)).toEqual([9102]);
+            expect(dataB.signals.map((s) => s.titleId)).toEqual([9103]);
+            expect(dataB.streamings).toEqual(["max"]);
+            expect(
+                first<{ liked: number[]; watched: number[] }>(app(q.loadTaste(a))),
+            ).toMatchObject({ liked: [9101], watched: [9102] });
+            expect(first<{ disliked: number[] }>(app(q.loadTaste(b))).disliked).toEqual([9103]);
+            for (const token of ["", "x", "f".repeat(64), a.toUpperCase(), `${a}' or '1'='1`]) {
+                expect(first(app(q.loadAccount(token))), token).toBeNull();
+                expect(first(app(q.loadTaste(token))), token).toBeNull();
+            }
+            admin(
+                `update user_sessions set expires_at = now() - interval '1 second' where token_hash = '${a}'`,
+            );
+            expect(first(app(q.loadAccount(a)))).toBeNull();
+            expect(first(app(q.loadTaste(a)))).toBeNull();
         });
 
         it("as funções internas não são do site, e a limpeza é só do kinne_sync", () => {

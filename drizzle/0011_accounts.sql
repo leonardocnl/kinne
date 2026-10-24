@@ -447,6 +447,71 @@ BEGIN
 END
 $$;--> statement-breakpoint
 
+-- Tudo o que a conta guarda, de uma vez, para o perfil e a exportação (sem e-mail e sem hashes).
+-- Nulo se o token não é de uma sessão viva.
+CREATE OR REPLACE FUNCTION kinne_load_account(p_token text) RETURNS jsonb
+    LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
+DECLARE
+    v_user integer := public.kinne_user_of(p_token);
+BEGIN
+    IF v_user IS NULL THEN
+        RETURN NULL;
+    END IF;
+    RETURN jsonb_build_object(
+        'createdAt', (SELECT u.created_at FROM public.users u WHERE u.id = v_user),
+        'streamings', coalesce((
+            SELECT jsonb_agg(s.streaming ORDER BY s.streaming)
+            FROM public.user_streamings s WHERE s.user_id = v_user), '[]'::jsonb),
+        'signals', coalesce((
+            SELECT jsonb_agg(jsonb_build_object(
+                'titleId', t.id, 'slug', t.slug, 'title', t.display_title,
+                'year', t.release_year, 'poster', t.poster_image_path,
+                'signal', g.signal, 'at', g.updated_at) ORDER BY g.updated_at, t.id)
+            FROM public.user_taste_signals g
+            JOIN public.catalog_titles t ON t.id = g.catalog_title_id
+            WHERE g.user_id = v_user), '[]'::jsonb),
+        'watched', coalesce((
+            SELECT jsonb_agg(jsonb_build_object(
+                'titleId', t.id, 'slug', t.slug, 'title', t.display_title,
+                'year', t.release_year, 'poster', t.poster_image_path,
+                'at', w.created_at) ORDER BY w.created_at, t.id)
+            FROM public.user_watched w
+            JOIN public.catalog_titles t ON t.id = w.catalog_title_id
+            WHERE w.user_id = v_user), '[]'::jsonb),
+        'onboarding', coalesce((
+            SELECT jsonb_agg(jsonb_build_object('step', o.step, 'status', o.status) ORDER BY o.step)
+            FROM public.user_onboarding o WHERE o.user_id = v_user), '[]'::jsonb)
+    );
+END
+$$;--> statement-breakpoint
+
+-- O que os sorteios leem da conta (US015 RNE003): só ids, do mais antigo ao mais recente.
+CREATE OR REPLACE FUNCTION kinne_load_taste(p_token text) RETURNS jsonb
+    LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
+DECLARE
+    v_user integer := public.kinne_user_of(p_token);
+BEGIN
+    IF v_user IS NULL THEN
+        RETURN NULL;
+    END IF;
+    RETURN jsonb_build_object(
+        'streamings', coalesce((SELECT jsonb_agg(s.streaming ORDER BY s.streaming)
+            FROM public.user_streamings s WHERE s.user_id = v_user), '[]'::jsonb),
+        'liked', coalesce((SELECT jsonb_agg(g.catalog_title_id ORDER BY g.updated_at, g.catalog_title_id)
+            FROM public.user_taste_signals g
+            WHERE g.user_id = v_user AND g.signal = 'liked'), '[]'::jsonb),
+        'willWatch', coalesce((SELECT jsonb_agg(g.catalog_title_id ORDER BY g.updated_at, g.catalog_title_id)
+            FROM public.user_taste_signals g
+            WHERE g.user_id = v_user AND g.signal = 'will_watch'), '[]'::jsonb),
+        'disliked', coalesce((SELECT jsonb_agg(g.catalog_title_id ORDER BY g.updated_at, g.catalog_title_id)
+            FROM public.user_taste_signals g
+            WHERE g.user_id = v_user AND g.signal = 'disliked'), '[]'::jsonb),
+        'watched', coalesce((SELECT jsonb_agg(w.catalog_title_id ORDER BY w.created_at, w.catalog_title_id)
+            FROM public.user_watched w WHERE w.user_id = v_user), '[]'::jsonb)
+    );
+END
+$$;--> statement-breakpoint
+
 -- Limpeza diária (D3): sessões vencidas, códigos com mais de um dia. Só o kinne_sync chama.
 CREATE OR REPLACE FUNCTION kinne_purge_expired_auth() RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
@@ -481,6 +546,8 @@ REVOKE ALL ON FUNCTION kinne_onboarding_step(text, integer, text, integer[], tex
 REVOKE ALL ON FUNCTION kinne_request_delete_code(text, text) FROM PUBLIC;--> statement-breakpoint
 REVOKE ALL ON FUNCTION kinne_delete_account(text, text) FROM PUBLIC;--> statement-breakpoint
 REVOKE ALL ON FUNCTION kinne_purge_expired_auth() FROM PUBLIC;--> statement-breakpoint
+REVOKE ALL ON FUNCTION kinne_load_account(text) FROM PUBLIC;--> statement-breakpoint
+REVOKE ALL ON FUNCTION kinne_load_taste(text) FROM PUBLIC;--> statement-breakpoint
 
 GRANT EXECUTE ON FUNCTION kinne_request_code(text, text) TO kinne_app;--> statement-breakpoint
 GRANT EXECUTE ON FUNCTION kinne_sign_in(text, text, text, text, text[], integer[], integer[], integer[], integer[]) TO kinne_app;--> statement-breakpoint
@@ -495,11 +562,12 @@ GRANT EXECUTE ON FUNCTION kinne_onboarding_step(text, integer, text, integer[], 
 GRANT EXECUTE ON FUNCTION kinne_request_delete_code(text, text) TO kinne_app;--> statement-breakpoint
 GRANT EXECUTE ON FUNCTION kinne_delete_account(text, text) TO kinne_app;--> statement-breakpoint
 GRANT EXECUTE ON FUNCTION kinne_purge_expired_auth() TO kinne_sync;--> statement-breakpoint
+GRANT EXECUTE ON FUNCTION kinne_load_account(text) TO kinne_app;--> statement-breakpoint
+GRANT EXECUTE ON FUNCTION kinne_load_taste(text) TO kinne_app;--> statement-breakpoint
 
--- Leitura do site: nunca users.email, sign_in_codes nem user_sessions. As quatro tabelas do gosto
--- servem aos sorteios, sempre filtradas pela conta que kinne_session_user devolveu.
-GRANT SELECT (id, created_at) ON users TO kinne_app;--> statement-breakpoint
-GRANT SELECT ON user_streamings, user_taste_signals, user_watched, user_onboarding TO kinne_app;--> statement-breakpoint
+-- Leitura do site (revisão M4): nenhuma tabela de conta é legível pelo kinne_app, nem as colunas
+-- livres de users. O perfil, a exportação e os sorteios leem pelo token da sessão, nas duas funções
+-- acima, que acham a conta lá dentro. Um id de usuário nunca atravessa o site.
 -- A carga do catálogo mantém inativo o título que alguém referencia (titleReferenced).
 GRANT SELECT (catalog_title_id) ON user_taste_signals, user_watched TO kinne_sync;
 

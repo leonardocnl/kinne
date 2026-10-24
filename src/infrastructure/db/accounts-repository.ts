@@ -92,12 +92,12 @@ export class DrizzleAccountsRepository implements AccountsRepository {
         return (result ?? "no_session") as "ok" | "invalid" | "locked" | "no_session";
     }
 
-    async load(userId: number): Promise<StoredAccount> {
-        return parsed<StoredAccount>(await this.one(q.loadAccount(userId)));
+    async load(tokenHash: string): Promise<StoredAccount | null> {
+        return parsed<StoredAccount | null>(await this.one(q.loadAccount(tokenHash)));
     }
 
-    async loadTaste(userId: number): Promise<StoredTaste> {
-        return parsed<StoredTaste>(await this.one(q.loadTaste(userId)));
+    async loadTaste(tokenHash: string): Promise<StoredTaste | null> {
+        return parsed<StoredTaste | null>(await this.one(q.loadTaste(tokenHash)));
     }
 
     /** Ids do catálogo para os slugs (o servidor deriva os ids; o navegador só manda slugs). */
