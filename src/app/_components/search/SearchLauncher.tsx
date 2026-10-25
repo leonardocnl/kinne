@@ -9,9 +9,9 @@ const SearchPanel = lazy(loadPanel);
 const preload = () => void loadPanel();
 
 /**
- * "Buscar", a última parte da navbar. Abre a busca no próprio chip (computador) ou em tela cheia
- * (celular); não é uma página, então não acende a luz. `className` vem da Navbar (servidor): as
- * classes vão no HTML, não no JS da home.
+ * Lupa redonda de vidro ao lado da navbar. Abre a busca no lugar, alargando-se num campo
+ * (computador), ou em tela cheia (celular). `className` vem da Navbar (servidor): as classes vão
+ * no HTML, não no JS da home.
  */
 export function SearchLauncher({ className }: { className: string }) {
     const [open, setOpen] = useState(false);
@@ -39,10 +39,10 @@ export function SearchLauncher({ className }: { className: string }) {
                 onClick={show}
                 aria-haspopup="dialog"
                 aria-expanded={open}
+                aria-label="Buscar filme ou série"
                 className={className}
             >
                 <SearchIcon />
-                Buscar
             </button>
             {open && (
                 <Suspense

@@ -17,7 +17,8 @@ Eu, como visitante, quero uma navegação curta e sempre à mão, para ir do in�
 ### C1: Abas e busca
 
 **Dado** que estou em qualquer tela do Kinne  
-**Então** vejo um chip flutuante com a marca, as abas "Início" e "Sobre" e o botão "Buscar"  
+**Então** vejo um chip flutuante com a marca, que leva ao início, e as abas "Início" e "Sobre"  
+**E**, ao lado do chip, a lupa da busca  
 **E** não há abas para telas que ainda não existem (Explorar, Minha lista)
 
 ### C2: Posição
@@ -47,8 +48,8 @@ Eu, como visitante, quero uma navegação curta e sempre à mão, para ir do in�
 
 ### C7: Buscar
 
-**Dado** que toco em "Buscar"  
-**Então**, no computador, o campo se abre dentro do próprio chip, com o botão de fechar ao lado, e os resultados aparecem embaixo  
+**Dado** que toco na lupa  
+**Então**, no computador, ela se alarga num campo de busca, empurrando o chip, com o botão de fechar dentro, e os resultados aparecem embaixo  
 **E**, no celular, a busca abre em tela cheia, com o campo em cima  
 **E** a busca não acende a luz nem marca `aria-current`, porque não é uma página
 

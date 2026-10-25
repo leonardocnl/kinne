@@ -127,28 +127,7 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
             }}
             className="z-1 max-desktop:fixed max-desktop:inset-0 max-desktop:flex max-desktop:flex-col max-desktop:gap-3.5 max-desktop:bg-scrim-strong max-desktop:px-4 max-desktop:pt-5.5 max-desktop:pb-5 max-desktop:backdrop-blur-glass desktop:absolute desktop:inset-0"
         >
-            {/*
-             * Gosma (computador): a pílula cresce com a parte da busca, que se alarga e empurra o chip, e
-             * a gota do "fechar" se solta dela para a ponta. O filtro desfoca as duas e corta a transparência, então
-             * elas se fundem enquanto estão perto.
-             */}
-            <svg aria-hidden="true" className="absolute size-0">
-                <filter id="kinne-goo">
-                    <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
-                    <feColorMatrix
-                        in="blur"
-                        values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"
-                        result="goo"
-                    />
-                    <feComposite in="SourceGraphic" in2="goo" operator="atop" />
-                </filter>
-            </svg>
-            <div aria-hidden="true" className="absolute inset-0 filter-goo max-desktop:hidden">
-                <span className="absolute inset-y-0 right-13.5 left-0 rounded-pill bg-goo" />
-                <span className="absolute inset-y-0 right-0 w-12 animate-goo-drop rounded-pill bg-goo motion-reduce:animate-none" />
-            </div>
-
-            <div className="flex items-center gap-2.5 motion-reduce:animate-none desktop:absolute desktop:inset-0 desktop:animate-goo-content desktop:gap-1.5">
+            <div className="flex items-center gap-2.5 motion-reduce:animate-none desktop:absolute desktop:inset-0 desktop:animate-search-in desktop:gap-1.5">
                 <input
                     // abre já com o cursor no campo: foi para isso que a pessoa tocou na lupa
                     autoFocus
@@ -186,7 +165,7 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
             </div>
 
             {/* resultados: embaixo da busca no computador; no celular, embaixo do campo */}
-            <div className="flex min-h-0 flex-col gap-3.5 max-desktop:flex-1 desktop:absolute desktop:top-full desktop:right-0 desktop:mt-2 desktop:max-h-search-panel desktop:w-navbar desktop:rounded-panel desktop:border desktop:border-line desktop:bg-glass desktop:bg-linear-to-b desktop:from-scrim-strong desktop:to-scrim-strong desktop:p-panel desktop:shadow-glass desktop:backdrop-blur-glass desktop:backdrop-saturate-glass">
+            <div className="flex min-h-0 flex-col gap-3.5 max-desktop:flex-1 desktop:absolute desktop:top-full desktop:right-0 desktop:mt-2 desktop:max-h-search-panel desktop:w-navbar desktop:rounded-panel desktop:border desktop:border-line desktop:bg-glass desktop:bg-linear-to-b desktop:from-scrim desktop:to-scrim desktop:p-panel desktop:shadow-glass desktop:backdrop-blur-glass desktop:backdrop-saturate-glass">
                 <ul
                     id={listId}
                     role="listbox"

@@ -13,7 +13,11 @@ describe("Navbar", () => {
         expect(html).toContain('<nav aria-label="Principal"');
         expect(html).toMatch(/href="\/"[^>]*>[\s\S]*Início/);
         expect(html).toMatch(/href="\/sobre"[^>]*>[\s\S]*Sobre/);
-        expect(html.match(/<a /g)).toHaveLength(2);
+        // a marca também é link para o início
+        expect(html).toMatch(
+            /href="\/"[^>]*aria-label="Kinne, ir para o início"|aria-label="Kinne, ir para o início"[^>]*href="\/"/,
+        );
+        expect(html.match(/<a /g)).toHaveLength(3);
         expect(html).not.toMatch(/<(svg|span)[^>]*>[^<]*[\p{Extended_Pictographic}]/u);
     });
 
@@ -41,9 +45,9 @@ describe("Navbar", () => {
         expect(html).not.toContain("limelight");
     });
 
-    it("tem a busca como botão, sem luz própria", () => {
+    it("tem a busca como lupa, fora do nav e sem luz própria", () => {
         const html = renderToStaticMarkup(<Navbar current="inicio" />);
-        expect(html).toMatch(/<button[^>]*aria-haspopup="dialog"[^>]*>[\s\S]*Buscar/);
+        expect(html).toMatch(/<\/nav>[\s\S]*<button[^>]*aria-label="Buscar filme ou série"/);
         expect(html.match(/bg-limelight(?!-)/g)).toHaveLength(1);
     });
 
@@ -72,7 +76,7 @@ describe("Navbar", () => {
         // onde o degradê ainda tem 84% do alfa
         const coneAlpha = Number(
             css.match(
-                /--background-image-limelight: linear-gradient\(\s*rgb\([^/]+\/ ([\d.]+)\)/,
+                /--background-image-limelight: radial-gradient\([^,]*,\s*rgb\([^/]+\/ ([\d.]+)\)/,
             )![1],
         );
         const [gr, gg, gb] = glass.match(/\d+/g)!.map(Number);

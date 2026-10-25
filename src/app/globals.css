@@ -30,7 +30,6 @@
     --color-veil: rgb(2 2 2 / 0.35); /* botão pequeno sobre a imagem (pausar) */
     --color-frame: #0a0a0a; /* quadro sem imagem */
     --color-toast: #161616; /* aviso */
-    --color-goo: #1f1f1f; /* pílula da busca que escorre dentro da navbar */
     --color-nav: rgb(
         2 2 2 / 0.9
     ); /* vidro da navbar: mais escuro que o painel, para dar 7:1 até sobre imagem clara */
@@ -115,11 +114,11 @@
     /* navbar flutuante: no computador no topo, no celular na base */
     --spacing-nav-edge: 1.375rem; /* da borda da tela à navbar; no topo é o respiro da página */
     --spacing-nav-gap: 0.875rem; /* da navbar ao conteúdo */
-    --spacing-nav-part: 7.5rem; /* cada parte do chip no computador: marca, abas e busca */
-    --spacing-nav-search: 20rem; /* parte da busca, aberta, no computador */
+    --spacing-nav-part: 7.5rem; /* cada parte do chip no computador: marca e abas */
+    --spacing-nav-search: 20rem; /* lupa aberta em campo, no computador */
     --spacing-nav-pad: 0.125rem; /* respiro do chip em volta das abas */
     --spacing-nav-light: 3.25rem; /* largura da barra de luz: o topo do cone */
-    --spacing-nav-cone: 8rem; /* largura do cone embaixo: cobre ícone e rótulo da aba */
+    --spacing-nav-cone: 8rem; /* largura do brilho da aba ativa */
     --spacing-nav: calc(
         var(--spacing-nav-edge) + var(--spacing-control) + var(--spacing-nav-gap)
     ); /* espaço que a navbar toma, antes da área segura */
@@ -183,12 +182,13 @@
     /* base da área que rola nos filtros, quando há mais campos abaixo */
     --background-image-scroll-hint: linear-gradient(rgb(2 2 2 / 0), var(--color-scrim-strong));
     --background-image-panel-foot: linear-gradient(rgb(14 14 14 / 0), rgb(14 14 14 / 0.94) 18px);
-    /* cone da luz: paper a 30% que se desfaz para baixo, atrás do ícone e do rótulo */
-    --background-image-limelight: linear-gradient(
-        rgb(242 242 238 / 0.3),
-        rgb(242 242 238 / 0.1) 60%,
-        rgb(2 2 2 / 0.7)
-    ); /* e escurece para o preto no pé do chip */
+    /* brilho da aba ativa: paper que desce da barra e se desfaz em elipse */
+    --background-image-limelight: radial-gradient(
+        50% 100% at 50% 0,
+        rgb(242 242 238 / 0.24),
+        rgb(242 242 238 / 0.08) 55%,
+        rgb(242 242 238 / 0)
+    );
     --background-image-grain: url("/grain.svg");
     --opacity-grain: 0.42;
     --opacity-grain-fine: 0.22; /* granulado fino do cone da navbar */
@@ -214,9 +214,8 @@
     --animate-rise-in: rise-in 640ms var(--ease-settle);
     /* barra de progresso da capa; a duração vem de quem usa (US001 RNE002) */
     --animate-fill: fill linear forwards;
-    /* busca na navbar: a parte da busca se alarga, a gota do fechar se solta e o campo aparece */
-    --animate-goo-drop: goo-drop 560ms var(--ease-settle);
-    --animate-goo-content: goo-content 560ms ease both;
+    /* busca: o campo aparece depois de a lupa se alargar */
+    --animate-search-in: search-in var(--transition-duration-panel) ease both;
     /* painel de filtros entrando: da direita no computador, de baixo no celular */
     --animate-panel-in: panel-in var(--transition-duration-panel) var(--ease-settle);
     --animate-panel-up: panel-up var(--transition-duration-panel) var(--ease-settle);
@@ -264,13 +263,7 @@
         }
     }
 
-    @keyframes goo-drop {
-        from {
-            right: calc(50% - 1.5rem);
-        }
-    }
-
-    @keyframes goo-content {
+    @keyframes search-in {
         0%,
         55% {
             opacity: 0;
@@ -344,27 +337,22 @@
     bottom: calc(var(--nav-lift, 0rem) + var(--spacing-nav-edge) + env(safe-area-inset-bottom));
 }
 
-/* busca na navbar: o filtro de gosma (o <filter id="kinne-goo"> vem com o painel da busca) */
-@utility filter-goo {
-    filter: url(#kinne-goo);
-}
-
 /* granulado fino: o mesmo grain.svg em um quarto do tamanho, grão menor (cone da navbar) */
 @utility bg-grain-fine {
     background-image: var(--background-image-grain);
     background-size: 3.4375rem;
 }
 
-/* cone de luz: estreito em cima, na barra, e largo embaixo */
-@utility clip-limelight {
-    clip-path: polygon(5% 100%, 30% 0, 70% 0, 95% 100%);
+/* granulado só onde há brilho */
+@utility mask-limelight {
+    mask-image: radial-gradient(50% 100% at 50% 0, black, transparent);
 }
 
 /* centro da luz na aba ativa: marca, abas e busca dividem o chip em quartos iguais, e --nav-index (0, 1…)
-   vem da prop current da Navbar; a marca ocupa a primeira parte. No celular as partes são quartos
+   vem da prop current da Navbar; a marca ocupa a primeira parte. No celular as partes são terços
    do chip (100%); no computador, largura fixa */
 @utility nav-light-x {
-    --nav-part: calc((100% - 2 * var(--spacing-nav-pad)) / 4);
+    --nav-part: calc((100% - 2 * var(--spacing-nav-pad)) / 3);
     @variant desktop {
         --nav-part: var(--spacing-nav-part);
     }
@@ -505,6 +493,6 @@
 }
 
 /* com a busca aberta, a navbar sobe acima do Dock e do aviso: no celular a busca ocupa a tela */
-nav[data-nav]:has([role="dialog"]) {
+[data-nav]:has([role="dialog"]) {
     z-index: 30;
 }
