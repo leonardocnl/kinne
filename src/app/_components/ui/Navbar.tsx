@@ -36,7 +36,7 @@ export function Navbar({ current }: { current: NavTab }) {
                 className="pointer-events-auto relative flex h-control w-full max-w-navbar items-center rounded-pill border border-line bg-nav p-nav-pad shadow-glass backdrop-blur-glass backdrop-saturate-glass"
             >
                 {/* a luz vai antes das abas: o texto fica por cima do cone */}
-                <li className="flex w-nav-icon items-center justify-center">
+                <li className="flex flex-1 items-center justify-center">
                     {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático: o next/image só somaria JS */}
                     <img
                         src="/icon.svg"

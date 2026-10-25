@@ -12,7 +12,7 @@
     --color-*: initial;
     --color-ink: #020202; /* fundo */
     --color-paper: #f2f2ee; /* texto */
-    --color-signal: #fff340; /* só no controle principal de cada tela e no ícone da marca */
+    --color-signal: #ffdf25; /* só no controle principal de cada tela e no ícone da marca */
     --color-soft: rgb(242 242 238 / 0.74); /* texto secundário */
     --color-faint: rgb(242 242 238 / 0.64); /* texto apagado */
     --color-line: rgb(255 255 255 / 0.14); /* bordas e divisórias */
@@ -115,9 +115,8 @@
     --spacing-nav-edge: 1.375rem; /* da borda da tela à navbar; no topo é o respiro da página */
     --spacing-nav-gap: 0.875rem; /* da navbar ao conteúdo */
     --spacing-nav-pad: 0.125rem; /* respiro do chip em volta das abas */
-    --spacing-nav-icon: 5rem; /* célula do ícone da marca, à esquerda das abas */
-    --spacing-nav-light: 2.75rem; /* largura da barra de luz */
-    --spacing-nav-cone: 4.4rem; /* largura do cone: 160% da barra */
+    --spacing-nav-light: 3.25rem; /* largura da barra de luz: o topo do cone */
+    --spacing-nav-cone: 8rem; /* largura do cone embaixo: cobre ícone e rótulo da aba */
     --spacing-nav: calc(
         var(--spacing-nav-edge) + var(--spacing-control) + var(--spacing-nav-gap)
     ); /* espaço que a navbar toma, antes da área segura */
@@ -321,15 +320,14 @@
 
 /* cone de luz: estreito em cima, na barra, e largo embaixo */
 @utility clip-limelight {
-    clip-path: polygon(5% 100%, 25% 0, 75% 0, 95% 100%);
+    clip-path: polygon(5% 100%, 30% 0, 70% 0, 95% 100%);
 }
 
-/* centro da luz na aba ativa: --nav-index (0, 1…) vem da prop current da Navbar. As abas
-   dividem por igual o que sobra depois da marca; 100% é a largura do chip */
+/* centro da luz na aba ativa: marca e abas dividem o chip em partes iguais, e --nav-index (0, 1…)
+   vem da prop current da Navbar; a marca ocupa a primeira parte. 100% é a largura do chip */
 @utility nav-light-x {
     left: calc(
-        var(--spacing-nav-pad) + var(--spacing-nav-icon) + (var(--nav-index) + 0.5) *
-            (100% - 2 * var(--spacing-nav-pad) - var(--spacing-nav-icon)) / 2
+        var(--spacing-nav-pad) + (var(--nav-index) + 1.5) * (100% - 2 * var(--spacing-nav-pad)) / 3
     );
 }
 

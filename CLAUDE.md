@@ -20,7 +20,7 @@ App web que recomenda um filme ou série por vez, só entre os streamings por as
   - Dependências só apontam para dentro: app → application → domain. A infrastructure implementa interfaces definidas em domain/application.
 - **Segredos:** só em variáveis de ambiente (veja `.env.example`). `.env.local` nunca vai para o Git.
 - **Fontes** (via `next/font/google`): Darker Grotesque peso 500 nos títulos (`font-display`) e Manrope na interface (`font-ui`).
-- **Cores** (tokens do Tailwind em `src/app/globals.css`): fundo `#020202` (`ink`), texto `#F2F2EE` (`paper`), destaque `#FFF340` (`signal`), este usado só no controle principal de cada tela e no ícone da marca. Todos os tokens e regras visuais estão no DESIGN.md.
+- **Cores** (tokens do Tailwind em `src/app/globals.css`): fundo `#020202` (`ink`), texto `#F2F2EE` (`paper`), destaque `#FFDF25` (`signal`), este usado só no controle principal de cada tela e no ícone da marca. Todos os tokens e regras visuais estão no DESIGN.md.
 - **Idioma:** interface em pt-BR. Código, nomes de arquivos e commits em inglês; comentários podem ser em português.
 - **Formatação:** o Prettier é a fonte da verdade (`.prettierrc.json`). Indentação de 4 espaços, linhas de até 100 caracteres. O ESLint não cuida de formatação (`eslint-config-prettier`).
 - **Dependências:** não adicionar nenhuma sem perguntar.
