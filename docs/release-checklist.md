@@ -120,7 +120,7 @@ Open the PR `develop` → `main`, wait for CI, merge. Vercel deploys Production 
 
 ## 7. First production sync
 
-1. Actions → **Sync catalog** → Run workflow, **Use workflow from: `main`**, and tick **Carga completa** (`full`, which sets `SYNC_FULL=1`). The first load reads about 22k titles; the job allows 60 minutes. Later runs leave `full` unticked (daily, incremental). Never start it before the promotion (§6) and the production migrations (§3). A run aborts, with no write, if the database's `meta.environment` is not `production`.
+1. Actions → **Sync catalog** → Run workflow, **Use workflow from: `main`**, and tick **Carga completa** (`full`, which sets `SYNC_FULL=1`). The first load reads about 22k titles; the job allows 150 minutes (the full load takes about an hour). Later runs leave `full` unticked (daily, incremental). Never start it before the promotion (§6) and the production migrations (§3). A run aborts, with no write, if the database's `meta.environment` is not `production`.
 2. Check the run summary (counts only), then the database:
 
    ```sql
