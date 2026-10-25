@@ -128,8 +128,8 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
             className="z-1 max-desktop:fixed max-desktop:inset-0 max-desktop:flex max-desktop:flex-col max-desktop:gap-3.5 max-desktop:bg-scrim-strong max-desktop:px-4 max-desktop:pt-5.5 max-desktop:pb-5 max-desktop:backdrop-blur-glass desktop:absolute desktop:inset-0"
         >
             {/*
-             * Gosma (computador): a pílula escorre da lupa até cobrir o chip, e a gota do "fechar"
-             * se solta dela para a ponta. O filtro desfoca as duas e corta a transparência, então
+             * Gosma (computador): a pílula cresce com a parte da busca, que se alarga e empurra o chip, e
+             * a gota do "fechar" se solta dela para a ponta. O filtro desfoca as duas e corta a transparência, então
              * elas se fundem enquanto estão perto.
              */}
             <svg aria-hidden="true" className="absolute size-0">
@@ -144,7 +144,7 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
                 </filter>
             </svg>
             <div aria-hidden="true" className="absolute inset-0 filter-goo max-desktop:hidden">
-                <span className="absolute inset-y-0 right-13.5 left-0 animate-goo-pill rounded-pill bg-goo motion-reduce:animate-none" />
+                <span className="absolute inset-y-0 right-13.5 left-0 rounded-pill bg-goo" />
                 <span className="absolute inset-y-0 right-0 w-12 animate-goo-drop rounded-pill bg-goo motion-reduce:animate-none" />
             </div>
 
@@ -185,8 +185,8 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
                 </button>
             </div>
 
-            {/* resultados: embaixo do chip no computador; no celular, embaixo do campo */}
-            <div className="flex min-h-0 flex-col gap-3.5 max-desktop:flex-1 desktop:absolute desktop:inset-x-0 desktop:top-full desktop:mt-2 desktop:max-h-search-panel desktop:rounded-panel desktop:border desktop:border-line desktop:bg-glass desktop:bg-linear-to-b desktop:from-scrim-strong desktop:to-scrim-strong desktop:p-panel desktop:shadow-glass desktop:backdrop-blur-glass desktop:backdrop-saturate-glass">
+            {/* resultados: embaixo da busca no computador; no celular, embaixo do campo */}
+            <div className="flex min-h-0 flex-col gap-3.5 max-desktop:flex-1 desktop:absolute desktop:top-full desktop:right-0 desktop:mt-2 desktop:max-h-search-panel desktop:w-navbar desktop:rounded-panel desktop:border desktop:border-line desktop:bg-glass desktop:bg-linear-to-b desktop:from-scrim-strong desktop:to-scrim-strong desktop:p-panel desktop:shadow-glass desktop:backdrop-blur-glass desktop:backdrop-saturate-glass">
                 <ul
                     id={listId}
                     role="listbox"

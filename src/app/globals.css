@@ -115,6 +115,8 @@
     /* navbar flutuante: no computador no topo, no celular na base */
     --spacing-nav-edge: 1.375rem; /* da borda da tela à navbar; no topo é o respiro da página */
     --spacing-nav-gap: 0.875rem; /* da navbar ao conteúdo */
+    --spacing-nav-part: 7.5rem; /* cada parte do chip no computador: marca, abas e busca */
+    --spacing-nav-search: 20rem; /* parte da busca, aberta, no computador */
     --spacing-nav-pad: 0.125rem; /* respiro do chip em volta das abas */
     --spacing-nav-light: 3.25rem; /* largura da barra de luz: o topo do cone */
     --spacing-nav-cone: 8rem; /* largura do cone embaixo: cobre ícone e rótulo da aba */
@@ -212,8 +214,7 @@
     --animate-rise-in: rise-in 640ms var(--ease-settle);
     /* barra de progresso da capa; a duração vem de quem usa (US001 RNE002) */
     --animate-fill: fill linear forwards;
-    /* busca na navbar: a pílula escorre da lupa, a gota do fechar se solta e o campo aparece */
-    --animate-goo-pill: goo-pill 560ms var(--ease-settle);
+    /* busca na navbar: a parte da busca se alarga, a gota do fechar se solta e o campo aparece */
     --animate-goo-drop: goo-drop 560ms var(--ease-settle);
     --animate-goo-content: goo-content 560ms ease both;
     /* painel de filtros entrando: da direita no computador, de baixo no celular */
@@ -263,15 +264,9 @@
         }
     }
 
-    @keyframes goo-pill {
-        from {
-            left: 75%;
-        }
-    }
-
     @keyframes goo-drop {
         from {
-            right: calc(12.5% - 1.5rem);
+            right: calc(50% - 1.5rem);
         }
     }
 
@@ -366,11 +361,14 @@
 }
 
 /* centro da luz na aba ativa: marca, abas e busca dividem o chip em quartos iguais, e --nav-index (0, 1…)
-   vem da prop current da Navbar; a marca ocupa a primeira parte. 100% é a largura do chip */
+   vem da prop current da Navbar; a marca ocupa a primeira parte. No celular as partes são quartos
+   do chip (100%); no computador, largura fixa */
 @utility nav-light-x {
-    left: calc(
-        var(--spacing-nav-pad) + (var(--nav-index) + 1.5) * (100% - 2 * var(--spacing-nav-pad)) / 4
-    );
+    --nav-part: calc((100% - 2 * var(--spacing-nav-pad)) / 4);
+    @variant desktop {
+        --nav-part: var(--spacing-nav-part);
+    }
+    left: calc(var(--spacing-nav-pad) + (var(--nav-index) + 1.5) * var(--nav-part));
 }
 
 /* lista que rola na horizontal no celular sem mostrar a barra (faixa "Hoje") */

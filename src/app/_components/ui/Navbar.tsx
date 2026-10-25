@@ -3,7 +3,7 @@ import { type CSSProperties, ViewTransition } from "react";
 import { SearchLauncher } from "../search/SearchLauncher";
 import { cx } from "./cx";
 import { HomeIcon, InfoIcon } from "./icons";
-import { navIdle, navItem } from "./navItem";
+import { navIdle, navItem, navPart } from "./navItem";
 
 const TABS = [
     { id: "inicio", href: "/", label: "Início", icon: <HomeIcon /> },
@@ -16,7 +16,7 @@ export type NavTab = (typeof TABS)[number]["id"];
  * Navbar flutuante em chip de vidro escuro: no computador no topo, no celular na base, sempre
  * centralizada, em todas as telas (no celular, acima do Dock). Componente de servidor, sem estado:
  * a página diz qual aba está ativa (nenhuma, fora do Início e do Sobre). Marca, abas e busca
- * dividem o chip em quartos iguais, então a luz ("limelight", em paper, nunca no amarelo) acha a aba pelo índice
+ * são partes iguais do chip (largura fixa no computador, quartos no celular), então a luz ("limelight", em paper, nunca no amarelo) acha a aba pelo índice
  * em --nav-index, sem medir nada. Ela é uma peça só, e o ViewTransition do React a faz deslizar
  * na troca de página. Enquanto a navbar existe, a página ganha espaço embaixo e scroll-padding:
  * veja [data-nav] no globals.css. A busca é um botão: não acende a luz.
@@ -31,7 +31,7 @@ export function Navbar({ current }: { current?: NavTab }) {
         >
             <ul
                 style={{ "--nav-index": index } as CSSProperties}
-                className="pointer-events-auto relative flex h-control w-full max-w-navbar items-center rounded-pill border border-line p-nav-pad shadow-nav"
+                className="pointer-events-auto relative flex h-control items-center rounded-pill border border-line p-nav-pad shadow-nav max-desktop:w-full"
             >
                 {/* o vidro fica numa camada atrás, e não no ul: backdrop-filter num ancestral prenderia
                     a busca em tela cheia do celular (position: fixed) dentro do chip */}
@@ -39,7 +39,7 @@ export function Navbar({ current }: { current?: NavTab }) {
                     aria-hidden="true"
                     className="absolute inset-0 -z-1 rounded-pill bg-nav backdrop-blur-glass backdrop-saturate-glass"
                 />
-                <li className="relative flex flex-1 items-center justify-center">
+                <li className={cx(navPart, "items-center justify-center")}>
                     {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático: o next/image só somaria JS */}
                     <img
                         src="/icon.svg"
@@ -74,7 +74,7 @@ export function Navbar({ current }: { current?: NavTab }) {
                     </>
                 )}
                 {TABS.map((tab) => (
-                    <li key={tab.id} className="flex flex-1">
+                    <li key={tab.id} className={navPart}>
                         <Link
                             href={tab.href}
                             aria-current={tab.id === current ? "page" : undefined}
@@ -85,7 +85,13 @@ export function Navbar({ current }: { current?: NavTab }) {
                         </Link>
                     </li>
                 ))}
-                <li className="flex flex-1">
+                {/* aberta, a busca alarga a própria parte e empurra o chip (computador) */}
+                <li
+                    className={cx(
+                        navPart,
+                        "relative self-stretch transition-all duration-panel ease-settle motion-reduce:transition-none desktop:has-aria-expanded:w-nav-search",
+                    )}
+                >
                     <SearchLauncher
                         className={cx(navItem, navIdle, "cursor-pointer aria-expanded:text-paper")}
                     />
