@@ -35,6 +35,18 @@ describe("Navbar", () => {
         expect(html.match(/(?<!drop-)shadow-limelight/g)).toHaveLength(1);
     });
 
+    it("fora do Início e do Sobre, nenhuma aba ativa nem luz", () => {
+        const html = renderToStaticMarkup(<Navbar />);
+        expect(html).not.toContain("aria-current");
+        expect(html).not.toContain("limelight");
+    });
+
+    it("tem a busca como botão, sem luz própria", () => {
+        const html = renderToStaticMarkup(<Navbar current="inicio" />);
+        expect(html).toMatch(/<button[^>]*aria-haspopup="dialog"[^>]*>[\s\S]*Buscar/);
+        expect(html.match(/bg-limelight(?!-)/g)).toHaveLength(1);
+    });
+
     it("não usa o amarelo (signal)", () => {
         expect(renderToStaticMarkup(<Navbar current="inicio" />)).not.toContain("signal");
     });

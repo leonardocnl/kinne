@@ -35,14 +35,14 @@ Leitura obrigatória antes de qualquer tarefa de interface. A fonte da verdade v
 
 ## Navegação
 
-- Navbar flutuante em chip (pílula) de vidro escuro, com as abas Início e Sobre. No computador fica fixa no topo, centralizada; no celular, fixa na base, acima da área segura (`nav-bottom`). A data do dia, no computador, fica junto da busca.
-- O vidro (`bg-nav`) é mais escuro que o painel de filtros e tem 7:1 no texto até sobre imagem branca; o teste da navbar confere.
-- Luz "limelight": uma peça só, sobre o chip, centrada na aba ativa. Barra de 1px exatamente sobre a borda de cima do chip em paper, com halo (`drop-shadow-limelight`); colado a ela, o cone e a luz que derrama sobre o chip (`shadow-limelight`) e, dentro dela, o cone (`bg-limelight`, `clip-limelight`) que passa das bordas do chip e se desfaz. Sempre paper, nunca `signal`. As abas têm a mesma largura (`--spacing-nav-tab`) e a posição vem do índice `--nav-index`, definido pela prop `current`. Ela desliza entre páginas com o `ViewTransition` do React (400 ms); sem suporte do navegador aparece no lugar, e com `prefers-reduced-motion` nada desliza.
-- Chip largo (até `--container-navbar`; no celular, a tela menos as margens): a marca e as abas dividem o chip em partes iguais, cada uma centrada na sua parte.
+- Navbar flutuante em chip (pílula) de vidro escuro, em todas as telas (padrão do Kinne): marca, Início, Sobre e Buscar dividem o chip em quartos iguais, cada um centrado no seu. No computador fica fixa no topo, centralizada, até `--container-navbar`; no celular, fixa na base, a tela menos as margens, acima da área segura (`nav-bottom`) e, na tela do título, acima do Dock (`--nav-lift`). A data do dia fica à direita da barra do topo só em tela larga (`wide:`), para não bater na navbar.
+- O vidro (`bg-nav`) fica numa camada atrás do conteúdo do chip, não no próprio chip: `backdrop-filter` num ancestral prenderia a busca em tela cheia do celular dentro dele. É mais escuro que o painel de filtros e tem 7:1 no texto até sobre imagem branca; o teste da navbar confere. Borda igual em volta (`shadow-nav`, sem o fio claro do `shadow-glass`).
+- Luz "limelight": uma peça só, centrada na aba ativa. Barra de 1px em paper exatamente sobre a borda de cima, com halo (`drop-shadow-limelight`); colado a ela, o cone (`bg-limelight`, `clip-limelight`, granulado fino `bg-grain-fine`) e a luz que derrama (`shadow-limelight`), recortados pelo chip: escurecem para o preto e não passam da borda de baixo. Sempre paper, nunca `signal`. A posição vem do índice `--nav-index`, da prop `current`. Desliza entre páginas com o `ViewTransition` do React (400 ms); sem suporte aparece no lugar, e com `prefers-reduced-motion` nada desliza. Sem aba ativa (fora do Início e do Sobre), não há luz.
 - Abas inativas em `soft`; no hover só sobem para `paper`, sem fundo nem contorno (exceção à regra do hover dos controles: no chip de vidro o contorno pesava). A ativa não muda.
-- Componente de servidor, sem JS novo no cliente: a página passa `current` e a navbar marca `aria-current="page"`.
-- Aparece só no Início e no Sobre. Fora da tela do título (Dock), da sala de grupo e da busca. Camadas: navbar `z-nav` (1) abaixo do painel de filtros (2), do Dock (10), da busca e do aviso (20).
-- Respiro: `[data-nav]` dá à página `--spacing-nav` embaixo no celular e `scroll-padding-top` no computador, para a navbar não cobrir conteúdo nem o foco.
+- Busca: um botão, não uma aba (sem luz). No computador, a pílula (`bg-goo`) escorre da lupa até cobrir o chip e a gota do "fechar" se solta dela, com o filtro de gosma (`filter-goo`); os resultados abrem embaixo, em vidro. No celular, abre em tela cheia, com o campo em cima, para o teclado não cobri-lo. Com movimento reduzido, nada escorre.
+- A navbar é componente de servidor. O botão de busca é o único JS dela, o mesmo que já existia na barra do topo, e recebe as classes da Navbar como prop, para elas irem no HTML e não no JS da home.
+- Camadas: navbar `z-nav` (1) abaixo do painel de filtros (2), do Dock (10) e do aviso (20); com a busca aberta ela sobe acima de todos.
+- Respiro: `[data-nav]` dá à página `--spacing-nav` embaixo no celular (mais o Dock, quando há) e `scroll-padding-top` no computador, para a navbar não cobrir conteúdo nem o foco.
 
 ## Imagens
 

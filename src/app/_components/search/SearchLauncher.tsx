@@ -1,7 +1,6 @@
 "use client";
 
 import { lazy, Suspense, useRef, useState } from "react";
-import { Button } from "../ui/Button";
 import { SearchIcon } from "../ui/icons";
 
 // H9: o painel só é baixado quando a pessoa chega perto do botão.
@@ -9,50 +8,42 @@ const loadPanel = () => import("./SearchPanel");
 const SearchPanel = lazy(loadPanel);
 const preload = () => void loadPanel();
 
-/** Botão de busca da barra do topo: "Buscar" no computador, só a lupa no celular. */
-export function SearchLauncher() {
+/**
+ * "Buscar", a última parte da navbar. Abre a busca no próprio chip (computador) ou em tela cheia
+ * (celular); não é uma página, então não acende a luz. `className` vem da Navbar (servidor): as
+ * classes vão no HTML, não no JS da home.
+ */
+export function SearchLauncher({ className }: { className: string }) {
     const [open, setOpen] = useState(false);
     // o que a pessoa digita enquanto o painel ainda está chegando
     const [early, setEarly] = useState("");
-    const opener = useRef<HTMLButtonElement | null>(null);
+    const button = useRef<HTMLButtonElement>(null);
 
-    function show(event: { currentTarget: HTMLButtonElement }) {
-        opener.current = event.currentTarget;
+    function show() {
         setEarly("");
         setOpen(true);
     }
 
     function close(returnFocus: boolean) {
         setOpen(false);
-        if (returnFocus) opener.current?.focus();
+        if (returnFocus) button.current?.focus();
     }
 
-    const shared = {
-        onPointerEnter: preload,
-        onFocus: preload,
-        onClick: show,
-        "aria-haspopup": "dialog",
-        "aria-expanded": open,
-    } as const;
-
     return (
-        <div className="relative">
-            <Button
-                variant="ghost"
-                icon={<SearchIcon />}
-                className="max-desktop:hidden"
-                {...shared}
-            >
-                Buscar
-            </Button>
-            <Button
-                variant="round"
-                aria-label="Buscar filme ou série"
-                className="desktop:hidden"
-                {...shared}
+        <>
+            <button
+                ref={button}
+                type="button"
+                onPointerEnter={preload}
+                onFocus={preload}
+                onClick={show}
+                aria-haspopup="dialog"
+                aria-expanded={open}
+                className={className}
             >
                 <SearchIcon />
-            </Button>
+                Buscar
+            </button>
             {open && (
                 <Suspense
                     fallback={
@@ -69,6 +60,6 @@ export function SearchLauncher() {
                     <SearchPanel initialTerm={early} onClose={close} />
                 </Suspense>
             )}
-        </div>
+        </>
     );
 }

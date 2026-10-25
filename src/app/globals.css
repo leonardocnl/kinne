@@ -30,6 +30,7 @@
     --color-veil: rgb(2 2 2 / 0.35); /* botão pequeno sobre a imagem (pausar) */
     --color-frame: #0a0a0a; /* quadro sem imagem */
     --color-toast: #161616; /* aviso */
+    --color-goo: #1f1f1f; /* pílula da busca que escorre dentro da navbar */
     --color-nav: rgb(
         2 2 2 / 0.9
     ); /* vidro da navbar: mais escuro que o painel, para dar 7:1 até sobre imagem clara */
@@ -211,6 +212,10 @@
     --animate-rise-in: rise-in 640ms var(--ease-settle);
     /* barra de progresso da capa; a duração vem de quem usa (US001 RNE002) */
     --animate-fill: fill linear forwards;
+    /* busca na navbar: a pílula escorre da lupa, a gota do fechar se solta e o campo aparece */
+    --animate-goo-pill: goo-pill 560ms var(--ease-settle);
+    --animate-goo-drop: goo-drop 560ms var(--ease-settle);
+    --animate-goo-content: goo-content 560ms ease both;
     /* painel de filtros entrando: da direita no computador, de baixo no celular */
     --animate-panel-in: panel-in var(--transition-duration-panel) var(--ease-settle);
     --animate-panel-up: panel-up var(--transition-duration-panel) var(--ease-settle);
@@ -255,6 +260,25 @@
         to {
             opacity: 0;
             transform: translateY(0.875rem);
+        }
+    }
+
+    @keyframes goo-pill {
+        from {
+            left: 75%;
+        }
+    }
+
+    @keyframes goo-drop {
+        from {
+            right: calc(12.5% - 1.5rem);
+        }
+    }
+
+    @keyframes goo-content {
+        0%,
+        55% {
+            opacity: 0;
         }
     }
 
@@ -322,7 +346,12 @@
 
 /* base da navbar no celular, acima da área segura do aparelho */
 @utility nav-bottom {
-    bottom: calc(var(--spacing-nav-edge) + env(safe-area-inset-bottom));
+    bottom: calc(var(--nav-lift, 0rem) + var(--spacing-nav-edge) + env(safe-area-inset-bottom));
+}
+
+/* busca na navbar: o filtro de gosma (o <filter id="kinne-goo"> vem com o painel da busca) */
+@utility filter-goo {
+    filter: url(#kinne-goo);
 }
 
 /* granulado fino: o mesmo grain.svg em um quarto do tamanho, grão menor (cone da navbar) */
@@ -336,11 +365,11 @@
     clip-path: polygon(5% 100%, 30% 0, 70% 0, 95% 100%);
 }
 
-/* centro da luz na aba ativa: marca e abas dividem o chip em partes iguais, e --nav-index (0, 1…)
+/* centro da luz na aba ativa: marca, abas e busca dividem o chip em quartos iguais, e --nav-index (0, 1…)
    vem da prop current da Navbar; a marca ocupa a primeira parte. 100% é a largura do chip */
 @utility nav-light-x {
     left: calc(
-        var(--spacing-nav-pad) + (var(--nav-index) + 1.5) * (100% - 2 * var(--spacing-nav-pad)) / 3
+        var(--spacing-nav-pad) + (var(--nav-index) + 1.5) * (100% - 2 * var(--spacing-nav-pad)) / 4
     );
 }
 
@@ -381,10 +410,15 @@
        computador ela fica no topo e o scroll-padding evita que cubra o elemento em foco */
     html:has([data-nav]) {
         @variant max-desktop {
-            --toast-bottom: calc(var(--spacing-nav) + env(safe-area-inset-bottom));
-            scroll-padding-bottom: calc(var(--spacing-nav) + env(safe-area-inset-bottom));
+            /* com o Dock (tela do título), a navbar sobe para cima dele */
+            --nav-space: calc(var(--nav-lift, 0rem) + var(--spacing-nav));
+            --toast-bottom: calc(var(--nav-space) + env(safe-area-inset-bottom));
+            scroll-padding-bottom: calc(var(--nav-space) + env(safe-area-inset-bottom));
             & body {
-                padding-bottom: calc(var(--spacing-nav) + env(safe-area-inset-bottom));
+                padding-bottom: calc(var(--nav-space) + env(safe-area-inset-bottom));
+            }
+            &:has([data-dock]) {
+                --nav-lift: var(--dock);
             }
         }
         @variant desktop {
@@ -470,4 +504,9 @@
     ::view-transition-new(.limelight) {
         animation: none;
     }
+}
+
+/* com a busca aberta, a navbar sobe acima do Dock e do aviso: no celular a busca ocupa a tela */
+nav[data-nav]:has([role="dialog"]) {
+    z-index: 30;
 }

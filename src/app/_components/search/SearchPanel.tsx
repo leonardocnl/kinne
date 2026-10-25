@@ -5,9 +5,7 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { parseSearchTerm, type SearchOutcome, type SearchResult } from "@/domain/search";
 import { searchTitles } from "../../_actions/search";
 import { goToTitle } from "../title/origin";
-import { Button } from "../ui/Button";
 import { cx } from "../ui/cx";
-import { GlassPanel } from "../ui/GlassPanel";
 import { CloseIcon } from "../ui/icons";
 import { TmdbImage } from "../ui/TmdbImage";
 import { posterSources } from "../ui/tmdb-sources";
@@ -127,42 +125,68 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
                 event.preventDefault();
                 onClose(true);
             }}
-            className="z-20 max-desktop:fixed max-desktop:inset-x-0 max-desktop:top-0 desktop:absolute desktop:top-full desktop:right-0 desktop:mt-2 desktop:w-104"
+            className="z-1 max-desktop:fixed max-desktop:inset-0 max-desktop:flex max-desktop:flex-col max-desktop:gap-3.5 max-desktop:bg-scrim-strong max-desktop:px-4 max-desktop:pt-5.5 max-desktop:pb-5 max-desktop:backdrop-blur-glass desktop:absolute desktop:inset-0"
         >
-            {/* no computador o pé do painel nunca passa do pé da imagem; a lista rola por dentro */}
-            <GlassPanel className="max-desktop:max-h-dvh max-desktop:pb-5 desktop:max-h-search-panel">
-                <div className="flex items-center gap-2.5">
-                    <input
-                        // abre já com o cursor no campo: foi para isso que a pessoa tocou na lupa
-                        autoFocus
-                        // o cursor vai para o fim do que já foi digitado
-                        onFocus={(event) => {
-                            const end = event.currentTarget.value.length;
-                            event.currentTarget.setSelectionRange(end, end);
-                        }}
-                        type="text"
-                        role="combobox"
-                        aria-label="Nome do filme ou série"
-                        aria-autocomplete="list"
-                        aria-expanded={results.length > 0}
-                        aria-controls={listId}
-                        aria-activedescendant={active >= 0 ? optionId(active) : undefined}
-                        autoComplete="off"
-                        autoCorrect="off"
-                        spellCheck={false}
-                        enterKeyHint="search"
-                        maxLength={80}
-                        placeholder="Buscar filme ou série"
-                        value={term}
-                        onChange={(event) => setTerm(event.target.value)}
-                        onKeyDown={onKeyDown}
-                        className="h-control min-w-0 flex-1 rounded-pill border border-line bg-scrim-strong px-5 text-small text-paper placeholder:text-soft"
+            {/*
+             * Gosma (computador): a pílula escorre da lupa até cobrir o chip, e a gota do "fechar"
+             * se solta dela para a ponta. O filtro desfoca as duas e corta a transparência, então
+             * elas se fundem enquanto estão perto.
+             */}
+            <svg aria-hidden="true" className="absolute size-0">
+                <filter id="kinne-goo">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
+                    <feColorMatrix
+                        in="blur"
+                        values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"
+                        result="goo"
                     />
-                    <Button variant="round" aria-label="Fechar busca" onClick={() => onClose(true)}>
-                        <CloseIcon />
-                    </Button>
-                </div>
+                    <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+                </filter>
+            </svg>
+            <div aria-hidden="true" className="absolute inset-0 filter-goo max-desktop:hidden">
+                <span className="absolute inset-y-0 right-13.5 left-0 animate-goo-pill rounded-pill bg-goo motion-reduce:animate-none" />
+                <span className="absolute inset-y-0 right-0 w-12 animate-goo-drop rounded-pill bg-goo motion-reduce:animate-none" />
+            </div>
 
+            <div className="flex items-center gap-2.5 motion-reduce:animate-none desktop:absolute desktop:inset-0 desktop:animate-goo-content desktop:gap-1.5">
+                <input
+                    // abre já com o cursor no campo: foi para isso que a pessoa tocou na lupa
+                    autoFocus
+                    // o cursor vai para o fim do que já foi digitado
+                    onFocus={(event) => {
+                        const end = event.currentTarget.value.length;
+                        event.currentTarget.setSelectionRange(end, end);
+                    }}
+                    type="text"
+                    role="combobox"
+                    aria-label="Nome do filme ou série"
+                    aria-autocomplete="list"
+                    aria-expanded={results.length > 0}
+                    aria-controls={listId}
+                    aria-activedescendant={active >= 0 ? optionId(active) : undefined}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    enterKeyHint="search"
+                    maxLength={80}
+                    placeholder="Buscar filme ou série"
+                    value={term}
+                    onChange={(event) => setTerm(event.target.value)}
+                    onKeyDown={onKeyDown}
+                    className="h-full min-w-0 flex-1 rounded-pill bg-transparent px-5 text-small text-paper placeholder:text-soft max-desktop:h-control max-desktop:border max-desktop:border-line max-desktop:bg-scrim-strong"
+                />
+                <button
+                    type="button"
+                    aria-label="Fechar busca"
+                    onClick={() => onClose(true)}
+                    className="flex size-control shrink-0 cursor-pointer items-center justify-center rounded-pill text-paper transition-colors duration-hover hover:bg-hover motion-reduce:transition-none max-desktop:border max-desktop:border-line max-desktop:bg-quiet desktop:size-12"
+                >
+                    <CloseIcon />
+                </button>
+            </div>
+
+            {/* resultados: embaixo do chip no computador; no celular, embaixo do campo */}
+            <div className="flex min-h-0 flex-col gap-3.5 max-desktop:flex-1 desktop:absolute desktop:inset-x-0 desktop:top-full desktop:mt-2 desktop:max-h-search-panel desktop:rounded-panel desktop:border desktop:border-line desktop:bg-glass desktop:bg-linear-to-b desktop:from-scrim-strong desktop:to-scrim-strong desktop:p-panel desktop:shadow-glass desktop:backdrop-blur-glass desktop:backdrop-saturate-glass">
                 <ul
                     id={listId}
                     role="listbox"
@@ -209,7 +233,7 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
                 <p role="status" className={cx("px-1 text-small text-soft", !status && "sr-only")}>
                     {status ?? count}
                 </p>
-            </GlassPanel>
+            </div>
         </div>
     );
 }

@@ -5,7 +5,6 @@ import { CONTACT_EMAIL } from "@/domain/contact";
 import { PIX } from "@/domain/pix";
 import { PageFrame } from "../_components/account/PageFrame";
 import { SHOW_SIGN_IN } from "../_components/account/signIn";
-import { Navbar } from "../_components/ui/Navbar";
 import { PixCopy } from "./PixCopy";
 
 export const metadata: Metadata = {
@@ -102,7 +101,7 @@ const FAQ: { question: string; answer: ReactNode }[] = [
 
 export default function AboutPage() {
     return (
-        <PageFrame>
+        <PageFrame nav="sobre">
             <main className="flex max-w-measure flex-col gap-5 pt-2 desktop:pt-3.5">
                 <h1 className="pb-1 font-display text-title font-medium text-balance">Sobre</h1>
 
@@ -218,7 +217,6 @@ export default function AboutPage() {
                     assistir por <External href="https://www.justwatch.com">JustWatch</External>.
                 </p>
             </main>
-            <Navbar current="sobre" />
         </PageFrame>
     );
 }

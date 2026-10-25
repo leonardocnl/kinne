@@ -1,6 +1,6 @@
 # US016 – Navegação
 
-Kinne · Requisitos do pós-MVP · decisão do dono de 25/10/2026
+Kinne · Requisitos do pós-MVP · decisão do dono de 25/10/2026 (navbar em todas as telas e busca no chip decididas no mesmo dia)
 
 |                |                                      |
 | -------------- | ------------------------------------ |
@@ -14,33 +14,43 @@ Eu, como visitante, quero uma navegação curta e sempre à mão, para ir do in�
 
 ## Critérios de aceitação
 
-### C1: Abas
+### C1: Abas e busca
 
-**Dado** que estou no Início ou no Sobre  
-**Então** vejo um chip flutuante com duas abas: "Início" e "Sobre"  
+**Dado** que estou em qualquer tela do Kinne  
+**Então** vejo um chip flutuante com a marca, as abas "Início" e "Sobre" e o botão "Buscar"  
 **E** não há abas para telas que ainda não existem (Explorar, Minha lista)
 
 ### C2: Posição
 
 **Dado** que uso o computador  
 **Então** o chip fica fixo no topo, centralizado  
-**E** a data do dia fica junto do botão Buscar  
+**E** a data do dia fica à direita da barra do topo em tela larga  
 **Dado** que uso o celular  
 **Então** o chip fica fixo na base, centralizado, acima da área segura do aparelho  
+**E**, na tela do título, fica logo acima das ações presas à base  
 **E** a data segue acima do título
 
 ### C3: Aba ativa
 
-**Dado** que estou numa das duas telas  
+**Dado** que estou no Início ou no Sobre  
 **Então** a aba da tela tem `aria-current="page"` e a luz sobre ela (barra fina com brilho e cone de luz)  
 **E** a luz é uma peça só e desliza para a aba nova na troca de página, quando o navegador permite e sem movimento reduzido  
 **E** a luz usa a cor do texto, nunca o amarelo de destaque  
 **E** as outras abas ficam em cor suave e sobem para a cor do texto no hover e no foco
 
-### C4: Onde não aparece
+### C4: Painéis
 
-**Dado** que estou na tela do título, na sala de grupo, na busca ou com um painel ou modal aberto  
-**Então** a navbar não aparece, ou fica abaixo do painel, e nunca o cobre
+**Dado** que um painel ou modal está aberto (filtros, aviso)  
+**Então** ele fica acima da navbar, e ela nunca o cobre  
+**Dado** que estou numa tela que não é o Início nem o Sobre  
+**Então** nenhuma aba fica ativa e não há luz
+
+### C7: Buscar
+
+**Dado** que toco em "Buscar"  
+**Então**, no computador, o campo se abre dentro do próprio chip, com o botão de fechar ao lado, e os resultados aparecem embaixo  
+**E**, no celular, a busca abre em tela cheia, com o campo em cima  
+**E** a busca não acende a luz nem marca `aria-current`, porque não é uma página
 
 ### C5: Sem cobrir conteúdo
 
@@ -55,5 +65,5 @@ Eu, como visitante, quero uma navegação curta e sempre à mão, para ir do in�
 
 ## Regras de negócio específicas
 
-- **RNE001 – Sem JS de cliente.** A navbar é componente de servidor, sem estado nem leitura do caminho. Cada página diz qual aba está ativa. A luz fica pela posição da aba (índice) e desliza com o `ViewTransition` do React, sem JS de cliente novo; sem suporte ela aparece no lugar e, em `prefers-reduced-motion`, nada se move. Motivo: o orçamento de JS da tela inicial (150 KB gzip, RNF) já está no limite.
+- **RNE001 – Sem JS de cliente novo.** A navbar é componente de servidor, sem estado nem leitura do caminho; o único JS é o botão de busca que já existia. Cada página diz qual aba está ativa. A luz fica pela posição da aba (índice) e desliza com o `ViewTransition` do React, sem JS de cliente novo; sem suporte ela aparece no lugar e, em `prefers-reduced-motion`, nada se move. Motivo: o orçamento de JS da tela inicial (150 KB gzip, RNF) já está no limite.
 - **RNE002 – Sem eventos.** Trocar de aba não gera evento de medição.
