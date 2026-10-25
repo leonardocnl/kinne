@@ -18,18 +18,18 @@ describe("Navbar", () => {
     });
 
     it.each([
-        ["inicio", "/", "/sobre"],
-        ["sobre", "/sobre", "/"],
-    ] as const)("marca só a aba ativa (%s) com aria-current", (current, active, other) => {
+        ["inicio", 0, "/"],
+        ["sobre", 1, "/sobre"],
+    ] as const)("%s: aria-current só na ativa e a luz no índice %i", (current, index, href) => {
         const html = renderToStaticMarkup(<Navbar current={current} />);
         expect(html.match(/aria-current="page"/g)).toHaveLength(1);
         expect(html).toMatch(
             new RegExp(
-                `href="${active}"[^>]*aria-current="page"|aria-current="page"[^>]*href="${active}"`,
+                `href="${href}"[^>]*aria-current="page"|aria-current="page"[^>]*href="${href}"`,
             ),
         );
-        expect(html).not.toMatch(new RegExp(`href="${other}"[^>]*aria-current`));
-        // a luz acende só na ativa
+        expect(html).toContain(`--nav-index:${index}`);
+        // uma única peça de luz, com o cone dentro
         expect(html.match(/bg-limelight/g)).toHaveLength(1);
         expect(html.match(/shadow-limelight/g)).toHaveLength(1);
     });
@@ -55,15 +55,14 @@ describe("Navbar", () => {
         const glass = `rgb(${[r, g, b].map((c) => Math.round(c * a + 255 * (1 - a))).join(" ")})`;
         expect(contrast(paper, glass)).toBeGreaterThanOrEqual(7);
         expect(contrast(token("color-soft"), glass)).toBeGreaterThanOrEqual(7);
-        // o cone clareia o fundo do texto ativo; o topo do texto fica a ~30% da altura da aba,
-        // onde o degradê ainda tem 70% do alfa
+        // o cone clareia o fundo do texto ativo; o topo do texto fica a 16% do cone,
+        // onde o degradê ainda tem 84% do alfa
         const coneAlpha = Number(
             css.match(/--background-image-limelight: linear-gradient\(rgb\([^/]+\/ ([\d.]+)\)/)![1],
         );
         const [gr, gg, gb] = glass.match(/\d+/g)!.map(Number);
-        const lit = [gr, gg, gb].map((c) =>
-            Math.round(242 * coneAlpha * 0.7 + c * (1 - coneAlpha * 0.7)),
-        );
+        const k = coneAlpha * 0.84;
+        const lit = [gr, gg, gb].map((c) => Math.round(242 * k + c * (1 - k)));
         expect(contrast(paper, `rgb(${lit.join(" ")})`)).toBeGreaterThanOrEqual(7);
     });
 });

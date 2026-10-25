@@ -31,7 +31,7 @@
     --color-frame: #0a0a0a; /* quadro sem imagem */
     --color-toast: #161616; /* aviso */
     --color-nav: rgb(
-        2 2 2 / 0.86
+        2 2 2 / 0.9
     ); /* vidro da navbar: mais escuro que o painel, para dar 7:1 até sobre imagem clara */
 
     /* fontes (as variáveis vêm do next/font, em layout.tsx) */
@@ -114,6 +114,10 @@
     /* navbar flutuante: no computador no topo, no celular na base */
     --spacing-nav-edge: 1.375rem; /* da borda da tela à navbar; no topo é o respiro da página */
     --spacing-nav-gap: 0.875rem; /* da navbar ao conteúdo */
+    --spacing-nav-tab: 7.5rem; /* largura de cada aba: iguais, para a luz achar a aba pelo índice */
+    --spacing-nav-pad: 0.125rem; /* respiro do chip em volta das abas */
+    --spacing-nav-light: 2.75rem; /* largura da barra de luz */
+    --spacing-nav-cone: 4.4rem; /* largura do cone: 160% da barra */
     --spacing-nav: calc(
         var(--spacing-nav-edge) + var(--spacing-control) + var(--spacing-nav-gap)
     ); /* espaço que a navbar toma, antes da área segura */
@@ -148,7 +152,7 @@
     --shadow-*: initial;
     --shadow-glass: inset 0 1px 0 rgb(255 255 255 / 0.2), 0 24px 60px -28px rgb(0 0 0 / 0.8);
     --shadow-focus: 0 0 0 3px var(--color-ink); /* fio escuro por dentro do anel de foco */
-    --shadow-limelight: 0 0 0.875rem 0.125rem rgb(242 242 238 / 0.55); /* brilho da barra de luz */
+    --shadow-limelight: 0 2.25rem 0.9375rem rgb(242 242 238 / 0.3); /* luz que a barra derrama sobre o chip */
     --shadow-toast: 0 12px 30px -10px rgb(0 0 0 / 0.9);
     --inset-shadow-*: initial;
     --drop-shadow-*: initial;
@@ -174,8 +178,8 @@
     /* base da área que rola nos filtros, quando há mais campos abaixo */
     --background-image-scroll-hint: linear-gradient(rgb(2 2 2 / 0), var(--color-scrim-strong));
     --background-image-panel-foot: linear-gradient(rgb(14 14 14 / 0), rgb(14 14 14 / 0.94) 18px);
-    /* cone de luz da aba ativa: paper que se desfaz para baixo, atrás do ícone e do rótulo */
-    --background-image-limelight: linear-gradient(rgb(242 242 238 / 0.26), rgb(242 242 238 / 0));
+    /* cone da luz: paper a 30% que se desfaz para baixo, atrás do ícone e do rótulo */
+    --background-image-limelight: linear-gradient(rgb(242 242 238 / 0.3), rgb(242 242 238 / 0));
     --background-image-grain: url("/grain.svg");
     --opacity-grain: 0.42;
 
@@ -191,6 +195,7 @@
     --transition-duration-fade: 300ms;
     --transition-duration-panel: 420ms;
     --transition-duration-dissolve: 900ms;
+    --transition-duration-limelight: 400ms; /* luz deslizando de uma aba para a outra */
     --animate-*: initial;
     --animate-breathe: breathe 2.4s ease-in-out infinite; /* pulsa em claridade, devagar */
     /* troca de capa: o título antigo sobe e sai, o novo sobe e entra */
@@ -198,8 +203,6 @@
     --animate-rise-in: rise-in 640ms var(--ease-settle);
     /* barra de progresso da capa; a duração vem de quem usa (US001 RNE002) */
     --animate-fill: fill linear forwards;
-    /* luz da aba ativa acendendo no lugar */
-    --animate-limelight: limelight var(--transition-duration-fade) ease-out;
     /* painel de filtros entrando: da direita no computador, de baixo no celular */
     --animate-panel-in: panel-in var(--transition-duration-panel) var(--ease-settle);
     --animate-panel-up: panel-up var(--transition-duration-panel) var(--ease-settle);
@@ -244,12 +247,6 @@
         to {
             opacity: 0;
             transform: translateY(0.875rem);
-        }
-    }
-
-    @keyframes limelight {
-        from {
-            opacity: 0;
         }
     }
 
@@ -322,7 +319,12 @@
 
 /* cone de luz: estreito em cima, na barra, e largo embaixo */
 @utility clip-limelight {
-    clip-path: polygon(35% 0, 65% 0, 100% 100%, 0 100%);
+    clip-path: polygon(5% 100%, 25% 0, 75% 0, 95% 100%);
+}
+
+/* centro da luz na aba ativa: --nav-index (0, 1…) vem da prop current da Navbar */
+@utility nav-light-x {
+    left: calc(var(--spacing-nav-pad) + (var(--nav-index) + 0.5) * var(--spacing-nav-tab));
 }
 
 /* lista que rola na horizontal no celular sem mostrar a barra (faixa "Hoje") */
@@ -435,5 +437,20 @@
         border-radius: 50%;
         background: var(--color-paper);
         box-shadow: 0 0 0 7px var(--color-halo);
+    }
+}
+
+/* a luz da navbar desliza entre páginas (React ViewTransition, share="limelight"); sem suporte do
+   navegador ela só aparece na aba ativa, e com movimento reduzido nada desliza */
+::view-transition-group(.limelight) {
+    animation-duration: var(--transition-duration-limelight);
+    animation-timing-function: ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(.limelight),
+    ::view-transition-old(.limelight),
+    ::view-transition-new(.limelight) {
+        animation: none;
     }
 }

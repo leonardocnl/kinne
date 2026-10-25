@@ -32,7 +32,8 @@ Eu, como visitante, quero uma navegação curta e sempre à mão, para ir do in�
 ### C3: Aba ativa
 
 **Dado** que estou numa das duas telas  
-**Então** a aba da tela tem `aria-current="page"` e a luz acesa (barra fina com brilho e cone de luz)  
+**Então** a aba da tela tem `aria-current="page"` e a luz sobre ela (barra fina com brilho e cone de luz)  
+**E** a luz é uma peça só e desliza para a aba nova na troca de página, quando o navegador permite e sem movimento reduzido  
 **E** a luz usa a cor do texto, nunca o amarelo de destaque  
 **E** as outras abas ficam em cor suave e sobem para a cor do texto no hover e no foco
 
@@ -54,5 +55,5 @@ Eu, como visitante, quero uma navegação curta e sempre à mão, para ir do in�
 
 ## Regras de negócio específicas
 
-- **RNE001 – Sem JS de cliente.** A navbar é componente de servidor, sem estado nem leitura do caminho. Cada página diz qual aba está ativa. A luz acende no lugar, com um fade curto, desligado em `prefers-reduced-motion`. Motivo: o orçamento de JS da tela inicial (150 KB gzip, RNF) já está no limite.
+- **RNE001 – Sem JS de cliente.** A navbar é componente de servidor, sem estado nem leitura do caminho. Cada página diz qual aba está ativa. A luz fica pela posição da aba (índice) e desliza com o `ViewTransition` do React, sem JS de cliente novo; sem suporte ela aparece no lugar e, em `prefers-reduced-motion`, nada se move. Motivo: o orçamento de JS da tela inicial (150 KB gzip, RNF) já está no limite.
 - **RNE002 – Sem eventos.** Trocar de aba não gera evento de medição.
