@@ -20,8 +20,9 @@ permissions:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    # A primeira carga completa (~22 mil títulos) cabe com folga; as diárias levam minutos.
-    timeout-minutes: 60
+    # A carga completa (~22 mil títulos) leva cerca de uma hora; a folga é para a API do TMDB lenta.
+    # As diárias levam minutos.
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
