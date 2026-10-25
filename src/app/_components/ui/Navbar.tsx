@@ -53,7 +53,7 @@ export function Navbar({ current }: { current: NavTab }) {
                 >
                     <ViewTransition name="limelight" share="limelight" default="none">
                         <div className="absolute top-0 nav-light-x h-0.5 w-nav-light -translate-x-1/2 shadow-limelight">
-                            <div className="absolute top-0.5 left-1/2 h-11 w-nav-cone -translate-x-1/2 bg-limelight clip-limelight">
+                            <div className="absolute top-0 left-1/2 h-12 w-nav-cone -translate-x-1/2 bg-limelight clip-limelight">
                                 <span className="absolute inset-0 bg-grain-fine opacity-grain-fine mix-blend-overlay" />
                             </div>
                         </div>
@@ -63,7 +63,7 @@ export function Navbar({ current }: { current: NavTab }) {
                 <ViewTransition name="limelight-bar" share="limelight" default="none">
                     <li
                         aria-hidden="true"
-                        className="pointer-events-none absolute -top-px nav-light-x h-0.5 w-nav-light -translate-x-1/2 bg-limelight-bar drop-shadow-limelight"
+                        className="pointer-events-none absolute -top-px nav-light-x h-px w-nav-light -translate-x-1/2 bg-limelight-bar drop-shadow-limelight"
                     />
                 </ViewTransition>
                 {TABS.map((tab) => (
