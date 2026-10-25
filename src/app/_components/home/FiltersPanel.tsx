@@ -30,6 +30,7 @@ import { personTitles } from "../../_actions/people";
 import { loadError } from "../StateScreen";
 import { saveStreamings } from "../../_actions/account";
 import { rememberReturn } from "../account/returnTo";
+import { SHOW_SIGN_IN } from "../account/signIn";
 import { setAccountStatus, useAccountStatus } from "../account/store";
 import { PersonField } from "./PersonField";
 import { goToTitle } from "../title/origin";
@@ -303,42 +304,45 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
                         onScroll={measureScroll}
                         className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto px-5 pb-1 max-desktop:px-4"
                     >
-                        <div className={section}>
-                            <span id={`${titleId}-feeling`} className="text-data text-soft">
-                                O que você quer sentir hoje?
-                            </span>
-                            <div
-                                role="group"
-                                aria-labelledby={`${titleId}-feeling`}
-                                className="flex flex-wrap gap-1.5"
-                            >
-                                {FEELINGS.map((f) => {
-                                    const on = filters.feeling === f;
-                                    return (
-                                        <Chip
-                                            key={f}
-                                            pressed={on}
-                                            // um só por vez; tocar no marcado volta a "nenhum" (C2)
-                                            onClick={() => {
-                                                // sentimento é só de quem tem conta (US015 C3)
-                                                if (!account) return setInvite(true);
-                                                update({ ...filters, feeling: on ? null : f });
-                                            }}
-                                        >
-                                            {FEELING_LABELS[f]}
-                                        </Chip>
-                                    );
-                                })}
+                        {/* sentimento é só de quem tem conta; sem o login na interface, some para o visitante */}
+                        {(account || SHOW_SIGN_IN) && (
+                            <div className={section}>
+                                <span id={`${titleId}-feeling`} className="text-data text-soft">
+                                    O que você quer sentir hoje?
+                                </span>
+                                <div
+                                    role="group"
+                                    aria-labelledby={`${titleId}-feeling`}
+                                    className="flex flex-wrap gap-1.5"
+                                >
+                                    {FEELINGS.map((f) => {
+                                        const on = filters.feeling === f;
+                                        return (
+                                            <Chip
+                                                key={f}
+                                                pressed={on}
+                                                // um só por vez; tocar no marcado volta a "nenhum" (C2)
+                                                onClick={() => {
+                                                    // sentimento é só de quem tem conta (US015 C3)
+                                                    if (!account) return setInvite(true);
+                                                    update({ ...filters, feeling: on ? null : f });
+                                                }}
+                                            >
+                                                {FEELING_LABELS[f]}
+                                            </Chip>
+                                        );
+                                    })}
+                                </div>
+                                {invite && !account && (
+                                    <p role="status" className="text-data text-soft">
+                                        Crie sua conta para escolher pelo que sente.{" "}
+                                        <TextLink href="/entrar" onClick={rememberReturn}>
+                                            Entrar
+                                        </TextLink>
+                                    </p>
+                                )}
                             </div>
-                            {invite && !account && (
-                                <p role="status" className="text-data text-soft">
-                                    Crie sua conta para escolher pelo que sente.{" "}
-                                    <TextLink href="/entrar" onClick={rememberReturn}>
-                                        Entrar
-                                    </TextLink>
-                                </p>
-                            )}
-                        </div>
+                        )}
 
                         <div className={section}>
                             <span id={`${titleId}-streamings`} className="text-data text-soft">

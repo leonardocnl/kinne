@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { CONTACT_EMAIL } from "@/domain/contact";
 import { PIX } from "@/domain/pix";
 import { PageFrame } from "../_components/account/PageFrame";
+import { SHOW_SIGN_IN } from "../_components/account/signIn";
 import { PixCopy } from "./PixCopy";
 
 export const metadata: Metadata = {
@@ -131,10 +132,12 @@ export default function AboutPage() {
                         “Vou assistir”, “Já vi”), ligados só a um código aleatório do seu navegador.
                         Não guardamos nome, e-mail nem IP com eles.
                     </li>
-                    <li>
-                        Se você entrar com e-mail, guardamos o e-mail, seus streamings, seu gosto e
-                        seus “Já vi”. Em “Seu perfil” você baixa tudo ou apaga a conta.
-                    </li>
+                    {SHOW_SIGN_IN && (
+                        <li>
+                            Se você entrar com e-mail, guardamos o e-mail, seus streamings, seu
+                            gosto e seus “Já vi”. Em “Seu perfil” você baixa tudo ou apaga a conta.
+                        </li>
+                    )}
                     <li>Sem anúncios, e seus dados não são vendidos nem usados para propaganda.</li>
                 </ul>
                 <p className={body}>

@@ -3,6 +3,7 @@
 import { ButtonLink } from "../ui/Button";
 import { UserIcon } from "../ui/icons";
 import { rememberReturn } from "./returnTo";
+import { SHOW_SIGN_IN } from "./signIn";
 import { useAccountStatus } from "./store";
 
 /**
@@ -19,6 +20,8 @@ export function AccountButton() {
             </ButtonLink>
         );
     }
+    // quem já tem sessão mantém o perfil; o visitante só vê "Entrar" com a chave ligada
+    if (!SHOW_SIGN_IN) return null;
     return (
         <ButtonLink
             variant="ghost"
