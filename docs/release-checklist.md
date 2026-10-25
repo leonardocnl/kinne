@@ -180,3 +180,18 @@ Then reload the home: it must still render (the lists were rebuilt). The third c
 - **Search misbehaving (TMDB or its budget):** set `SEARCH_TMDB_FALLBACK=off` and redeploy the same build (title-search I2).
 - **Sync misbehaving:** Actions → Sync catalog → ⋯ → Disable workflow. The site keeps serving the last good catalog from its cache and database. The safety valve already aborts a run that would remove more than 5% of active titles (catalog-sync B1).
 - **Suspected secret leak:** rotate first, investigate after (security §4): new `kinne_app` / `kinne_sync` password (`\password <role>` in `psql`), update Vercel or GitHub, redeploy; new `REVALIDATE_SECRET` in both places; new `RATE_LIMIT_SECRET` in Vercel.
+
+## 11. After the merge into `main`
+
+Final steps, in this order. Do not skip ahead: (b) reads the code on `main`, and (d) can show that the platform changed something the code did not.
+
+1. **Make `main` the default branch.** Settings → General → Default branch → switch to `main`. Scheduled workflows run the file on the default branch, so until then the daily 06:17 UTC run uses the `develop` copy of `sync-catalog.yml` (§6). Keep `develop` for the task branches and its PRs.
+2. **First full load on production.** Actions → **Sync catalog** → Run workflow, **Use workflow from: `main`**, tick **Carga completa**. It takes about an hour (the job allows 150 minutes). Details and the abort rules are in §7.1.
+3. **Verify the load.** Run the three queries of §7.2 against production (`sync_runs`, the `catalog_titles` totals, `daily_picks` for today and tomorrow) and compare with the expected numbers there. Then open the production home and a title page (§7.3).
+4. **Check the security headers in production.** The platform (Vercel) can override or add headers, so test the live domain, not only the build:
+
+   ```sh
+   curl -I https://kinne.com.br
+   ```
+
+   The response must carry all six, with the values of security.md §10: `Content-Security-Policy`, `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` and `Cross-Origin-Opener-Policy: same-origin`. There must be no `X-Powered-By`. A missing or different header is a regression: fix it before announcing the site.
