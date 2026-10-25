@@ -114,3 +114,20 @@ export function UserIcon() {
         </svg>
     );
 }
+
+export function ChevronIcon() {
+    return (
+        <svg
+            viewBox="0 0 16 16"
+            className="size-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <path d="M3.5 6l4.5 4.5L12.5 6" />
+        </svg>
+    );
+}

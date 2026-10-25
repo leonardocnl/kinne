@@ -11,7 +11,6 @@ import {
     withType,
     type FilterCandidate,
     type Filters,
-    type TypeChoice,
 } from "@/domain/filters";
 import { FEELING_LABELS, FEELINGS } from "@/domain/feelings";
 import { GENRE_LABELS, KINNE_GENRES } from "@/domain/genre";
@@ -32,7 +31,9 @@ import { saveStreamings } from "../../_actions/account";
 import { rememberReturn } from "../account/returnTo";
 import { setAccountStatus, useAccountStatus } from "../account/store";
 import { PersonField } from "./PersonField";
+import { summarize, TYPES } from "./filtersSummary";
 import { goToTitle } from "../title/origin";
+import { AccordionSection } from "../ui/AccordionSection";
 import { Button } from "../ui/Button";
 import { Chip, RadioChip } from "../ui/Chip";
 import { GlassPanel } from "../ui/GlassPanel";
@@ -41,12 +42,6 @@ import { CloseIcon } from "../ui/icons";
 import { Skeleton } from "../ui/Skeleton";
 import { TextLink } from "../ui/TextLink";
 import { Digits, Slider } from "../ui/Slider";
-
-const TYPES: { value: TypeChoice; label: string }[] = [
-    { value: "movie", label: "Filmes" },
-    { value: "series", label: "Séries" },
-    { value: "both", label: "Os dois" },
-];
 
 const section = "flex flex-col gap-2 border-t border-line px-1 pt-3";
 
@@ -255,6 +250,7 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
         });
     }
 
+    const summary = summarize(filters);
     const runtime = RUNTIME_LIMITS.findIndex((l) => l.minutes === filters.maxRuntime);
     const hint =
         failed || drawFailed
@@ -301,7 +297,7 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
                     <div
                         ref={scrollRef}
                         onScroll={measureScroll}
-                        className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto px-5 pb-1 max-desktop:px-4"
+                        className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-5 pb-1 max-desktop:px-4"
                     >
                         <div className={section}>
                             <span id={`${titleId}-feeling`} className="text-data text-soft">
@@ -340,15 +336,8 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
                             )}
                         </div>
 
-                        <div className={section}>
-                            <span id={`${titleId}-streamings`} className="text-data text-soft">
-                                Streamings
-                            </span>
-                            <div
-                                role="group"
-                                aria-labelledby={`${titleId}-streamings`}
-                                className="flex flex-wrap gap-1.5"
-                            >
+                        <AccordionSection title="Streamings" summary={summary.streamings}>
+                            <div className="flex flex-wrap gap-1.5">
                                 {STREAMING_SERVICES.map((s) => {
                                     const on = filters.streamings.includes(s.id);
                                     return (
@@ -371,15 +360,12 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
                                     );
                                 })}
                             </div>
-                        </div>
+                        </AccordionSection>
 
-                        <div className={section}>
-                            <span id={`${titleId}-type`} className="text-data text-soft">
-                                Tipo
-                            </span>
+                        <AccordionSection title="Tipo" summary={summary.type}>
                             <div
                                 role="radiogroup"
-                                aria-labelledby={`${titleId}-type`}
+                                aria-label="Tipo"
                                 className="flex flex-wrap gap-1.5"
                             >
                                 {TYPES.map((t) => (
@@ -394,17 +380,10 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
                                     </RadioChip>
                                 ))}
                             </div>
-                        </div>
+                        </AccordionSection>
 
-                        <div className={section}>
-                            <span id={`${titleId}-genres`} className="text-data text-soft">
-                                Gênero
-                            </span>
-                            <div
-                                role="group"
-                                aria-labelledby={`${titleId}-genres`}
-                                className="flex flex-wrap gap-1.5"
-                            >
+                        <AccordionSection title="Gênero" summary={summary.genres}>
+                            <div className="flex flex-wrap gap-1.5">
                                 {KINNE_GENRES.filter(
                                     // o TMDB não tem Romance para séries (C8)
                                     (g) => g !== "romance" || filters.type !== "series",
@@ -428,30 +407,21 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
                                     );
                                 })}
                             </div>
-                        </div>
+                        </AccordionSection>
 
-                        <div className={section}>
-                            <span id={`${titleId}-rating`} className="text-data text-soft">
-                                Classificação
-                            </span>
-                            <div
-                                role="group"
-                                aria-labelledby={`${titleId}-rating`}
-                                className="flex flex-wrap gap-1.5"
+                        <AccordionSection title="Classificação" summary={summary.rating}>
+                            {/* desligado por padrão: só com ele os títulos 18 entram (fase 4) */}
+                            <Chip
+                                pressed={filters.adult}
+                                className="w-full"
+                                onClick={() => update({ ...filters, adult: !filters.adult })}
                             >
-                                {/* desligado por padrão: só com ele os títulos 18 entram (fase 4) */}
-                                <Chip
-                                    pressed={filters.adult}
-                                    aria-label="18+, incluir títulos para maiores de 18 anos"
-                                    onClick={() => update({ ...filters, adult: !filters.adult })}
-                                >
-                                    18+
-                                </Chip>
-                            </div>
-                        </div>
+                                18+, incluir títulos para maiores de 18 anos
+                            </Chip>
+                        </AccordionSection>
 
-                        <div className={section}>
-                            <span id={`${titleId}-person`} className="text-data text-soft">
+                        <AccordionSection title="Ator ou diretor" summary={summary.person}>
+                            <span id={`${titleId}-person`} className="sr-only">
                                 Buscar ator ou diretor
                             </span>
                             <PersonField
@@ -459,41 +429,43 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
                                 value={filters.person}
                                 onChange={(person) => update({ ...filters, person })}
                             />
-                        </div>
+                        </AccordionSection>
 
-                        <Slider
-                            className={section}
-                            label="Nota TMDB mínima"
-                            min={MIN_RATING}
-                            max={MAX_RATING}
-                            step={0.1}
-                            value={filters.minRating}
-                            valueText={filters.minRating.toFixed(1).replace(".", ",")}
-                            onChange={(event) =>
-                                update({
-                                    ...filters,
-                                    minRating: Math.round(Number(event.target.value) * 10) / 10,
-                                })
-                            }
-                        />
-
-                        {filters.type === "movie" && (
+                        <AccordionSection title="Nota mínima" summary={summary.minRating}>
                             <Slider
-                                className={section}
-                                label="Duração do filme"
-                                min={0}
-                                max={RUNTIME_LIMITS.length - 1}
-                                step={1}
-                                value={runtime}
-                                valueText={RUNTIME_LIMITS[runtime].label}
+                                label="Nota TMDB mínima"
+                                min={MIN_RATING}
+                                max={MAX_RATING}
+                                step={0.1}
+                                value={filters.minRating}
+                                valueText={summary.minRating}
                                 onChange={(event) =>
                                     update({
                                         ...filters,
-                                        maxRuntime:
-                                            RUNTIME_LIMITS[Number(event.target.value)].minutes,
+                                        minRating: Math.round(Number(event.target.value) * 10) / 10,
                                     })
                                 }
                             />
+                        </AccordionSection>
+
+                        {filters.type === "movie" && (
+                            <AccordionSection title="Duração" summary={summary.runtime}>
+                                <Slider
+                                    label="Duração do filme"
+                                    min={0}
+                                    max={RUNTIME_LIMITS.length - 1}
+                                    step={1}
+                                    value={runtime}
+                                    valueText={summary.runtime}
+                                    onChange={(event) =>
+                                        update({
+                                            ...filters,
+                                            maxRuntime:
+                                                RUNTIME_LIMITS[Number(event.target.value)].minutes,
+                                        })
+                                    }
+                                />
+                            </AccordionSection>
                         )}
                     </div>
                     {/* há mais campos abaixo: degradê na base, que some no fim da rolagem */}

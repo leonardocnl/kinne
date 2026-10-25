@@ -28,9 +28,12 @@ Eu, como visitante, quero filtrar por streaming, tipo, gênero, nota e duração
 | Gênero           | Seleção múltipla | Não | "Ação", "Comédia", "Drama", "Romance", "Suspense"; Romance só com Filmes ou Os dois (C8) | "Drama"     | Nenhum                 |
 | Nota TMDB mínima | Slider           | Sim | 6,0 a 9,0, passo 0,1                                                                     | "7,2"       | "6,4"                  |
 | Duração          | Slider           | Sim | "Até 1h30", "Até 1h45", "Até 2h", "Qualquer"; só com Filmes (C2)                         | "Até 1h45"  | "Qualquer"             |
-| Classificação    | Chip "18+"       | Não | Marcado inclui títulos de classificação 18 (C10, RNG008)                                 | "18+"       | Desmarcado             |
+| Classificação    | Linha "18+"      | Não | Marcada inclui títulos de classificação 18 (C10, RNG008)                                 | "18+"       | Desmarcada             |
 | Ator ou diretor  | Busca            | Não | Pessoas do catálogo; uma por vez; 3 letras ou mais (C9)                                  | "Tom Hanks" | Nenhuma                |
 
+**E** cada campo é uma seção recolhível, todas fechadas ao abrir; várias podem ficar abertas ao mesmo tempo  
+**E** o cabeçalho de cada seção fechada resume o que está marcado, em texto (ex.: "Netflix, Max", "Qualquer", "Nenhum")  
+**E** a ordem das seções é Streamings, Tipo, Gênero, Classificação, Ator ou diretor, Nota mínima e Duração  
 **E** exibe o contador "N títulos combinam" e a ação "Sortear um título" (principal)  
 **E**, no computador, os filtros abrem como painel de vidro sobre a capa, no canto superior direito  
 **E**, em janela baixa, o painel desce sobre o título, que fica esmaecido  
@@ -100,9 +103,9 @@ Eu, como visitante, quero filtrar por streaming, tipo, gênero, nota e duração
 ### C10: Títulos 18+
 
 **Dado** que os filtros estão abertos  
-**Quando** marco o chip "18+"  
+**Quando** marco a linha "18+" na seção Classificação  
 **Então** o contador e o sorteio passam a incluir títulos de classificação 18 (RNG008)  
-**E**, com o chip desmarcado, esses títulos nunca aparecem
+**E**, com a linha desmarcada, esses títulos nunca aparecem
 
 ## Regras de negócio específicas
 

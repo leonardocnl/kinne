@@ -10,6 +10,7 @@ import {
     PauseIcon,
     SearchIcon,
 } from "../../_components/ui/icons";
+import { AccordionSection } from "../../_components/ui/AccordionSection";
 import { Chip } from "../../_components/ui/Chip";
 import { GlassPanel } from "../../_components/ui/GlassPanel";
 import { Slider } from "../../_components/ui/Slider";
@@ -264,6 +265,28 @@ export function Controls() {
                         ),
                     }}
                 />
+            </Spec>
+
+            <Spec
+                name="AccordionSection"
+                props={["title: string", "summary: string", "children"]}
+                does="Seção recolhível dos filtros: botão com aria-expanded e aria-controls, fechada por padrão, várias abertas ao mesmo tempo. Fechada, o cabeçalho mostra o que está marcado, em texto. O conteúdo continua montado e a altura não anima."
+            >
+                <div className="flex flex-col">
+                    <AccordionSection title="Gênero" summary="Ação, Drama">
+                        <div className="flex flex-wrap gap-1.5">
+                            <Chip pressed>Ação</Chip>
+                            <Chip pressed={false}>Comédia</Chip>
+                            <Chip pressed>Drama</Chip>
+                        </div>
+                    </AccordionSection>
+                    <AccordionSection title="Streamings" summary="Qualquer">
+                        <div className="flex flex-wrap gap-1.5">
+                            <Chip pressed={false}>Netflix</Chip>
+                            <Chip pressed={false}>Max</Chip>
+                        </div>
+                    </AccordionSection>
+                </div>
             </Spec>
 
             <Spec
