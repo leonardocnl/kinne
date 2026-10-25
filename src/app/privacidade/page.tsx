@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CONTACT_EMAIL } from "@/domain/contact";
 import { PageFrame } from "../_components/account/PageFrame";
 
 export const metadata: Metadata = {
@@ -57,7 +58,14 @@ export default function PrivacyPage() {
 
                 <h2 className="font-display text-heading font-medium">Contato</h2>
                 <p className="text-small text-soft">
-                    O contato do responsável será informado aqui antes da abertura das contas.
+                    Para dúvidas ou pedidos sobre seus dados, escreva para{" "}
+                    <a
+                        href={`mailto:${CONTACT_EMAIL}`}
+                        className="underline decoration-line underline-offset-5 hover:decoration-paper"
+                    >
+                        {CONTACT_EMAIL}
+                    </a>
+                    .
                 </p>
             </main>
         </PageFrame>
