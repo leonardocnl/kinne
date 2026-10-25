@@ -114,7 +114,6 @@
     /* navbar flutuante: no computador no topo, no celular na base */
     --spacing-nav-edge: 1.375rem; /* da borda da tela à navbar; no topo é o respiro da página */
     --spacing-nav-gap: 0.875rem; /* da navbar ao conteúdo */
-    --spacing-nav-tab: 7.5rem; /* largura de cada aba: iguais, para a luz achar a aba pelo índice */
     --spacing-nav-pad: 0.125rem; /* respiro do chip em volta das abas */
     --spacing-nav-icon: 5rem; /* célula do ícone da marca, à esquerda das abas */
     --spacing-nav-light: 2.75rem; /* largura da barra de luz */
@@ -127,6 +126,7 @@
     --container-page: calc(
         100vh * 16 / 9
     ); /* largura máxima da página: nunca mais larga que um quadro 16:9 da altura da janela */
+    --container-navbar: 30rem; /* largura máxima da navbar; no celular ocupa a tela menos as margens */
     --container-measure: 80ch; /* texto corrido */
     /* painel de filtros; não pode se chamar "panel": w-panel acharia antes --spacing-panel */
     --container-filters: 33.125rem;
@@ -187,6 +187,7 @@
     /* telas: "celular" é até 860px; desktop: vale de 861px para cima */
     --breakpoint-*: initial;
     --breakpoint-desktop: 861px;
+    --breakpoint-wide: 1140px; /* abaixo disso a data some da barra do topo, para não bater na navbar */
 
     /* movimento */
     --ease-*: initial;
@@ -323,11 +324,12 @@
     clip-path: polygon(5% 100%, 25% 0, 75% 0, 95% 100%);
 }
 
-/* centro da luz na aba ativa: --nav-index (0, 1…) vem da prop current da Navbar */
+/* centro da luz na aba ativa: --nav-index (0, 1…) vem da prop current da Navbar. As abas
+   dividem por igual o que sobra depois da marca; 100% é a largura do chip */
 @utility nav-light-x {
     left: calc(
         var(--spacing-nav-pad) + var(--spacing-nav-icon) + (var(--nav-index) + 0.5) *
-            var(--spacing-nav-tab)
+            (100% - 2 * var(--spacing-nav-pad) - var(--spacing-nav-icon)) / 2
     );
 }
 

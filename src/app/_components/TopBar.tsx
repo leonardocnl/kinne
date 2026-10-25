@@ -14,10 +14,8 @@ export function TopBar({ date, back }: TopBarProps) {
     return (
         <header className="flex items-center justify-end gap-3">
             <div className="flex items-center gap-2.5">
-                {/* no computador a data fica junto da busca, deixando o centro para a navbar */}
-                <p className="mr-2 text-data whitespace-nowrap text-soft max-desktop:hidden">
-                    {date}
-                </p>
+                {/* em tela larga a data fica junto da busca, deixando o centro para a navbar */}
+                <p className="mr-2 text-data whitespace-nowrap text-soft max-wide:hidden">{date}</p>
                 <SearchLauncher />
                 {back && (
                     <ButtonLink

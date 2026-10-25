@@ -11,10 +11,9 @@ const TABS = [
 export type NavTab = (typeof TABS)[number]["id"];
 
 const item =
-    "relative flex h-target w-nav-tab items-center justify-center gap-2 rounded-pill border border-transparent text-small font-medium whitespace-nowrap transition-colors duration-hover motion-reduce:transition-none";
-// hover como o do quiet: fundo hover e borda line-strong; a aba ativa não muda
-const idle =
-    "text-soft hover:border-line-strong hover:bg-hover hover:text-paper focus-visible:text-paper";
+    "relative flex flex-1 h-target items-center justify-center gap-2 rounded-pill text-small font-medium whitespace-nowrap transition-colors duration-hover motion-reduce:transition-none";
+// no hover a aba só sobe de soft para paper: sem fundo nem contorno (exceção do DESIGN.md)
+const idle = "text-soft hover:text-paper focus-visible:text-paper";
 
 /**
  * Navbar flutuante em chip de vidro escuro: no computador no topo, no celular na base, sempre
@@ -30,11 +29,11 @@ export function Navbar({ current }: { current: NavTab }) {
         <nav
             aria-label="Principal"
             data-nav=""
-            className="pointer-events-none fixed inset-x-0 top-nav-edge z-nav flex justify-center max-desktop:top-auto max-desktop:nav-bottom"
+            className="pointer-events-none fixed inset-x-0 top-nav-edge z-nav flex justify-center px-gutter max-desktop:top-auto max-desktop:nav-bottom"
         >
             <ul
                 style={{ "--nav-index": index } as CSSProperties}
-                className="pointer-events-auto relative flex h-control items-center rounded-pill border border-line bg-nav p-nav-pad shadow-glass backdrop-blur-glass backdrop-saturate-glass"
+                className="pointer-events-auto relative flex h-control w-full max-w-navbar items-center rounded-pill border border-line bg-nav p-nav-pad shadow-glass backdrop-blur-glass backdrop-saturate-glass"
             >
                 {/* a luz vai antes das abas: o texto fica por cima do cone */}
                 <li className="flex w-nav-icon items-center justify-center">
@@ -56,7 +55,7 @@ export function Navbar({ current }: { current: NavTab }) {
                     </li>
                 </ViewTransition>
                 {TABS.map((tab) => (
-                    <li key={tab.id}>
+                    <li key={tab.id} className="flex flex-1">
                         <Link
                             href={tab.href}
                             aria-current={tab.id === current ? "page" : undefined}
