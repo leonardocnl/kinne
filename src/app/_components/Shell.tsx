@@ -6,6 +6,7 @@ import { Navbar, type NavTab } from "./ui/Navbar";
 
 const links = [
     { href: "/sobre", label: "Sobre" },
+    { href: "/perguntas", label: "Perguntas frequentes" },
     { href: "/privacidade", label: "Privacidade" },
     { href: "/sobre#apoie", label: "Apoie" },
 ];

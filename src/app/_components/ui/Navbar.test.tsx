@@ -36,7 +36,6 @@ describe("Navbar", () => {
         // uma única luz: a barra sobre a borda e o cone abaixo dela
         expect(html.match(/bg-limelight(?!-)/g)).toHaveLength(1);
         expect(html.match(/drop-shadow-limelight/g)).toHaveLength(1);
-        expect(html.match(/(?<!drop-)shadow-limelight/g)).toHaveLength(1);
     });
 
     it("fora do Início e do Sobre, nenhuma aba ativa nem luz", () => {
@@ -51,8 +50,11 @@ describe("Navbar", () => {
         expect(html.match(/bg-limelight(?!-)/g)).toHaveLength(1);
     });
 
-    it("não usa o amarelo (signal)", () => {
-        expect(renderToStaticMarkup(<Navbar current="inicio" />)).not.toContain("signal");
+    it("o amarelo fica só no traço da aba ativa", () => {
+        expect(renderToStaticMarkup(<Navbar />)).not.toContain("signal");
+        const html = renderToStaticMarkup(<Navbar current="inicio" />);
+        expect(html.match(/signal/g)).toHaveLength(1);
+        expect(html).toMatch(/<li[^>]*bg-signal[^>]*drop-shadow-limelight/);
     });
 
     it("é componente de servidor: sem use client nem hooks", () => {
@@ -62,26 +64,30 @@ describe("Navbar", () => {
     });
 
     // vidro escuro sobre a pior imagem possível (branco puro): texto ativo, inativo e o cone no topo
-    it("dá 7:1 no texto sobre o vidro, mesmo com imagem branca atrás", () => {
+    // vidro claro sutil sobre a pior imagem possível (branco puro), escurecida pelo
+    // backdrop-brightness. A navbar tem exceção à regra de 7:1 (decisão do dono): 4,5:1 (AA).
+    it("dá 4,5:1 no texto sobre o vidro, mesmo com imagem branca atrás", () => {
         const css = readFileSync(join(dir, "../../globals.css"), "utf8");
         const token = (name: string) => css.match(new RegExp(`--${name}: ([^;]+);`))![1];
         const paper = token("color-paper");
+        const source = readFileSync(join(dir, "navItem.ts"), "utf8");
+        const behind = (255 * Number(source.match(/backdrop-brightness-(\d+)/)![1])) / 100;
         const [r, g, b, a] = token("color-nav")
             .match(/[\d.]+/g)!
             .map(Number);
-        const glass = `rgb(${[r, g, b].map((c) => Math.round(c * a + 255 * (1 - a))).join(" ")})`;
-        expect(contrast(paper, glass)).toBeGreaterThanOrEqual(7);
-        expect(contrast(token("color-soft"), glass)).toBeGreaterThanOrEqual(7);
-        // o cone clareia o fundo do texto ativo; o topo do texto fica a 16% do cone,
-        // onde o degradê ainda tem 84% do alfa
-        const coneAlpha = Number(
-            css.match(
-                /--background-image-limelight: radial-gradient\([^,]*,\s*rgb\([^/]+\/ ([\d.]+)\)/,
-            )![1],
-        );
-        const [gr, gg, gb] = glass.match(/\d+/g)!.map(Number);
-        const k = coneAlpha * 0.84;
-        const lit = [gr, gg, gb].map((c) => Math.round(242 * k + c * (1 - k)));
-        expect(contrast(paper, `rgb(${lit.join(" ")})`)).toBeGreaterThanOrEqual(7);
+        const mix = (fg: number[], alpha: number, bg: number[]) =>
+            fg.map((c, i) => Math.round(c * alpha + bg[i] * (1 - alpha)));
+        const rgb = (c: number[]) => `rgb(${c.join(" ")})`;
+        const glass = mix([r, g, b], a, [behind, behind, behind]);
+        expect(contrast(paper, rgb(glass))).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(token("color-soft"), rgb(glass))).toBeGreaterThanOrEqual(4.5);
+        // o brilho amarelo sobe do traço; atrás do rótulo vale no máximo a segunda parada
+        const stops = [
+            ...css
+                .match(/--background-image-limelight: radial-gradient\([^;]*\);/)![0]
+                .matchAll(/rgb\(([\d.]+) ([\d.]+) ([\d.]+) \/ ([\d.]+)\)/g),
+        ].map((m) => m.slice(1).map(Number));
+        const [yr, yg, yb, ya] = stops[1];
+        expect(contrast(paper, rgb(mix([yr, yg, yb], ya, glass)))).toBeGreaterThanOrEqual(4.5);
     });
 });

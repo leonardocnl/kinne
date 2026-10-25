@@ -106,7 +106,7 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
     }
 
     const status = !ready
-        ? "Digite o nome de um filme ou série."
+        ? "Continue digitando."
         : !outcome
           ? "Buscando…"
           : outcome.kind === "results"
@@ -125,7 +125,7 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
                 event.preventDefault();
                 onClose(true);
             }}
-            className="z-1 max-desktop:fixed max-desktop:inset-0 max-desktop:flex max-desktop:flex-col max-desktop:gap-3.5 max-desktop:bg-scrim-strong max-desktop:px-4 max-desktop:pt-5.5 max-desktop:pb-5 max-desktop:backdrop-blur-glass desktop:absolute desktop:inset-0"
+            className="pointer-events-auto z-1 max-desktop:fixed max-desktop:inset-0 max-desktop:flex max-desktop:flex-col max-desktop:gap-3.5 max-desktop:bg-scrim-strong max-desktop:px-4 max-desktop:pt-5.5 max-desktop:pb-5 max-desktop:backdrop-blur-glass desktop:absolute desktop:inset-0"
         >
             <div className="flex items-center gap-2.5 motion-reduce:animate-none desktop:absolute desktop:inset-0 desktop:animate-search-in desktop:gap-1.5">
                 <input
@@ -164,8 +164,15 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
                 </button>
             </div>
 
-            {/* resultados: embaixo da busca no computador; no celular, embaixo do campo */}
-            <div className="flex min-h-0 flex-col gap-3.5 max-desktop:flex-1 desktop:absolute desktop:top-full desktop:right-0 desktop:mt-2 desktop:max-h-search-panel desktop:w-navbar desktop:rounded-panel desktop:border desktop:border-line desktop:bg-glass desktop:bg-linear-to-b desktop:from-scrim desktop:to-scrim desktop:p-panel desktop:shadow-glass desktop:backdrop-blur-glass desktop:backdrop-saturate-glass">
+            {/* resultados: no computador, embaixo de navbar e busca, da largura das duas; no celular,
+                embaixo do campo. Só depois da primeira letra */}
+            <div
+                className={cx(
+                    "flex min-h-0 flex-col gap-3.5 max-desktop:flex-1 desktop:absolute desktop:top-full desktop:right-0 desktop:mt-2 desktop:max-h-search-panel desktop:w-search-results desktop:rounded-panel desktop:border desktop:border-line desktop:bg-nav desktop:bg-linear-to-b desktop:from-sheen desktop:to-transparent desktop:p-panel desktop:shadow-nav desktop:backdrop-blur-veil desktop:backdrop-brightness-45 desktop:backdrop-saturate-glass",
+                    // o painel só aparece depois que a pessoa começa a digitar: antes, o lugar dela é o campo
+                    term === "" && "hidden",
+                )}
+            >
                 <ul
                     id={listId}
                     role="listbox"
@@ -184,26 +191,28 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
                             onClick={() => open(result)}
                             onPointerMove={() => setActive(i)}
                             className={cx(
-                                "flex h-result shrink-0 cursor-pointer items-center gap-3.5 rounded-control pr-5 pl-3 transition duration-hover motion-reduce:transition-none",
+                                "flex h-result shrink-0 cursor-pointer items-center gap-3.5 rounded-control pr-5 pl-3 transition duration-hover motion-reduce:transition-none desktop:h-result-lg",
                                 i === active && "bg-hover outline outline-line-strong",
                             )}
                         >
                             {result.posterPath ? (
                                 <TmdbImage
                                     sources={posterSources(result.posterPath)}
-                                    className="h-poster w-poster-width shrink-0"
+                                    className="h-poster w-poster-width shrink-0 desktop:h-poster-lg desktop:w-poster-lg-width"
                                 />
                             ) : (
                                 <span
                                     aria-hidden="true"
-                                    className="h-poster w-poster-width shrink-0 bg-frame"
+                                    className="h-poster w-poster-width shrink-0 bg-frame desktop:h-poster-lg desktop:w-poster-lg-width"
                                 />
                             )}
                             <span className="flex min-w-0 flex-col">
-                                <span className="truncate text-body text-paper">
+                                <span className="truncate text-body text-paper desktop:font-display desktop:text-shot">
                                     {result.title}
                                 </span>
-                                <span className="text-data text-faint">{resultFacts(result)}</span>
+                                <span className="text-data text-faint desktop:text-small">
+                                    {resultFacts(result)}
+                                </span>
                             </span>
                         </li>
                     ))}

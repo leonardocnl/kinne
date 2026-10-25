@@ -36,7 +36,7 @@ Eu, como visitante, quero uma navegação curta e sempre à mão, para ir do in�
 **Dado** que estou no Início ou no Sobre  
 **Então** a aba da tela tem `aria-current="page"` e a luz sobre ela (barra fina com brilho e cone de luz)  
 **E** a luz é uma peça só e desliza para a aba nova na troca de página, quando o navegador permite e sem movimento reduzido  
-**E** a luz usa a cor do texto, nunca o amarelo de destaque  
+**E** a luz é um traço amarelo na borda de baixo, com um brilho atrás do rótulo  
 **E** as outras abas ficam em cor suave e sobem para a cor do texto no hover e no foco
 
 ### C4: Painéis
@@ -49,7 +49,7 @@ Eu, como visitante, quero uma navegação curta e sempre à mão, para ir do in�
 ### C7: Buscar
 
 **Dado** que toco na lupa  
-**Então**, no computador, ela se alarga num campo de busca, empurrando o chip, com o botão de fechar dentro, e os resultados aparecem embaixo  
+**Então**, no computador, ela se alarga num campo de busca, empurrando o chip, com o botão de fechar dentro, e os resultados aparecem embaixo depois da primeira letra  
 **E**, no celular, a busca abre em tela cheia, com o campo em cima  
 **E** a busca não acende a luz nem marca `aria-current`, porque não é uma página
 
@@ -62,7 +62,7 @@ Eu, como visitante, quero uma navegação curta e sempre à mão, para ir do in�
 ### C6: Leitura
 
 **Dado** qualquer imagem atrás do chip, inclusive clara  
-**Então** o texto do chip tem contraste de no mínimo 7:1 sobre o vidro
+**Então** o texto do chip tem contraste de no mínimo 4,5:1 sobre o vidro (exceção da navbar à regra de 7:1, decisão do dono)
 
 ## Regras de negócio específicas
 

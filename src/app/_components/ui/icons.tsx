@@ -114,37 +114,3 @@ export function UserIcon() {
         </svg>
     );
 }
-
-export function HomeIcon() {
-    return (
-        <svg
-            viewBox="0 0 24 24"
-            className="size-4.5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinejoin="round"
-            aria-hidden="true"
-        >
-            <path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z" />
-        </svg>
-    );
-}
-
-export function InfoIcon() {
-    return (
-        <svg
-            viewBox="0 0 24 24"
-            className="size-4.5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            aria-hidden="true"
-        >
-            <circle cx="12" cy="12" r="8.5" />
-            <path d="M12 11v5.5" />
-            <circle cx="12" cy="7.9" r="0.6" fill="currentColor" />
-        </svg>
-    );
-}
