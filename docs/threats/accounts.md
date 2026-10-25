@@ -110,7 +110,7 @@ An adversarial review of the first implementation found the items below. Each ha
 | B6  | Claimed bundle check and concurrency safety were not tested                                                                       | Secret scan in `bundle:check`; multi-connection tests for the 5-attempt limit and single-use codes                                                                                               | `scripts/bundle-secrets.test.ts`, `accounts.db.test.ts` "B6" |
 | B7  | The local-only guards could be bypassed by `PGHOSTADDR`, `PGSERVICE`, host lists, URI `PGDATABASE`                                | One guard (`src/test/local-guard.ts`) used by the test helper and mirrored in `apply-migrations-local.sh`                                                                                        | `src/test/local-guard.test.ts`                               |
 
-Not in this PR: M3 (HTTP security headers, security.md §10) goes in its own PR.
+M3 (HTTP security headers, security.md §10) was fixed in its own PR (`feat/security-headers`); the one gap left, `'unsafe-inline'` in `script-src`, is an accepted risk in security.md §17.
 
 ## Attack tests (required)
 
