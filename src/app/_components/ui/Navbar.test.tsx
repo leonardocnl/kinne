@@ -58,7 +58,9 @@ describe("Navbar", () => {
         // o cone clareia o fundo do texto ativo; o topo do texto fica a 16% do cone,
         // onde o degradê ainda tem 84% do alfa
         const coneAlpha = Number(
-            css.match(/--background-image-limelight: linear-gradient\(rgb\([^/]+\/ ([\d.]+)\)/)![1],
+            css.match(
+                /--background-image-limelight: linear-gradient\(\s*rgb\([^/]+\/ ([\d.]+)\)/,
+            )![1],
         );
         const [gr, gg, gb] = glass.match(/\d+/g)!.map(Number);
         const k = coneAlpha * 0.84;

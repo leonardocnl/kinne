@@ -152,6 +152,7 @@
     --shadow-*: initial;
     --shadow-glass: inset 0 1px 0 rgb(255 255 255 / 0.2), 0 24px 60px -28px rgb(0 0 0 / 0.8);
     --shadow-focus: 0 0 0 3px var(--color-ink); /* fio escuro por dentro do anel de foco */
+    --shadow-nav: 0 24px 60px -28px rgb(0 0 0 / 0.8); /* navbar: a sombra do vidro, sem o fio claro em cima, para a borda ser igual em volta */
     --shadow-limelight: 0 2.25rem 0.9375rem rgb(242 242 238 / 0.3); /* luz que a barra derrama sobre o chip */
     --shadow-toast: 0 12px 30px -10px rgb(0 0 0 / 0.9);
     --inset-shadow-*: initial;
@@ -179,7 +180,11 @@
     --background-image-scroll-hint: linear-gradient(rgb(2 2 2 / 0), var(--color-scrim-strong));
     --background-image-panel-foot: linear-gradient(rgb(14 14 14 / 0), rgb(14 14 14 / 0.94) 18px);
     /* cone da luz: paper a 30% que se desfaz para baixo, atrás do ícone e do rótulo */
-    --background-image-limelight: linear-gradient(rgb(242 242 238 / 0.3), rgb(242 242 238 / 0));
+    --background-image-limelight: linear-gradient(
+        rgb(242 242 238 / 0.3),
+        rgb(242 242 238 / 0.1) 60%,
+        rgb(2 2 2 / 0.7)
+    ); /* e escurece para o preto no pé do chip */
     --background-image-grain: url("/grain.svg");
     --opacity-grain: 0.42;
 

@@ -33,7 +33,7 @@ export function Navbar({ current }: { current: NavTab }) {
         >
             <ul
                 style={{ "--nav-index": index } as CSSProperties}
-                className="pointer-events-auto relative flex h-control w-full max-w-navbar items-center rounded-pill border border-line bg-nav p-nav-pad shadow-glass backdrop-blur-glass backdrop-saturate-glass"
+                className="pointer-events-auto relative flex h-control w-full max-w-navbar items-center rounded-pill border border-line bg-nav p-nav-pad shadow-nav backdrop-blur-glass backdrop-saturate-glass"
             >
                 {/* a luz vai antes das abas: o texto fica por cima do cone */}
                 <li className="flex flex-1 items-center justify-center">
@@ -46,14 +46,19 @@ export function Navbar({ current }: { current: NavTab }) {
                         className="h-6 w-auto"
                     />
                 </li>
-                <ViewTransition name="limelight" share="limelight" default="none">
-                    <li
-                        aria-hidden="true"
-                        className="pointer-events-none absolute top-0 nav-light-x h-1.25 w-nav-light -translate-x-1/2 rounded-pill bg-paper shadow-limelight"
-                    >
-                        <span className="absolute top-1.25 left-1/2 h-14 w-nav-cone -translate-x-1/2 bg-limelight clip-limelight" />
-                    </li>
-                </ViewTransition>
+                {/* a luz fica recortada pelo chip: o cone não passa da borda de baixo */}
+                <li
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 overflow-hidden rounded-pill"
+                >
+                    <ViewTransition name="limelight" share="limelight" default="none">
+                        <div className="absolute top-0 nav-light-x h-1.25 w-nav-light -translate-x-1/2 rounded-pill bg-paper shadow-limelight">
+                            <div className="absolute top-1.25 left-1/2 h-11 w-nav-cone -translate-x-1/2 bg-limelight clip-limelight">
+                                <span className="absolute inset-0 bg-grain opacity-grain mix-blend-overlay" />
+                            </div>
+                        </div>
+                    </ViewTransition>
+                </li>
                 {TABS.map((tab) => (
                     <li key={tab.id} className="flex flex-1">
                         <Link
