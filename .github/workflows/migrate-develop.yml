@@ -34,7 +34,9 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - run: npm ci
+      # Este job tem a credencial de dono do banco: sem scripts de instalação de nenhum pacote.
+      # O Drizzle (drizzle-kit, tsx) não precisa deles.
+      - run: npm ci --ignore-scripts
       # Trava: antes de qualquer SQL de migration, o banco precisa ter meta.environment = 'develop'.
       - run: npm run db:migrate:guard
       # drizzle.config.ts carrega .env.local; um arquivo vazio basta (a variável exportada vence).

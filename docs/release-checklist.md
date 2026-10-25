@@ -19,7 +19,7 @@ For the owner, in order. Every command is copy-paste ready; replace only the `<.
    docker run --rm -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t https://<preview-host>.vercel.app -I
    ```
 
-   Read every WARN/FAIL. Known gap: security.md §10 headers (CSP and friends) are not implemented in the app yet, so ZAP will flag them; decide before release whether that is fixed or recorded as an accepted risk.
+   Read every WARN/FAIL. The §10 headers are implemented. Expect ZAP to flag `script-src`/`style-src` `'unsafe-inline'` (CSP: script-src unsafe-inline, style-src unsafe-inline), which is the accepted risk in security.md §17; anything else on headers is a regression. Before release, check the HSTS `preload` decision (security.md §10) and curl the production home: `curl -sI https://<production domain>/ | grep -iE 'content-security|strict-transport|x-content|referrer|permissions|cross-origin'`.
 
 2. Your manual OWASP ASVS level 1 pass (security.md §14), with the threat models in `docs/threats/` as the list of what each feature promises.
 
