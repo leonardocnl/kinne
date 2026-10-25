@@ -29,9 +29,10 @@ describe("Navbar", () => {
             ),
         );
         expect(html).toContain(`--nav-index:${index}`);
-        // uma única peça de luz, com o cone dentro
-        expect(html.match(/bg-limelight/g)).toHaveLength(1);
-        expect(html.match(/shadow-limelight/g)).toHaveLength(1);
+        // uma única luz: a barra sobre a borda e o cone abaixo dela
+        expect(html.match(/bg-limelight(?!-)/g)).toHaveLength(1);
+        expect(html.match(/bg-limelight-bar/g)).toHaveLength(1);
+        expect(html.match(/(?<!drop-)shadow-limelight/g)).toHaveLength(1);
     });
 
     it("não usa o amarelo (signal)", () => {

@@ -157,6 +157,7 @@
     --shadow-toast: 0 12px 30px -10px rgb(0 0 0 / 0.9);
     --inset-shadow-*: initial;
     --drop-shadow-*: initial;
+    --drop-shadow-limelight: 0 0 0.375rem rgb(242 242 238 / 0.85); /* halo da barra de luz, segue as pontas que somem */
     --text-shadow-*: initial;
     --text-shadow-score: 0 1px 12px rgb(0 0 0 / 0.6);
     --opacity-disabled: 0.38;
@@ -179,6 +180,14 @@
     /* base da área que rola nos filtros, quando há mais campos abaixo */
     --background-image-scroll-hint: linear-gradient(rgb(2 2 2 / 0), var(--color-scrim-strong));
     --background-image-panel-foot: linear-gradient(rgb(14 14 14 / 0), rgb(14 14 14 / 0.94) 18px);
+    /* barra de luz: paper que some nas pontas */
+    --background-image-limelight-bar: linear-gradient(
+        to right,
+        rgb(242 242 238 / 0),
+        var(--color-paper) 30%,
+        var(--color-paper) 70%,
+        rgb(242 242 238 / 0)
+    );
     /* cone da luz: paper a 30% que se desfaz para baixo, atrás do ícone e do rótulo */
     --background-image-limelight: linear-gradient(
         rgb(242 242 238 / 0.3),
