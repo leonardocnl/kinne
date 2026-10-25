@@ -14,7 +14,7 @@ Leitura obrigatória antes de qualquer tarefa de interface. A fonte da verdade v
 
 ## Cor
 
-- O amarelo (`signal`) aparece só no controle mais importante de cada tela e na wordmark. Um amarelo por tela.
+- O amarelo (`signal`) aparece só no controle mais importante de cada tela e no ícone da marca. Um amarelo por tela.
 - No hover, todo controle segue o do quiet: fundo `hover` e borda `line-strong`. Nenhum controle ganha cor nova no hover. O primary não muda de cor; só encolhe ao ser pressionado. O chip marcado não muda.
 
 ## Forma
@@ -49,7 +49,7 @@ Leitura obrigatória antes de qualquer tarefa de interface. A fonte da verdade v
 - Imagem grande (quadro): `w780`, `w1280` e `original` com a largura real guardada pela carga, com `sizes` do quadro (página menos as margens no computador, tela toda no celular). A primeira imagem da tela carrega já, com `fetchpriority="high"`.
 - Miniaturas da faixa "Hoje": `w300` e `w780`. Pôsteres pequenos: `w92`, com `w185` nas telas 2x.
 - O layout raiz abre a conexão com o `image.tmdb.org` (`preconnect`).
-- A wordmark é um `<img>` do SVG em `public/`, sem `next/image`: o JS do `next/image` passaria a ir em toda página.
+- O ícone da marca (`public/icon.svg`, dentro da navbar) é um `<img>` do SVG em `public/`, sem `next/image`: o JS do `next/image` passaria a ir em toda página.
 
 ## Orçamento
 

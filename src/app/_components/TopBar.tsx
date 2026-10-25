@@ -1,7 +1,6 @@
 import { AccountButton } from "./account/AccountButton";
 import { SearchLauncher } from "./search/SearchLauncher";
 import { ButtonLink } from "./ui/Button";
-import { Wordmark } from "./ui/Wordmark";
 
 type TopBarProps = {
     /** data do dia; no celular ela sai daqui e vai para cima do título */
@@ -10,11 +9,10 @@ type TopBarProps = {
     back?: boolean;
 };
 
-/** Barra do topo: wordmark, busca com a data ao lado (computador), "Voltar" fora da tela inicial e "Entrar" ou o perfil (US012, US014). */
+/** Barra do topo: busca com a data ao lado (computador), "Voltar" fora da tela inicial e "Entrar" ou o perfil (US012, US014). */
 export function TopBar({ date, back }: TopBarProps) {
     return (
-        <header className="flex items-center justify-between gap-3">
-            <Wordmark />
+        <header className="flex items-center justify-end gap-3">
             <div className="flex items-center gap-2.5">
                 {/* no computador a data fica junto da busca, deixando o centro para a navbar */}
                 <p className="mr-2 text-data whitespace-nowrap text-soft max-desktop:hidden">

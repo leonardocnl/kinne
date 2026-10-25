@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { TextLink } from "../_components/ui/TextLink";
-import { Wordmark } from "../_components/ui/Wordmark";
 import { Colors } from "./_sections/Colors";
 import { Components } from "./_sections/Components";
 import { Cover } from "./_sections/Cover";
@@ -20,7 +19,6 @@ export default function DesignPage() {
     return (
         <div className="page-container grid gap-x-10 py-8 desktop:grid-cols-12">
             <aside className="flex flex-col gap-6 pb-8 desktop:sticky desktop:top-0 desktop:col-span-2 desktop:h-dvh desktop:self-start desktop:pt-2">
-                <Wordmark className="self-start" />
                 <nav aria-label="Seções">
                     <ol className="flex flex-wrap gap-x-5 desktop:flex-col">
                         {sections.map((section, index) => (

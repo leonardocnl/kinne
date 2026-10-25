@@ -4,7 +4,6 @@ import { Score } from "../../_components/ui/Score";
 import { QrCode } from "../../_components/ui/QrCode";
 import { Skeleton } from "../../_components/ui/Skeleton";
 import { Toast } from "../../_components/ui/Toast";
-import { Wordmark } from "../../_components/ui/Wordmark";
 import { BackIcon, PlayIcon } from "../../_components/ui/icons";
 import { TokenValue } from "./live";
 import { DoDont, Row, Spec } from "./Spec";
@@ -163,28 +162,6 @@ export function Media() {
                                 <Skeleton shape="line" className="w-4/5" />
                                 <Skeleton shape="line" className="w-1/2" />
                             </span>
-                        ),
-                    }}
-                />
-            </Spec>
-
-            <Spec
-                name="Wordmark"
-                props={["className?"]}
-                does="A marca do Kinne, amarela como o controle principal, no canto da barra do topo."
-            >
-                <Row label="normal">
-                    <Wordmark />
-                </Row>
-                <DoDont
-                    use={{ note: "uma vez, no topo.", example: <Wordmark /> }}
-                    avoid={{
-                        note: "repetida na mesma tela.",
-                        example: (
-                            <>
-                                <Wordmark />
-                                <Wordmark />
-                            </>
                         ),
                     }}
                 />

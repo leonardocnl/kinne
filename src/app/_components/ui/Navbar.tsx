@@ -34,9 +34,19 @@ export function Navbar({ current }: { current: NavTab }) {
         >
             <ul
                 style={{ "--nav-index": index } as CSSProperties}
-                className="pointer-events-auto relative grid h-control grid-cols-2 items-center rounded-pill border border-line bg-nav p-nav-pad shadow-glass backdrop-blur-glass backdrop-saturate-glass"
+                className="pointer-events-auto relative flex h-control items-center rounded-pill border border-line bg-nav p-nav-pad shadow-glass backdrop-blur-glass backdrop-saturate-glass"
             >
                 {/* a luz vai antes das abas: o texto fica por cima do cone */}
+                <li className="flex w-nav-icon items-center justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático: o next/image só somaria JS */}
+                    <img
+                        src="/icon.svg"
+                        alt="Kinne"
+                        width={39}
+                        height={24}
+                        className="h-6 w-auto"
+                    />
+                </li>
                 <ViewTransition name="limelight" share="limelight" default="none">
                     <li
                         aria-hidden="true"

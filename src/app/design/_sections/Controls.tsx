@@ -15,7 +15,6 @@ import { GlassPanel } from "../../_components/ui/GlassPanel";
 import { Navbar } from "../../_components/ui/Navbar";
 import { Slider } from "../../_components/ui/Slider";
 import { TextLink } from "../../_components/ui/TextLink";
-import { Wordmark } from "../../_components/ui/Wordmark";
 import { FiltersDemo, RemovableChipDemo, TokenValue } from "./live";
 import { DoDont, focusRing, Row, Spec, States } from "./Spec";
 
@@ -101,7 +100,7 @@ export function Controls() {
                 </p>
                 <Row label="ghost na barra do topo">
                     <div className="flex w-full items-center justify-between gap-4 border-b border-line pb-3">
-                        <Wordmark />
+                        <span className="text-data text-soft">Kinne</span>
                         <span className="text-data text-soft max-desktop:hidden">
                             Sexta, 9 de outubro
                         </span>

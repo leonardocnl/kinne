@@ -8,7 +8,7 @@ const groups = [
         colors: [
             { name: "ink", className: "bg-ink", role: "Fundo" },
             { name: "paper", className: "bg-paper", role: "Texto" },
-            { name: "signal", className: "bg-signal", role: "Controle principal e wordmark" },
+            { name: "signal", className: "bg-signal", role: "Controle principal e ícone da marca" },
             { name: "soft", className: "bg-soft", role: "Texto secundário" },
             { name: "faint", className: "bg-faint", role: "Texto apagado" },
         ],
@@ -56,8 +56,8 @@ export function Colors() {
                     <>
                         <p>
                             O amarelo <code>signal</code> aparece só no controle mais importante de
-                            cada tela e na wordmark. O resto é tinta clara sobre preto, em camadas
-                            translúcidas.
+                            cada tela e no ícone da marca. O resto é tinta clara sobre preto, em
+                            camadas translúcidas.
                         </p>
                         <p>
                             O contraste é medido sobre <code>ink</code>, já misturando a

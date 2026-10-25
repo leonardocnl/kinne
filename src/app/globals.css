@@ -12,7 +12,7 @@
     --color-*: initial;
     --color-ink: #020202; /* fundo */
     --color-paper: #f2f2ee; /* texto */
-    --color-signal: #fff340; /* só no controle principal de cada tela e na wordmark */
+    --color-signal: #fff340; /* só no controle principal de cada tela e no ícone da marca */
     --color-soft: rgb(242 242 238 / 0.74); /* texto secundário */
     --color-faint: rgb(242 242 238 / 0.64); /* texto apagado */
     --color-line: rgb(255 255 255 / 0.14); /* bordas e divisórias */
@@ -116,6 +116,7 @@
     --spacing-nav-gap: 0.875rem; /* da navbar ao conteúdo */
     --spacing-nav-tab: 7.5rem; /* largura de cada aba: iguais, para a luz achar a aba pelo índice */
     --spacing-nav-pad: 0.125rem; /* respiro do chip em volta das abas */
+    --spacing-nav-icon: 5rem; /* célula do ícone da marca, à esquerda das abas */
     --spacing-nav-light: 2.75rem; /* largura da barra de luz */
     --spacing-nav-cone: 4.4rem; /* largura do cone: 160% da barra */
     --spacing-nav: calc(
@@ -324,7 +325,10 @@
 
 /* centro da luz na aba ativa: --nav-index (0, 1…) vem da prop current da Navbar */
 @utility nav-light-x {
-    left: calc(var(--spacing-nav-pad) + (var(--nav-index) + 0.5) * var(--spacing-nav-tab));
+    left: calc(
+        var(--spacing-nav-pad) + var(--spacing-nav-icon) + (var(--nav-index) + 0.5) *
+            var(--spacing-nav-tab)
+    );
 }
 
 /* lista que rola na horizontal no celular sem mostrar a barra (faixa "Hoje") */
