@@ -187,6 +187,7 @@
     ); /* e escurece para o preto no pé do chip */
     --background-image-grain: url("/grain.svg");
     --opacity-grain: 0.42;
+    --opacity-grain-fine: 0.22; /* granulado fino do cone da navbar */
 
     /* telas: "celular" é até 860px; desktop: vale de 861px para cima */
     --breakpoint-*: initial;
@@ -321,6 +322,12 @@
 /* base da navbar no celular, acima da área segura do aparelho */
 @utility nav-bottom {
     bottom: calc(var(--spacing-nav-edge) + env(safe-area-inset-bottom));
+}
+
+/* granulado fino: o mesmo grain.svg em um quarto do tamanho, grão menor (cone da navbar) */
+@utility bg-grain-fine {
+    background-image: var(--background-image-grain);
+    background-size: 3.4375rem;
 }
 
 /* cone de luz: estreito em cima, na barra, e largo embaixo */
