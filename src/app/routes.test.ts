@@ -25,6 +25,7 @@ describe("rotas (H3)", () => {
             "/privacidade",
             "/sala",
             "/sala/[code]",
+            "/sobre",
             "/titulo/[slug]",
         ]);
     });

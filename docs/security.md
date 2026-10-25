@@ -80,7 +80,7 @@ Security by design: every feature is specified, built and reviewed against these
 
 - URLs carry only the path (`/titulo/suzume-2022`). No query parameters for state, origin, filters, panels or tracking.
 - Transient state lives in `sessionStorage` or `history.state`.
-- External links use `rel="noopener noreferrer"` and open only to an allowlist of hosts (YouTube, streaming services, TMDB).
+- External links use `rel="noopener noreferrer"` and open only to an allowlist of hosts (YouTube, streaming services, TMDB). The public `/sobre` page and the footer add the owner's own profiles and credits: `www.linkedin.com`, `github.com`, `www.themoviedb.org`, `www.justwatch.com`, plus `mailto:` for the contact address. They are fixed links in code, never built from input.
 
 ## 9. Browser storage
 
@@ -116,7 +116,7 @@ Target: grade A+ on securityheaders.com and Mozilla Observatory.
 
 - Collect the minimum: no names, emails, IPs or device fingerprints in the guest mode.
 - Test events are deleted by the RNF10 deadline (`npm run events:delete`).
-- Retention, purpose and contact are stated in the privacy text before any account feature ships (LGPD). `/privacidade` is a draft until the owner reviews it (US014 RNE003). Accounts keep an email (stored in plain only in `users`; pending sign-in codes keep only an HMAC of it), streamings, taste, "Já vi" and onboarding progress; the profile downloads and deletes them.
+- Retention, purpose and contact are stated in the privacy text before any account feature ships (LGPD). `/privacidade` is a draft until the owner reviews it (US014 RNE003). `/sobre` (public, static) summarizes this in plain language and links to `/privacidade`; its Pix key, name and city are public by design and live in one constant (`src/domain/pix.ts`). Accounts keep an email (stored in plain only in `users`; pending sign-in codes keep only an HMAC of it), streamings, taste, "Já vi" and onboarding progress; the profile downloads and deletes them.
 
 ## 13. Authentication (6-digit email code)
 

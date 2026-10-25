@@ -35,6 +35,13 @@ Abra http://localhost:3000.
 | `npm run typecheck`    | Checagem de tipos (`tsc --noEmit`)        |
 | `npm test`             | Testes com Vitest                         |
 
+## Páginas públicas
+
+- `/sobre`: por que o Kinne existe, resumo de privacidade, perguntas frequentes, apoio por Pix e créditos.
+- `/privacidade`: texto de privacidade (rascunho).
+
+O rodapé de toda página leva a elas e ao contato. O QR code Pix é um arquivo fixo (`public/pix-qr.svg`), gerado de `src/domain/pix.ts` por `scripts/generate-pix-qr.py`.
+
 ## Atribuição
 
 Este produto usa a API do TMDB, mas não é endossado nem certificado pelo TMDB.
