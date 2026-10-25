@@ -59,11 +59,11 @@ export function Navbar({ current }: { current: NavTab }) {
                         </div>
                     </ViewTransition>
                 </li>
-                {/* a barra fica sobre a borda de cima do chip, com halo, e some nas pontas */}
+                {/* a barra fica sobre a borda de cima do chip, com halo */}
                 <ViewTransition name="limelight-bar" share="limelight" default="none">
                     <li
                         aria-hidden="true"
-                        className="pointer-events-none absolute -top-px nav-light-x h-px w-nav-light -translate-x-1/2 bg-limelight-bar drop-shadow-limelight"
+                        className="pointer-events-none absolute -top-px nav-light-x h-px w-nav-light -translate-x-1/2 bg-paper drop-shadow-limelight"
                     />
                 </ViewTransition>
                 {TABS.map((tab) => (

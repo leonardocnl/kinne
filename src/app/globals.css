@@ -180,14 +180,6 @@
     /* base da área que rola nos filtros, quando há mais campos abaixo */
     --background-image-scroll-hint: linear-gradient(rgb(2 2 2 / 0), var(--color-scrim-strong));
     --background-image-panel-foot: linear-gradient(rgb(14 14 14 / 0), rgb(14 14 14 / 0.94) 18px);
-    /* barra de luz: paper que some nas pontas */
-    --background-image-limelight-bar: linear-gradient(
-        to right,
-        rgb(242 242 238 / 0),
-        var(--color-paper) 30%,
-        var(--color-paper) 70%,
-        rgb(242 242 238 / 0)
-    );
     /* cone da luz: paper a 30% que se desfaz para baixo, atrás do ícone e do rótulo */
     --background-image-limelight: linear-gradient(
         rgb(242 242 238 / 0.3),
