@@ -1,44 +1,45 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import {
-    useEffect,
-    useEffectEvent,
-    useId,
-    useMemo,
-    useRef,
-    useState,
-    useSyncExternalStore,
-    useTransition,
-} from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useEffectEvent, useId, useMemo, useRef, useState, useTransition } from "react";
 import { MIN_RATING } from "@/domain/catalog";
 import {
-    filterTitles,
+    matchTitles,
     MAX_RATING,
     RUNTIME_LIMITS,
+    wireFilters,
     withType,
     type FilterCandidate,
     type Filters,
     type TypeChoice,
 } from "@/domain/filters";
+import { FEELING_LABELS, FEELINGS } from "@/domain/feelings";
 import { GENRE_LABELS, KINNE_GENRES } from "@/domain/genre";
 import { STREAMING_SERVICES } from "@/domain/streaming";
+import { EMPTY_TASTE } from "@/domain/taste-signals";
 import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
 import {
     filteredRun,
     saveFilters,
     savedFilters,
+    tasteSignals,
     watchedTitles,
 } from "@/infrastructure/browser-storage";
 import { drawFiltered, filterCandidates } from "../../_actions/filters";
+import { personTitles } from "../../_actions/people";
 import { loadError } from "../StateScreen";
-import { titleHref } from "../title/origin";
+import { saveStreamings } from "../../_actions/account";
+import { rememberReturn } from "../account/returnTo";
+import { setAccountStatus, useAccountStatus } from "../account/store";
+import { PersonField } from "./PersonField";
+import { goToTitle } from "../title/origin";
 import { Button } from "../ui/Button";
 import { Chip, RadioChip } from "../ui/Chip";
 import { GlassPanel } from "../ui/GlassPanel";
 import { cx } from "../ui/cx";
 import { CloseIcon } from "../ui/icons";
 import { Skeleton } from "../ui/Skeleton";
+import { TextLink } from "../ui/TextLink";
 import { Digits, Slider } from "../ui/Slider";
 
 const TYPES: { value: TypeChoice; label: string }[] = [
@@ -51,36 +52,6 @@ const section = "flex flex-col gap-2 border-t border-line px-1 pt-3";
 
 const thousands = new Intl.NumberFormat("pt-BR");
 
-const noop = () => () => {};
-
-/**
- * O painel aberto vive na URL (?filtros), sem os valores: o "voltar" fecha o painel (C5) e
- * recarregar a página o mantém aberto. Os valores ficam no navegador (RNG005). Só abre depois da
- * hidratação, porque os valores salvos não existem no servidor.
- */
-export function useFiltersRoute() {
-    const hydrated = useSyncExternalStore(
-        noop,
-        () => true,
-        () => false,
-    );
-    const open = useSearchParams().has("filtros") && hydrated;
-    // aberto por aqui: fechar é voltar. Aberto pelo endereço: fechar só tira o ?filtros
-    const pushed = useRef(false);
-    return {
-        open,
-        show() {
-            pushed.current = true;
-            window.history.pushState(null, "", "?filtros");
-        },
-        hide() {
-            if (pushed.current) window.history.back();
-            else window.history.replaceState(null, "", window.location.pathname);
-            pushed.current = false;
-        },
-    };
-}
-
 // A lista do contador vem uma vez por aba; se falhar, a próxima abertura tenta de novo.
 let candidatesRequest: Promise<FilterCandidate[]> | null = null;
 function loadCandidates() {
@@ -89,6 +60,21 @@ function loadCandidates() {
         throw error;
     });
     return candidatesRequest;
+}
+
+// Os títulos de cada pessoa escolhida, uma vez por aba (person-search B3); falha não fica guardada.
+const personRequests = new Map<number, Promise<number[]>>();
+function loadPersonTitles(personId: number) {
+    let request = personRequests.get(personId);
+    if (!request) {
+        request = personTitles({ personId }).then((ids) => {
+            if (!ids) throw new Error("Títulos da pessoa indisponíveis");
+            return ids;
+        });
+        request.catch(() => personRequests.delete(personId));
+        personRequests.set(personId, request);
+    }
+    return request;
 }
 
 type FiltersPanelProps = {
@@ -103,17 +89,41 @@ type FiltersPanelProps = {
  * no celular, tela cheia e modal (C1). Os campos rolam por dentro, entre o título e o rodapé com o
  * contador. O contador conta no navegador sobre a lista do dia (C3), e o sorteio é no servidor (C6).
  */
-export function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelProps) {
+export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelProps) {
     const router = useRouter();
     const titleId = useId();
     const dialogRef = useRef<HTMLDialogElement>(null);
     const panelRef = useRef<HTMLDivElement>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
     const [more, setMore] = useState(false);
-    const [filters, setFilters] = useState(savedFilters);
-    const [watched] = useState(() => watchedTitles.read());
+    const [stored, setStored] = useState(savedFilters);
+    const status = useAccountStatus();
+    const account = status.state === "account" ? status.account : null;
+    // com a conta aberta o "Já vi" vem da conta; sem ela, do navegador (US015 C2)
+    const [browserWatched] = useState(() => watchedTitles.read());
+    const watched = useMemo(
+        () => (account ? account.watched.map((t) => t.titleId) : browserWatched),
+        [account, browserWatched],
+    );
+    // o convite de quem não tem conta ao tocar num sentimento (US015 C3)
+    const [invite, setInvite] = useState(false);
+    // O que a conta manda vale por cima do que a aba guardou: os streamings são os da conta, e sem
+    // conta não há sentimento (RNE005). Derivado, sem estado novo.
+    const filters = useMemo<Filters>(
+        () => ({
+            ...stored,
+            ...(account && { streamings: account.streamings }),
+            ...(status.state === "visitor" && stored.feeling !== null && { feeling: null }),
+        }),
+        [stored, account, status.state],
+    );
     const [candidates, setCandidates] = useState<FilterCandidate[] | "error" | null>(null);
     const [attempt, setAttempt] = useState(0);
+    // os títulos da pessoa do filtro, para o contador; o sorteio deriva os seus no servidor (A7)
+    const [personIds, setPersonIds] = useState<{
+        id: number;
+        titles: Set<number> | "error";
+    } | null>(null);
     const [drawFailed, setDrawFailed] = useState(false);
     const [pending, startTransition] = useTransition();
     const close = useEffectEvent(() => !leaving && onClose());
@@ -132,7 +142,9 @@ export function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelProps) {
             if (!dialog.matches(":modal")) panel?.scrollIntoView({ block: "nearest" });
         });
         if (panel) fit.observe(panel);
-        const onKey = (event: KeyboardEvent) => event.key === "Escape" && close();
+        // a Esc que um campo já usou (a lista da busca de pessoas fechando) não fecha o painel
+        const onKey = (event: KeyboardEvent) =>
+            event.key === "Escape" && !event.defaultPrevented && close();
         document.addEventListener("keydown", onKey);
         return () => {
             fit.disconnect();
@@ -158,10 +170,29 @@ export function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelProps) {
         };
     }, [attempt]);
 
-    const count = useMemo(
-        () => (Array.isArray(candidates) ? filterTitles(candidates, filters, watched).count : null),
-        [candidates, filters, watched],
-    );
+    const personId = filters.person?.id ?? null;
+    useEffect(() => {
+        if (personId === null) return;
+        let live = true;
+        loadPersonTitles(personId).then(
+            (ids) => live && setPersonIds({ id: personId, titles: new Set(ids) }),
+            () => live && setPersonIds({ id: personId, titles: "error" }),
+        );
+        return () => {
+            live = false;
+        };
+    }, [personId, attempt]);
+    const personTitleSet =
+        personId !== null && personIds?.id === personId ? personIds.titles : null;
+    const failed = candidates === "error" || personTitleSet === "error";
+
+    const count = useMemo(() => {
+        if (!Array.isArray(candidates)) return null;
+        if (personId === null) return matchTitles(candidates, filters, watched).length;
+        // a pessoa escolhida ainda sem os títulos: o contador espera
+        if (!(personTitleSet instanceof Set)) return null;
+        return matchTitles(candidates, filters, watched, personTitleSet).length;
+    }, [candidates, filters, watched, personId, personTitleSet]);
 
     // sobra campo abaixo da área visível? A folga de 1 cobre o arredondamento do zoom
     function measureScroll() {
@@ -180,13 +211,22 @@ export function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelProps) {
     }, [filters.type]);
 
     function update(next: Filters) {
-        setFilters(next);
+        setStored(next);
         setDrawFailed(false);
-        saveFilters(next);
+        // com a conta aberta, os streamings vão para a conta e o navegador não guarda nenhum
+        saveFilters(next, !account);
+        if (account && next.streamings.join(",") !== filters.streamings.join(",")) {
+            const streamings = next.streamings;
+            void saveStreamings({ streamings }).then((answer) => {
+                if (answer.ok)
+                    setAccountStatus({ state: "account", account: { ...account, streamings } });
+            });
+        }
     }
 
     function retry() {
-        setCandidates(null);
+        if (candidates === "error") setCandidates(null);
+        setPersonIds(null);
         setAttempt((n) => n + 1);
     }
 
@@ -195,11 +235,18 @@ export function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelProps) {
         startTransition(async () => {
             try {
                 const request = { filters, watched: watched.slice(-SURPRISE_MAX_EXCLUDED) };
-                const { slug } = await drawFiltered({ ...request, seen: [] });
+                const { slug } = await drawFiltered({
+                    filters: wireFilters(filters),
+                    watched: request.watched,
+                    seen: [],
+                    // com a conta aberta o servidor lê tudo da conta e ignora estas listas (RNE003)
+                    taste: account ? EMPTY_TASTE : tasteSignals.read(),
+                    round: 0,
+                });
                 if (slug) {
                     // a rodada de "Outra opção" (US004 C2) começa aqui
                     filteredRun.start(request.filters, request.watched);
-                    return router.push(titleHref(slug, "filtros"));
+                    return goToTitle(router, "push", slug, "filtros");
                 }
             } catch {
                 // cai no aviso abaixo
@@ -210,9 +257,13 @@ export function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelProps) {
 
     const runtime = RUNTIME_LIMITS.findIndex((l) => l.minutes === filters.maxRuntime);
     const hint =
-        candidates === "error" || drawFailed
+        failed || drawFailed
             ? `${loadError.heading}. Tente de novo.`
-            : count === 0 && "Tente baixar a nota ou marcar mais um streaming.";
+            : count === 0 &&
+              (filters.feeling === null
+                  ? "Tente baixar a nota ou marcar mais um streaming."
+                  : // US008 C5
+                    "Tente outro sentimento ou marque mais um streaming.");
 
     return (
         <dialog
@@ -229,7 +280,7 @@ export function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelProps) {
                     leaving && event.target === event.currentTarget && onLeft()
                 }
                 className={cx(
-                    "min-h-0 overflow-hidden max-desktop:h-full desktop:pointer-events-auto desktop:max-h-panel-height desktop:w-panel desktop:max-w-full desktop:scroll-mb-4",
+                    "min-h-0 overflow-hidden max-desktop:h-full desktop:pointer-events-auto desktop:max-h-panel-height desktop:w-filters desktop:max-w-full desktop:scroll-mb-4",
                     // com movimento reduzido, nem entra nem sai animado (CM004)
                     leaving
                         ? "motion-safe:max-desktop:animate-panel-down motion-safe:desktop:animate-panel-out"
@@ -252,6 +303,43 @@ export function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelProps) {
                         onScroll={measureScroll}
                         className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto px-5 pb-1 max-desktop:px-4"
                     >
+                        <div className={section}>
+                            <span id={`${titleId}-feeling`} className="text-data text-soft">
+                                O que você quer sentir hoje?
+                            </span>
+                            <div
+                                role="group"
+                                aria-labelledby={`${titleId}-feeling`}
+                                className="flex flex-wrap gap-1.5"
+                            >
+                                {FEELINGS.map((f) => {
+                                    const on = filters.feeling === f;
+                                    return (
+                                        <Chip
+                                            key={f}
+                                            pressed={on}
+                                            // um só por vez; tocar no marcado volta a "nenhum" (C2)
+                                            onClick={() => {
+                                                // sentimento é só de quem tem conta (US015 C3)
+                                                if (!account) return setInvite(true);
+                                                update({ ...filters, feeling: on ? null : f });
+                                            }}
+                                        >
+                                            {FEELING_LABELS[f]}
+                                        </Chip>
+                                    );
+                                })}
+                            </div>
+                            {invite && !account && (
+                                <p role="status" className="text-data text-soft">
+                                    Crie sua conta para escolher pelo que sente.{" "}
+                                    <TextLink href="/entrar" onClick={rememberReturn}>
+                                        Entrar
+                                    </TextLink>
+                                </p>
+                            )}
+                        </div>
+
                         <div className={section}>
                             <span id={`${titleId}-streamings`} className="text-data text-soft">
                                 Streamings
@@ -342,6 +430,37 @@ export function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelProps) {
                             </div>
                         </div>
 
+                        <div className={section}>
+                            <span id={`${titleId}-rating`} className="text-data text-soft">
+                                Classificação
+                            </span>
+                            <div
+                                role="group"
+                                aria-labelledby={`${titleId}-rating`}
+                                className="flex flex-wrap gap-1.5"
+                            >
+                                {/* desligado por padrão: só com ele os títulos 18 entram (fase 4) */}
+                                <Chip
+                                    pressed={filters.adult}
+                                    aria-label="18+, incluir títulos para maiores de 18 anos"
+                                    onClick={() => update({ ...filters, adult: !filters.adult })}
+                                >
+                                    18+
+                                </Chip>
+                            </div>
+                        </div>
+
+                        <div className={section}>
+                            <span id={`${titleId}-person`} className="text-data text-soft">
+                                Buscar ator ou diretor
+                            </span>
+                            <PersonField
+                                labelId={`${titleId}-person`}
+                                value={filters.person}
+                                onChange={(person) => update({ ...filters, person })}
+                            />
+                        </div>
+
                         <Slider
                             className={section}
                             label="Nota TMDB mínima"
@@ -402,7 +521,7 @@ export function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelProps) {
                             </b>
                             <span>{count === 1 ? "título combina" : "títulos combinam"}</span>
                         </p>
-                        {candidates === "error" ? (
+                        {failed ? (
                             <Button variant="primary" className="flex-1 px-2.5" onClick={retry}>
                                 Tentar de novo
                             </Button>
@@ -414,7 +533,7 @@ export function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelProps) {
                                 aria-busy={pending}
                                 onClick={see}
                             >
-                                Ver recomendação
+                                Sortear um título
                             </Button>
                         )}
                     </div>

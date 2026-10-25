@@ -1,11 +1,16 @@
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
-import { savedStreamings, shownTitles, watchedTitles } from "@/infrastructure/browser-storage";
+import {
+    savedStreamings,
+    shownTitles,
+    tasteSignals,
+    watchedTitles,
+} from "@/infrastructure/browser-storage";
 import { surprise } from "../../_actions/surprise";
 import { loadError } from "../StateScreen";
 import { showToast } from "../toast";
-import { titleHref } from "./origin";
+import { goToTitle } from "./origin";
 
 /**
  * Me surpreenda (US003): sorteia no servidor com o que o navegador guarda e abre o título com
@@ -25,8 +30,9 @@ export function useSurprise(mode: "push" | "replace") {
                     streamings: savedStreamings(),
                     watched: watchedTitles.read().slice(-SURPRISE_MAX_EXCLUDED),
                     shown: shownTitles.read().slice(-SURPRISE_MAX_EXCLUDED),
+                    taste: tasteSignals.read(),
                 });
-                if (slug) return router[mode](titleHref(slug, "surpresa"));
+                if (slug) return goToTitle(router, mode, slug, "surpresa");
                 showToast("Você já marcou todos os títulos que a surpresa sorteia.");
             } catch {
                 showToast(`${loadError.heading}. Tente de novo.`);

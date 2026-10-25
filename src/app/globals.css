@@ -77,11 +77,25 @@
     --spacing-control: 3.125rem; /* altura dos botões */
     --spacing-target: 2.75rem; /* alvo mínimo de toque; altura dos chips e links */
     --spacing-overlay: 2rem; /* botão pequeno sobre a imagem; o alvo de toque continua 44px */
-    --spacing-gutter: clamp(1rem, 3vw, 2.5rem); /* margem lateral da página */
+    --spacing-gutter: clamp(1rem, 3vw, 2.5rem); /* margem lateral da página, em toda largura */
     --spacing-digit: 0.58em; /* célula de um algarismo na Darker Grotesque */
     /* painel de filtros no computador: cabe na capa e na janela, com folga de 1rem */
     --spacing-panel-height: min(100%, 100dvh - 2rem);
     --spacing-skeleton-title: clamp(2.4rem, 4.2vw, 3.8rem);
+    /* altura da primeira linha do título: os botões da tela do título se alinham a ela */
+    --spacing-title-line: calc(var(--text-title) * var(--text-title--line-height));
+    /* altura do quadro no computador (2.39:1 da largura útil da página) */
+    --spacing-hero-height: calc(
+        (min(100vw, var(--container-page)) - 2 * var(--spacing-gutter)) / 2.39
+    );
+    /*
+     * painel de busca no computador: abre 0.5rem abaixo da barra, que fica 0.875rem acima do
+     * quadro; com 1rem de folga, o pé do painel nunca passa do pé da imagem
+     */
+    --spacing-search-panel: calc(var(--spacing-hero-height) + 0.375rem - 1rem);
+    --spacing-poster: 3.5rem; /* pôster na lista da busca (2:3) */
+    --spacing-poster-width: calc(var(--spacing-poster) * 2 / 3);
+    --spacing-result: calc(var(--spacing-poster) + 1rem); /* linha da busca: pôster e respiro */
     /* barra presa à base (Dock): a altura sai das mesmas peças que a montam, sem a área segura */
     --spacing-dock-top: 1.75rem; /* acima dos botões */
     --spacing-dock-base: 0.875rem; /* abaixo dos botões, antes da área segura */
@@ -95,14 +109,25 @@
     ); /* com "Combinado", em uma linha */
 
     --container-*: initial;
-    --container-page: 80rem; /* largura máxima da página */
+    --container-page: calc(
+        100vh * 16 / 9
+    ); /* largura máxima da página: nunca mais larga que um quadro 16:9 da altura da janela */
     --container-measure: 80ch; /* texto corrido */
-    --container-panel: 33.125rem; /* painel de filtros */
+    /* painel de filtros; não pode se chamar "panel": w-panel acharia antes --spacing-panel */
+    --container-filters: 33.125rem;
 
-    /* raios */
+    /*
+     * raios concêntricos: o raio de fora é o raio de dentro mais o respiro entre os dois.
+     * Painel de vidro: controle de 50px (raio 25px) dentro de 20px de respiro, logo 45px.
+     */
+    --spacing-panel: 1.25rem; /* respiro do painel de vidro */
+    --spacing-tag: 0.25rem; /* respiro do contador sobre a imagem */
     --radius-*: initial;
     --radius-pill: 999px; /* todo controle tocável */
-    --radius-panel: 1.125rem; /* painel de vidro */
+    --radius-control: calc(var(--spacing-control) / 2); /* raio de um controle de 50px */
+    --radius-panel: calc(var(--radius-control) + var(--spacing-panel)); /* painel de vidro */
+    /* contador "1 de 5" sobre a imagem: envolve o botão de pausa (32px, raio 16px) */
+    --radius-tag: calc(var(--spacing-overlay) / 2 + var(--spacing-tag));
     --radius-card: 0.75rem; /* aviso e bloco de título do skeleton */
 
     /* vidro e sombras */
@@ -112,6 +137,7 @@
     --backdrop-saturate-glass: 165%;
     --shadow-*: initial;
     --shadow-glass: inset 0 1px 0 rgb(255 255 255 / 0.2), 0 24px 60px -28px rgb(0 0 0 / 0.8);
+    --shadow-focus: 0 0 0 3px var(--color-ink); /* fio escuro por dentro do anel de foco */
     --shadow-toast: 0 12px 30px -10px rgb(0 0 0 / 0.9);
     --inset-shadow-*: initial;
     --drop-shadow-*: initial;
@@ -124,12 +150,6 @@
     --aspect-scope: 2.39 / 1; /* computador */
     --aspect-video: 16 / 9; /* celular */
     --object-position-focus: 50% 25%; /* não corta cabeças */
-    /* o topo fica escuro até a altura do contador "1 de 5": 7:1 mesmo sobre uma capa branca */
-    --background-image-shade-top: linear-gradient(
-        to bottom,
-        rgb(2 2 2 / 0.72) 2.75rem,
-        rgb(2 2 2 / 0) calc(2.75rem + 30%)
-    );
     --background-image-shade-full: linear-gradient(
         to bottom,
         rgb(2 2 2 / 0.34),
@@ -143,7 +163,7 @@
     /* base da área que rola nos filtros, quando há mais campos abaixo */
     --background-image-scroll-hint: linear-gradient(rgb(2 2 2 / 0), var(--color-scrim-strong));
     --background-image-panel-foot: linear-gradient(rgb(14 14 14 / 0), rgb(14 14 14 / 0.94) 18px);
-    --background-image-grain: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --background-image-grain: url("/grain.svg");
     --opacity-grain: 0.42;
 
     /* telas: "celular" é até 860px; desktop: vale de 861px para cima */
@@ -243,8 +263,15 @@
         --text-shot: 1.25rem;
         --text-synopsis: 0.875rem;
         --text-footnote: 0.6875rem;
-        --spacing-gutter: 1rem;
     }
+}
+
+/* coluna única de toda tela: largura toda, margem lateral e, em tela ultralarga, centralizada */
+@utility page-container {
+    margin-inline: auto;
+    width: 100%;
+    max-width: var(--container-page);
+    padding-inline: var(--spacing-gutter);
 }
 
 /* recorta o título durante a troca, sem cortar acentos e descendentes */
@@ -295,9 +322,23 @@
         }
     }
 
-    :focus-visible {
+    /*
+     * Foco: um só estilo para tudo. Anel claro com fio escuro por dentro, para ter 3:1 tanto
+     * sobre o fundo escuro quanto sobre uma imagem clara (WCAG 2.4.7, 1.4.11). O rádio dos chips
+     * é invisível, então o anel vai no rótulo. A modalidade (data-input, ver InputModality) tira o
+     * anel depois de mouse ou toque: campos de texto casam :focus-visible mesmo no clique.
+     */
+    :focus-visible,
+    label:has(> input:focus-visible) {
         outline: 2px solid var(--color-paper);
         outline-offset: 3px;
+        box-shadow: var(--shadow-focus);
+    }
+
+    html[data-input="pointer"] :focus-visible,
+    html[data-input="pointer"] label:has(> input:focus-visible) {
+        outline: none;
+        box-shadow: none;
     }
 
     /* slider: trilho de 2px, preenchido até --p, e botão com anel */

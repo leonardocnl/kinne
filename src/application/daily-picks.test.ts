@@ -38,6 +38,7 @@ function memoryRepository() {
                 releaseYear: 2020,
                 runtimeMinutes: 100,
                 backdropImagePath: null,
+                backdropWidth: null,
                 streamingTmdbIds: [8],
             }));
         },

@@ -3,11 +3,14 @@ import { DEFAULT_FILTERS } from "@/domain/filters";
 import {
     browserId,
     filteredRun,
+    filtersOnArrival,
     saveFilters,
     savedFilters,
     savedStreamings,
     shownTitles,
+    tasteSignals,
     teamBrowser,
+    titleOrigin,
     watchedTitles,
 } from "./browser-storage";
 
@@ -85,16 +88,41 @@ describe("browser storage", () => {
         filteredRun.see(1);
         filteredRun.see(2);
         filteredRun.see(1);
-        expect(filteredRun.read()).toEqual({ filters, watched: [9], seen: [1, 2] });
+        expect(filteredRun.read()).toEqual({ filters, watched: [9], seen: [1, 2], round: 0 });
+        // "Sortear entre os próximos 10": rodada seguinte, sem esquecer os já mostrados
+        filteredRun.advance();
+        expect(filteredRun.read()).toEqual({ filters, watched: [9], seen: [1, 2], round: 1 });
+        // "Recomeçar": primeira rodada, sem os mostrados
         filteredRun.restart();
-        expect(filteredRun.read()).toEqual({ filters, watched: [9], seen: [] });
+        expect(filteredRun.read()).toEqual({ filters, watched: [9], seen: [], round: 0 });
+    });
+
+    it("rodada adulterada no navegador começa uma sequência nova (recommendation-rounds A5)", () => {
+        const sessionStorage = memoryStorage();
+        vi.stubGlobal("window", { localStorage: memoryStorage(), sessionStorage });
+        filteredRun.start({ ...DEFAULT_FILTERS, type: "movie" }, []);
+        for (const round of [-1, 1000, 1.5, "2", null]) {
+            const run = JSON.parse(sessionStorage.getItem("kinne:filtered-run")!);
+            sessionStorage.setItem("kinne:filtered-run", JSON.stringify({ ...run, round }));
+            expect(filteredRun.read()).toEqual({
+                filters: DEFAULT_FILTERS,
+                watched: [],
+                seen: [],
+                round: 0,
+            });
+        }
     });
 
     it("sem rodada salva, começa uma com os filtros e os marcados de agora", () => {
         const localStorage = memoryStorage();
         localStorage.setItem("kinne:watched", "[4]");
         vi.stubGlobal("window", { localStorage, sessionStorage: memoryStorage() });
-        expect(filteredRun.read()).toEqual({ filters: DEFAULT_FILTERS, watched: [4], seen: [] });
+        expect(filteredRun.read()).toEqual({
+            filters: DEFAULT_FILTERS,
+            watched: [4],
+            seen: [],
+            round: 0,
+        });
     });
 
     it("o código do navegador é criado uma vez e fica entre visitas (RNG005)", () => {
@@ -113,5 +141,67 @@ describe("browser storage", () => {
         expect(teamBrowser.is()).toBe(true);
         vi.stubGlobal("window", { localStorage: memoryStorage() });
         expect(teamBrowser.is()).toBe(false);
+    });
+});
+
+describe("origem do título (security §8, §9)", () => {
+    it.each(["dia", "surpresa", "filtros", "busca"] as const)("guarda e lê %s", (origin) => {
+        vi.stubGlobal("window", { sessionStorage: memoryStorage() });
+        titleOrigin.set("matrix-1999", origin);
+        expect(titleOrigin.read("matrix-1999")).toBe(origin);
+    });
+
+    it("vale só para o título com que foi gravada", () => {
+        vi.stubGlobal("window", { sessionStorage: memoryStorage() });
+        titleOrigin.set("matrix-1999", "busca");
+        expect(titleOrigin.read("outro-2020")).toBe("link");
+    });
+
+    it.each([
+        ["nada gravado", null],
+        ["origem desconhecida", JSON.stringify({ slug: "matrix-1999", origin: "admin" })],
+        ["origem 'link' gravada", JSON.stringify({ slug: "matrix-1999", origin: "link" })],
+        ["não é objeto", JSON.stringify("busca")],
+        ["JSON quebrado", "{"],
+    ])("%s vira link", (_, raw) => {
+        const sessionStorage = memoryStorage();
+        if (raw !== null) sessionStorage.setItem("kinne:origin", raw);
+        vi.stubGlobal("window", { sessionStorage });
+        expect(titleOrigin.read("matrix-1999")).toBe("link");
+    });
+
+    it("armazenamento bloqueado vira link, sem quebrar", () => {
+        vi.stubGlobal("window", {
+            get sessionStorage(): Storage {
+                throw new Error("bloqueado");
+            },
+        });
+        expect(() => titleOrigin.set("matrix-1999", "dia")).not.toThrow();
+        expect(titleOrigin.read("matrix-1999")).toBe("link");
+    });
+});
+
+describe("abrir os filtros ao chegar (US004 C3)", () => {
+    it("vale uma vez", () => {
+        vi.stubGlobal("window", { sessionStorage: memoryStorage() });
+        expect(filtersOnArrival.take()).toBe(false);
+        filtersOnArrival.request();
+        expect(filtersOnArrival.take()).toBe(true);
+        expect(filtersOnArrival.take()).toBe(false);
+    });
+});
+
+describe("sinais de gosto (US009 RNE001)", () => {
+    it("guarda, troca o anterior e descarta o que foi mexido à mão", () => {
+        const localStorage = memoryStorage();
+        vi.stubGlobal("window", { localStorage });
+        tasteSignals.record(3, "liked");
+        tasteSignals.record(4, "will_watch");
+        tasteSignals.record(3, "disliked");
+        expect(tasteSignals.read()).toEqual({ liked: [], willWatch: [4], disliked: [3] });
+        localStorage.setItem("kinne:taste", '{"liked":[1,"x",-2],"extra":1}');
+        expect(tasteSignals.read()).toEqual({ liked: [1], willWatch: [], disliked: [] });
+        localStorage.setItem("kinne:taste", "{quebrado");
+        expect(tasteSignals.read()).toEqual({ liked: [], willWatch: [], disliked: [] });
     });
 });

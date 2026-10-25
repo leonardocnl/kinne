@@ -1,0 +1,41 @@
+name: Sync catalog (develop)
+
+# SÓ MANUAL: atualiza o catálogo do banco de develop quando precisarmos. Não há agendamento; o
+# agendado é o sync-catalog.yml, que cuida da produção. Mesmos passos, outro banco.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: sync-develop
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: develop
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # Só o segredo do banco develop. Sem REVALIDATE_ORIGIN e REVALIDATE_SECRET: o develop não
+      # deve invalidar o cache do site de produção. O script confere meta.environment (C3).
+      - run: npm run catalog:sync
+        env:
+          SYNC_TARGET: develop
+          TMDB_TOKEN: ${{ secrets.TMDB_TOKEN }}
+          SYNC_DATABASE_URL: ${{ secrets.SYNC_DEVELOP_DATABASE_URL }}
+      - run: npm run daily:pick
+        env:
+          DATABASE_URL_POOLED: ${{ secrets.SYNC_DEVELOP_DATABASE_URL }}
+      - run: npm run graph:build
+        env:
+          SYNC_TARGET: develop
+          SYNC_DATABASE_URL: ${{ secrets.SYNC_DEVELOP_DATABASE_URL }}

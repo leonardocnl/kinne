@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../../_components/ui/Button";
 import { Chip, RadioChip } from "../../_components/ui/Chip";
+import { RemovableChip } from "../../_components/ui/RemovableChip";
 import { GlassPanel } from "../../_components/ui/GlassPanel";
 import { Digits, Slider } from "../../_components/ui/Slider";
 import { cx } from "../../_components/ui/cx";
@@ -205,7 +206,7 @@ export function FiltersDemo() {
     const none = picked.length === 0;
 
     return (
-        <GlassPanel className="max-w-panel" aria-label="Exemplo de painel de filtros">
+        <GlassPanel className="max-w-filters" aria-label="Exemplo de painel de filtros">
             <div className="flex flex-col gap-2 border-t border-line px-1 pt-3">
                 <span id="demo-streamings" className="text-data text-soft">
                     Streamings
@@ -293,5 +294,20 @@ export function FiltersDemo() {
                 )}
             </div>
         </GlassPanel>
+    );
+}
+
+/** A pílula da pessoa escolhida nos filtros; remover só a esconde até a próxima visita à página. */
+export function RemovableChipDemo({ className }: { className?: string }) {
+    const [shown, setShown] = useState(true);
+    if (!shown) return <span className="text-data text-faint">Removida</span>;
+    return (
+        <RemovableChip
+            removeLabel="Remover Tom Hanks"
+            onRemove={() => setShown(false)}
+            className={className}
+        >
+            Tom Hanks · Atuação
+        </RemovableChip>
     );
 }

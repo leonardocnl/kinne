@@ -1,5 +1,6 @@
 "use server";
 
+import "server-only";
 import { after } from "next/server";
 import { recordUsageEvent } from "@/application/usage-events";
 import { createDb } from "@/infrastructure/db/client";

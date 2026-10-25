@@ -14,6 +14,14 @@ Cópia em Markdown dos requisitos mantidos no Google Drive (pasta KINNE › 01 �
 | US005  | [us005-responder-a-uma-recomendacao.md](us005-responder-a-uma-recomendacao.md) | Vou assistir, Já vi                                                |
 | US006  | [us006-tirar-a-equipe-da-contagem.md](us006-tirar-a-equipe-da-contagem.md)     | Endereço secreto da equipe                                         |
 | US007  | [us007-manter-o-catalogo-atualizado.md](us007-manter-o-catalogo-atualizado.md) | Atualização diária                                                 |
+| US008  | [us008-escolher-pelo-que-sinto.md](us008-escolher-pelo-que-sinto.md)           | Sentimentos nos filtros (pós-MVP, aprovada em 23/10/2026)          |
+| US009  | [us009-gosto-invisivel.md](us009-gosto-invisivel.md)                           | Ordem pelo gosto (pós-MVP, aprovada em 23/10/2026)                 |
+| US010  | [us010-curtiu.md](us010-curtiu.md)                                             | "Curtiu?" depois de "Já vi" (pós-MVP, aprovada em 23/10/2026)      |
+| US011  | [us011-sala-de-grupo.md](us011-sala-de-grupo.md)                               | Sala de grupo (pós-MVP, aprovada em 23/10/2026)                    |
+| US012  | [us012-entrar-com-codigo.md](us012-entrar-com-codigo.md)                       | Entrar com código no e-mail (pós-MVP)                              |
+| US013  | [us013-onboarding.md](us013-onboarding.md)                                     | Onboarding (pós-MVP)                                               |
+| US014  | [us014-perfil-e-meus-dados.md](us014-perfil-e-meus-dados.md)                   | Perfil, baixar e apagar dados, privacidade (pós-MVP)               |
+| US015  | [us015-gosto-na-conta.md](us015-gosto-na-conta.md)                             | Gosto, "Já vi" e streamings na conta (pós-MVP)                     |
 | 02     | [02-requisitos-nao-funcionais.md](02-requisitos-nao-funcionais.md)             | RNF01 a RNF11                                                      |
 | 03     | [03-medicao-da-semana-0.md](03-medicao-da-semana-0.md)                         | Critérios, definições, eventos                                     |
 | 04     | [04-mudancas-e-pendencias.md](04-mudancas-e-pendencias.md)                     | O que mudou e o que falta decidir                                  |

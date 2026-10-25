@@ -1,6 +1,7 @@
 import { useId } from "react";
 import type { HomePick } from "../../_data/home";
 import { TmdbImage } from "../ui/TmdbImage";
+import { THUMBNAIL_SIZES, thumbnailSources } from "../ui/tmdb-sources";
 
 type TodayReelProps = {
     picks: HomePick[];
@@ -46,8 +47,8 @@ export function TodayReel({ picks, current, onSelect }: TodayReelProps) {
                             <span className="h-0.5 bg-rail group-aria-pressed:bg-paper" />
                             {p.backdropImagePath ? (
                                 <TmdbImage
-                                    path={p.backdropImagePath}
-                                    widths={["w300"]}
+                                    sources={thumbnailSources(p.backdropImagePath)}
+                                    sizes={THUMBNAIL_SIZES}
                                     className="aspect-scope w-full opacity-50 transition-opacity duration-fade group-hover:opacity-80 group-aria-pressed:opacity-100 motion-reduce:transition-none"
                                 />
                             ) : (

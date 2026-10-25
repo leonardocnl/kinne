@@ -4,7 +4,7 @@ import { kinneGenreFor } from "@/domain/genre";
 import { STREAMING_SERVICES } from "@/domain/streaming";
 import { createDb } from "@/infrastructure/db/client";
 import { genres, streamingServices } from "@/infrastructure/db/schema";
-import { TmdbClient } from "@/infrastructure/tmdb/client";
+import { publicErrorMessage, TmdbClient } from "@/infrastructure/tmdb/client";
 
 type GenreList = { genres: { id: number; name: string }[] };
 
@@ -21,8 +21,8 @@ async function main() {
         });
 
     const lists = await Promise.all(
-        ["movie", "tv"].map((type) =>
-            tmdb.get<GenreList>(`/genre/${type}/list`, { language: "pt-BR" }),
+        ["movie", "tv"].map(
+            (type) => tmdb.get(`/genre/${type}/list`, { language: "pt-BR" }) as Promise<GenreList>,
         ),
     );
     const byId = new Map(lists.flatMap((l) => l.genres).map((g) => [g.id, g.name]));
@@ -44,6 +44,7 @@ async function main() {
 }
 
 main().catch((e) => {
-    console.error(e);
+    // nada do erro vai para o terminal: pode trazer host ou URL do banco (security §6)
+    console.error(publicErrorMessage(e, "Erro no seed"));
     process.exit(1);
 });

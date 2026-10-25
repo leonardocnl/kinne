@@ -1,23 +1,27 @@
-import { SURPRISE_MAX_EXCLUDED, type SurpriseRequest } from "@/domain/surprise";
+import { z } from "zod";
+import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
+import { MAX_TITLE_ID } from "@/domain/taste-signals";
 import { isStreaming, STREAMING_SERVICES } from "@/domain/streaming";
+import { tasteSchema } from "./taste";
 
-export const idList = (value: unknown): value is number[] =>
-    Array.isArray(value) &&
-    value.length <= SURPRISE_MAX_EXCLUDED &&
-    value.every((v) => Number.isSafeInteger(v) && v > 0);
+export const idListSchema = z
+    .array(z.int().positive().max(MAX_TITLE_ID))
+    .max(SURPRISE_MAX_EXCLUDED);
+
+export const surpriseRequestSchema = z.strictObject({
+    streamings: z.array(z.string().refine(isStreaming)).max(STREAMING_SERVICES.length),
+    watched: idListSchema,
+    shown: idListSchema,
+    // os sinais de gosto do navegador (US009)
+    taste: tasteSchema,
+});
+
+export type SurpriseDrawRequest = z.infer<typeof surpriseRequestSchema>;
 
 /** O pedido vem do navegador: só passa no formato e no tamanho esperados. */
-export function parseSurpriseRequest(input: unknown): SurpriseRequest {
-    if (typeof input !== "object" || input === null) throw new Error("Pedido inválido");
-    const { streamings, watched, shown } = input as Record<string, unknown>;
-    if (
-        !Array.isArray(streamings) ||
-        streamings.length > STREAMING_SERVICES.length ||
-        !streamings.every((s) => typeof s === "string" && isStreaming(s)) ||
-        !idList(watched) ||
-        !idList(shown)
-    ) {
-        throw new Error("Pedido inválido");
-    }
-    return { streamings, watched, shown };
+export function parseSurpriseRequest(input: unknown): SurpriseDrawRequest {
+    const parsed = surpriseRequestSchema.safeParse(input);
+    // mensagem fixa: nada do pedido volta ao navegador nem ao log
+    if (!parsed.success) throw new Error("Pedido inválido");
+    return parsed.data;
 }

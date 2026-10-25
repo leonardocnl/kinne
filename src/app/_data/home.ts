@@ -1,4 +1,5 @@
-import { cacheLife } from "next/cache";
+import "server-only";
+import { cacheLife, cacheTag } from "next/cache";
 import { dailyPicksFor, type DailyPickTitle } from "@/application/daily-picks";
 import { formatRuntime } from "@/domain/catalog";
 import { pickPhrase, rotationSeconds } from "@/domain/daily-picks";
@@ -7,6 +8,7 @@ import { GENRE_LABELS } from "@/domain/genre";
 import { primaryStreaming, type StreamingService } from "@/domain/streaming";
 import { createDb } from "@/infrastructure/db/client";
 import { DrizzleDailyPicksRepository } from "@/infrastructure/db/daily-picks-repository";
+import { CATALOG_TAG, LISTS_TAG } from "@/infrastructure/revalidation";
 
 // Uma indicação já pronta para a tela inicial.
 export type HomePick = {
@@ -19,6 +21,7 @@ export type HomePick = {
     facts: string[];
     streaming: StreamingService | null;
     backdropImagePath: string | null;
+    backdropWidth: number | null;
 };
 
 /**
@@ -29,6 +32,7 @@ export type HomePick = {
 export async function homePicks(day: Day): Promise<HomePick[]> {
     "use cache: remote";
     cacheLife("days");
+    cacheTag(CATALOG_TAG, LISTS_TAG);
     const picks = await dailyPicksFor(day, new DrizzleDailyPicksRepository(createDb()));
     return picks.map(toHomePick);
 }
@@ -48,5 +52,6 @@ function toHomePick(p: DailyPickTitle): HomePick {
         ].filter((fact) => fact !== undefined),
         streaming: primaryStreaming(p.streamingTmdbIds),
         backdropImagePath: p.backdropImagePath,
+        backdropWidth: p.backdropWidth,
     };
 }

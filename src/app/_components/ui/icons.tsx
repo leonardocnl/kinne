@@ -82,3 +82,35 @@ export function CloseIcon() {
         </svg>
     );
 }
+
+export function SearchIcon() {
+    return (
+        <svg
+            viewBox="0 0 20 20"
+            className="size-4.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            aria-hidden="true"
+        >
+            <circle cx="8.5" cy="8.5" r="5.5" />
+            <path d="M12.5 12.5L17 17" />
+        </svg>
+    );
+}
+
+export function UserIcon() {
+    return (
+        <svg
+            viewBox="0 0 24 24"
+            className="size-4.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            aria-hidden="true"
+        >
+            <circle cx="12" cy="8" r="3.6" />
+            <path d="M4.5 20c.9-3.6 3.7-5.5 7.5-5.5s6.6 1.9 7.5 5.5" />
+        </svg>
+    );
+}

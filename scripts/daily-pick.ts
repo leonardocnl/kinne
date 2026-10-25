@@ -4,6 +4,7 @@ import { generateDailyPicks } from "@/application/daily-picks";
 import { addDays, brasiliaDay } from "@/domain/day";
 import { createDb } from "@/infrastructure/db/client";
 import { DrizzleDailyPicksRepository } from "@/infrastructure/db/daily-picks-repository";
+import { publicErrorMessage } from "@/infrastructure/tmdb/client";
 
 async function main() {
     const repository = new DrizzleDailyPicksRepository(createDb());
@@ -17,6 +18,7 @@ async function main() {
 }
 
 main().catch((e) => {
-    console.error(e);
+    // D1: nunca ecoa a mensagem do driver do banco.
+    console.error(publicErrorMessage(e));
     process.exit(1);
 });

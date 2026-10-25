@@ -1,3 +1,4 @@
+import "server-only";
 import { and, count, gte, lt } from "drizzle-orm";
 import type { EventRange, TestEventsRepository } from "@/application/delete-test-events";
 import type { UsageEventsRepository } from "@/application/usage-events";

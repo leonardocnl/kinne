@@ -2,13 +2,20 @@ import { Button, ButtonLink } from "../../_components/ui/Button";
 import { Dock } from "../../_components/ui/Dock";
 import { Fact, Facts } from "../../_components/ui/Facts";
 import { Frame } from "../../_components/ui/Frame";
-import { BackIcon, CheckIcon, CloseIcon, DiceIcon, PauseIcon } from "../../_components/ui/icons";
+import {
+    BackIcon,
+    CheckIcon,
+    CloseIcon,
+    DiceIcon,
+    PauseIcon,
+    SearchIcon,
+} from "../../_components/ui/icons";
 import { Chip } from "../../_components/ui/Chip";
 import { GlassPanel } from "../../_components/ui/GlassPanel";
 import { Slider } from "../../_components/ui/Slider";
 import { TextLink } from "../../_components/ui/TextLink";
 import { Wordmark } from "../../_components/ui/Wordmark";
-import { FiltersDemo, TokenValue } from "./live";
+import { FiltersDemo, RemovableChipDemo, TokenValue } from "./live";
 import { DoDont, focusRing, Row, Spec, States } from "./Spec";
 
 export function Controls() {
@@ -36,6 +43,12 @@ export function Controls() {
                     </Button>
                     <Button variant="round" aria-label="Outra opção" spinIcon>
                         <DiceIcon />
+                    </Button>
+                    <Button variant="ghost" icon={<SearchIcon />}>
+                        Buscar
+                    </Button>
+                    <Button variant="round" aria-label="Buscar filme ou série">
+                        <SearchIcon />
                     </Button>
                 </Row>
                 <Row label="ButtonLink: leva a outra página">
@@ -250,6 +263,19 @@ export function Controls() {
                             </>
                         ),
                     }}
+                />
+            </Spec>
+
+            <Spec
+                name="RemovableChip"
+                props={["children", "removeLabel: string", "onRemove", "removeRef?"]}
+                does="Mostra uma escolha que se tira com um toque, como a pessoa escolhida nos filtros. O botão de remover tem o alvo de toque inteiro e é concêntrico à pílula."
+            >
+                <States
+                    states={["normal", "foco"]}
+                    render={(state) => (
+                        <RemovableChipDemo className={state === "foco" ? focusRing : undefined} />
+                    )}
                 />
             </Spec>
 

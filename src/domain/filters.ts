@@ -1,5 +1,7 @@
-import { meetsQualityFloor, MIN_RATING, type TitleType } from "./catalog";
+import { meetsQualityFloor, meetsTasteFloor, MIN_RATING, type TitleType } from "./catalog";
+import { isFeeling, maskAllows, type Feeling } from "./feelings";
 import { isKinneGenre, KINNE_GENRES, type KinneGenre } from "./genre";
+import { parsePersonPick, type PersonPick } from "./person-search";
 import { isStreaming, STREAMING_SERVICES, streamingTmdbIds, type Streaming } from "./streaming";
 import type { SurpriseCandidate } from "./surprise";
 
@@ -15,7 +17,23 @@ export type Filters = {
     minRating: number;
     // teto em minutos; null é "Qualquer". Só vale com Filmes (C2)
     maxRuntime: number | null;
+    // ator ou diretor escolhido na busca do painel; null é ninguém (fase 3)
+    person: PersonPick | null;
+    // chip 18+: só com ele os títulos de classificação 18 entram (fase 4)
+    adult: boolean;
+    // "O que você quer sentir hoje?" (US008); null é nenhum
+    feeling: Feeling | null;
 };
+
+/**
+ * Os filtros como vão ao servidor: da pessoa, só o id (person-search A7). O servidor deriva os
+ * títulos dela; o nome e o papel servem só à pílula do painel.
+ */
+export type FilterCriteria = Omit<Filters, "person"> & { personId: number | null };
+
+export function wireFilters({ person, ...rest }: Filters): FilterCriteria {
+    return { ...rest, personId: person?.id ?? null };
+}
 
 // O slider começa no piso: o catálogo não tem títulos abaixo dele (RNE002).
 export const MAX_RATING = 9;
@@ -34,14 +52,16 @@ export const DEFAULT_FILTERS: Filters = {
     genres: [],
     minRating: MIN_RATING,
     maxRuntime: null,
+    person: null,
+    adult: false,
+    feeling: null,
 };
-
-// Quantos títulos entram no sorteio (RNE003).
-export const DRAWABLE = 10;
 
 // Sem o slug: a lista vai inteira ao navegador para o contador, e o slug dobraria o tamanho.
 export type FilterCandidate = Omit<SurpriseCandidate, "slug"> & {
     type: TitleType;
+    // quais sentimentos aceitam o título, um bit por sentimento (US008 RNE004)
+    feelings: number;
     runtimeMinutes: number | null;
     kinneGenres: readonly KinneGenre[];
 };
@@ -53,24 +73,43 @@ export function withType(filters: Filters, type: TypeChoice): Filters {
     return { ...filters, type, genres };
 }
 
+function passesRating(
+    c: Pick<FilterCandidate, "id" | "rating" | "votes">,
+    minRating: number,
+    reached: ReadonlySet<number> | null,
+): boolean {
+    // o gosto afrouxa o piso, não o slider: quem subiu a nota quer aquela nota
+    if (reached?.has(c.id) && minRating <= MIN_RATING) return meetsTasteFloor(c.votes);
+    return c.rating >= minRating && meetsQualityFloor(c.rating, c.votes);
+}
+
 /**
- * Quantos títulos combinam (C3) e os 10 de maior nota entre eles (RNE003): empate vai para mais
- * votos e depois para o menor id, para os 10 serem sempre os mesmos.
+ * Os títulos que combinam com os filtros (C3), sem os marcados (RNG004). `personTitles` são os
+ * títulos da pessoa escolhida; null quando não há pessoa no filtro. Títulos 18 só com o chip 18+
+ * (recommendation-rounds). A ordem e as rodadas ficam com buildRounds (rounds.ts).
+ *
+ * `reached` são os títulos que o gosto da pessoa alcança (US009 RNE003): eles dispensam a nota
+ * mínima de 6,4 e só precisam de 100 votos. Se a pessoa subiu o slider, o que ela pediu vale para
+ * todos. 18+, streamings, sentimento e marcados valem sempre, e `reached` nunca acrescenta um
+ * título: só afrouxa a nota de quem já passou nas demais regras (feelings-and-taste-ui A1, A2).
  */
-export function filterTitles<T extends FilterCandidate>(
+export function matchTitles<T extends FilterCandidate>(
     candidates: readonly T[],
-    filters: Filters,
+    filters: Omit<Filters, "person">,
     watched: readonly number[],
-): { count: number; top: T[] } {
+    personTitles: ReadonlySet<number> | null = null,
+    reached: ReadonlySet<number> | null = null,
+): T[] {
     const wanted = streamingTmdbIds(filters.streamings);
     const seen = new Set(watched);
     const limit = filters.type === "movie" ? filters.maxRuntime : null;
-    const matching = candidates.filter(
+    return candidates.filter(
         (c) =>
-            c.rating >= filters.minRating &&
-            meetsQualityFloor(c.rating, c.votes) &&
+            (filters.adult || !c.adult) &&
+            passesRating(c, filters.minRating, reached) &&
             c.streamingTmdbIds.some((id) => wanted.includes(id)) &&
             (filters.type === "both" || c.type === filters.type) &&
+            (filters.feeling === null || maskAllows(c.feelings, filters.feeling)) &&
             (filters.genres.length === 0 ||
                 // com Os dois, Romance só traz filmes (C8)
                 filters.genres.some(
@@ -78,12 +117,9 @@ export function filterTitles<T extends FilterCandidate>(
                 )) &&
             // sem duração conhecida, não dá para garantir o teto
             (limit === null || (c.runtimeMinutes !== null && c.runtimeMinutes <= limit)) &&
+            (personTitles === null || personTitles.has(c.id)) &&
             !seen.has(c.id),
     );
-    const top = matching
-        .toSorted((a, b) => b.rating - a.rating || b.votes - a.votes || a.id - b.id)
-        .slice(0, DRAWABLE);
-    return { count: matching.length, top };
 }
 
 /**
@@ -99,14 +135,7 @@ export function drawUnseen<T extends { id: number }>(
     return pool.length > 0 ? pool[Math.floor(random() * pool.length)] : null;
 }
 
-/** Título do estado de fim (US004 C3): menos de 10 quando poucos combinam. */
-export function endOfOptionsHeading(total: number): string {
-    if (total === 0) return "Nenhum título combina mais com esses filtros";
-    if (total === 1) return "Você viu a melhor opção para esses filtros";
-    return `Você viu as ${total} melhores para esses filtros`;
-}
-
-const TYPES: readonly TypeChoice[] = ["movie", "series", "both"];
+export const TYPES: readonly TypeChoice[] = ["movie", "series", "both"];
 
 const listOf = <T extends string>(value: unknown, max: number, is: (v: string) => v is T) =>
     Array.isArray(value) &&
@@ -120,7 +149,8 @@ const listOf = <T extends string>(value: unknown, max: number, is: (v: string) =
  */
 export function parseFilters(value: unknown): Filters | null {
     if (typeof value !== "object" || value === null) return null;
-    const { streamings, type, genres, minRating, maxRuntime } = value as Record<string, unknown>;
+    const { streamings, type, genres, minRating, maxRuntime, person, adult, feeling } =
+        value as Record<string, unknown>;
     const ok =
         listOf(streamings, STREAMING_SERVICES.length, isStreaming) &&
         TYPES.includes(type as TypeChoice) &&
@@ -137,5 +167,11 @@ export function parseFilters(value: unknown): Filters | null {
         // o slider anda de 0,1 em 0,1; o arredondamento tira o 7,199999… do ponto flutuante
         minRating: Math.round(minRating * 10) / 10,
         maxRuntime: maxRuntime as number | null,
+        // pessoa ausente ou adulterada vale como ninguém, sem perder os outros campos (A9)
+        person: parsePersonPick(person),
+        // só true liga o 18+; ausente ou qualquer outra coisa é desligado (recommendation-rounds A5)
+        adult: adult === true,
+        // sentimento ausente (aba antiga) ou fora da lista vale como nenhum (A4)
+        feeling: typeof feeling === "string" && isFeeling(feeling) ? feeling : null,
     };
 }

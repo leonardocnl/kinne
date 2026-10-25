@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import { cx } from "./cx";
 import { TmdbImage } from "./TmdbImage";
+import { backdropSources, FRAME_SIZES } from "./tmdb-sources";
 
 type FrameProps = {
-    /** escurece também a base, para a nota e o trailer ficarem legíveis */
+    /** escurece a imagem de cima a baixo, para a nota e o trailer ficarem legíveis */
     bottomShade?: boolean;
     /** imagens (FrameImage) e conteúdo sobreposto (nota, trailer, voltar) */
     children?: ReactNode;
@@ -12,7 +13,7 @@ type FrameProps = {
 
 /**
  * Quadro da imagem: cantos retos, 2.39:1 no computador e 16:9 no celular (de ponta a ponta da
- * tela), com gradiente e grão por cima da imagem.
+ * tela), com grão (e gradiente, com bottomShade) por cima da imagem.
  */
 export function Frame({ bottomShade, children, className }: FrameProps) {
     return (
@@ -22,13 +23,9 @@ export function Frame({ bottomShade, children, className }: FrameProps) {
                 className,
             )}
         >
-            <div
-                aria-hidden="true"
-                className={cx(
-                    "absolute inset-0 -z-2",
-                    bottomShade ? "bg-shade-full" : "bg-shade-top",
-                )}
-            />
+            {bottomShade && (
+                <div aria-hidden="true" className="absolute inset-0 -z-2 bg-shade-full" />
+            )}
             <div
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-0 -z-1 bg-grain opacity-grain mix-blend-overlay"
@@ -40,17 +37,19 @@ export function Frame({ bottomShade, children, className }: FrameProps) {
 
 type FrameImageProps = {
     path: string;
+    /** largura do original no TMDB; sem ela, o srcset fica nos tamanhos fixos */
+    width: number | null;
     /** com várias imagens no quadro, só a visível aparece; a troca dissolve */
     visible?: boolean;
     priority?: boolean;
 };
 
 /** Imagem do TMDB que preenche o quadro, por baixo do gradiente e do grão. */
-export function FrameImage({ path, visible = true, priority }: FrameImageProps) {
+export function FrameImage({ path, width, visible = true, priority }: FrameImageProps) {
     return (
         <TmdbImage
-            path={path}
-            widths={["w780", "w1280"]}
+            sources={backdropSources(path, width)}
+            sizes={FRAME_SIZES}
             priority={priority}
             className={cx(
                 "absolute inset-0 -z-3 size-full transition-opacity duration-dissolve motion-reduce:transition-none",

@@ -12,6 +12,8 @@ export type CatalogEntry = {
     tagline: string | null;
     synopsis: string | null;
     backdropImagePath: string | null;
+    // largura do original no TMDB, para o srcset oferecer o original com o tamanho certo
+    backdropWidth: number | null;
     trailerYoutubeKey: string | null;
     releaseYear: number | null;
     runtimeMinutes: number | null;
@@ -20,6 +22,11 @@ export type CatalogEntry = {
     // nomes em português dos gêneros do TMDB, para o título sem gênero do Kinne
     genreNames: string[];
     streamingTmdbIds: number[];
+    // fora disso o título só chega pela busca: sem sorteio na tela (US007)
+    recommendable: boolean;
+    // todos os diretores e o começo do elenco, cada um na ordem dos créditos
+    directors: string[];
+    cast: string[];
 };
 
 // Um título que a surpresa (US003) e os filtros (US002) podem sortear.

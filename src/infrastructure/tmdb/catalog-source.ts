@@ -1,40 +1,48 @@
-import type { CatalogSource, Tag, TitleDetails } from "@/application/sync-catalog";
-import { cleanText, MIN_RATING, MIN_VOTES, type TitleType } from "@/domain/catalog";
-import type { TmdbClient } from "./client";
-
-type DiscoverPage = { page: number; total_pages: number; results: { id: number }[] };
-
-type RawVideos = {
-    results: { site: string; type: string; key: string; iso_639_1: string | null }[];
-};
-
-type RawDetails = {
-    id: number;
-    title?: string;
-    name?: string;
-    original_title?: string;
-    original_name?: string;
-    original_language: string;
-    tagline: string | null;
-    overview: string | null;
-    poster_path: string | null;
-    backdrop_path: string | null;
-    release_date?: string;
-    first_air_date?: string;
-    runtime?: number | null;
-    episode_run_time?: number[];
-    vote_average: number;
-    vote_count: number;
-    genres: { id: number; name: string }[];
-    keywords: {
-        keywords?: { id: number; name: string }[];
-        results?: { id: number; name: string }[];
-    };
-    videos: RawVideos;
-};
+import "server-only";
+import type {
+    CatalogSource,
+    Credit,
+    DetailsResult,
+    SeriesType,
+    Tag,
+} from "@/application/sync-catalog";
+import { pickTrailer, type TitleType } from "@/domain/catalog";
+import { pickBackdrop, pickCertification } from "@/domain/catalog-sync";
+import { TmdbHttpError, type TmdbClient } from "./client";
+import {
+    changesPageSchema,
+    discoverPageSchema,
+    movieDetailsSchema,
+    seriesDetailsSchema,
+} from "./schemas";
 
 const tmdbPath = (type: TitleType) => (type === "movie" ? "movie" : "tv");
 const toTag = (t: { id: number; name: string }): Tag => ({ tmdbId: t.id, name: t.name });
+
+// O discover do TMDB para em 500 páginas (10.000 resultados).
+const RESULT_CAP = 10_000;
+// O /changes também só serve até a página 500.
+const MAX_CHANGES_PAGES = 500;
+const MIN_YEAR = 1870;
+const MAX_CAST = 10; // C2
+// Funções de roteiro no crédito do TMDB (grafo de gosto, docs/design/taste-graph.md §3).
+const WRITER_JOBS = new Set(["Screenplay", "Writer", "Teleplay"]);
+const MAX_WRITERS = 5;
+
+const SERIES_TYPE_BY_TMDB: Record<string, SeriesType> = {
+    Miniseries: "miniseries",
+    Scripted: "scripted",
+    Documentary: "documentary",
+    Reality: "reality",
+    "Talk Show": "talk_show",
+    News: "news",
+    Video: "video",
+};
+// Trailer em pt ou no idioma original (pickTrailer): pedimos os idiomas originais mais comuns
+// numa chamada só. ponytail: idioma original fora da lista fica sem trailer; ampliar se faltar.
+const VIDEO_LANGUAGES = "pt,en,es,fr,de,it,ja,ko,zh,cn,hi,ru,tr,sv,da,no,pl,nl,th,id,ar,he,null";
+
+const day = (d: Date) => d.toISOString().slice(0, 10);
 
 export class TmdbCatalogSource implements CatalogSource {
     constructor(private readonly client: TmdbClient) {}
@@ -43,63 +51,205 @@ export class TmdbCatalogSource implements CatalogSource {
         return this.client.requestCount;
     }
 
+    // Divide por faixa de anos até cada consulta ficar abaixo de 10.000 (B3). Um ano sozinho no
+    // limite derruba a carga. ponytail: títulos sem data só entram enquanto não há divisão.
     async discover(type: TitleType, streamingTmdbId: number): Promise<number[]> {
-        const page = (n: number) =>
-            this.client.get<DiscoverPage>(`/discover/${tmdbPath(type)}`, {
-                watch_region: "BR",
-                with_watch_monetization_types: "flatrate",
-                with_watch_providers: streamingTmdbId,
-                "vote_average.gte": MIN_RATING,
-                "vote_count.gte": MIN_VOTES,
-                include_adult: "false",
-                language: "pt-BR",
-                sort_by: "vote_count.desc",
-                page: n,
-            });
-        const first = await page(1);
-        const rest = await Promise.all(
-            Array.from({ length: Math.min(first.total_pages, 500) - 1 }, (_, i) => page(i + 2)),
-        );
-        // A ordem pode mudar entre páginas enquanto paginamos; o Set tira repetidos.
-        return [...new Set([first, ...rest].flatMap((p) => p.results.map((r) => r.id)))];
+        const ids = new Set<number>();
+        const dateField = type === "movie" ? "primary_release_date" : "first_air_date";
+        const query = (page: number, years: [number, number] | null) =>
+            this.client
+                .get(`/discover/${tmdbPath(type)}`, {
+                    watch_region: "BR",
+                    with_watch_monetization_types: "flatrate",
+                    with_watch_providers: streamingTmdbId,
+                    include_adult: "false",
+                    // ordem estável enquanto paginamos
+                    sort_by: type === "movie" ? "original_title.asc" : "original_name.asc",
+                    page,
+                    ...(years && {
+                        [`${dateField}.gte`]: `${years[0]}-01-01`,
+                        [`${dateField}.lte`]: `${years[1]}-12-31`,
+                    }),
+                })
+                .then((r) => discoverPageSchema.parse(r));
+
+        const visit = async (years: [number, number] | null): Promise<void> => {
+            const first = await query(1, years);
+            if (first.total_results >= RESULT_CAP) {
+                const [from, to] = years ?? [MIN_YEAR, new Date().getUTCFullYear() + 5];
+                if (from === to) {
+                    console.warn(`Aviso: ${type} ${streamingTmdbId} ${from} no limite do TMDB`);
+                    throw new Error(`Listagem ainda no limite de ${RESULT_CAP} após dividir`);
+                }
+                const mid = Math.floor((from + to) / 2);
+                await visit([from, mid]);
+                await visit([mid + 1, to]);
+                return;
+            }
+            const rest = await Promise.all(
+                Array.from({ length: first.total_pages - 1 }, (_, i) => query(i + 2, years)),
+            );
+            for (const p of [first, ...rest]) for (const r of p.results) ids.add(r.id);
+        };
+        await visit(null);
+        return [...ids];
     }
 
-    async details(type: TitleType, tmdbId: number): Promise<TitleDetails> {
-        const d = await this.client.get<RawDetails>(`/${tmdbPath(type)}/${tmdbId}`, {
-            language: "pt-BR",
-            append_to_response: "videos,keywords",
-            include_video_language: "pt,en,null",
-        });
-        // O pedido acima só traz vídeos em pt e en; outro idioma original exige uma busca à parte.
-        const videos = ["pt", "en"].includes(d.original_language)
-            ? d.videos
-            : await this.client.get<RawVideos>(`/${tmdbPath(type)}/${tmdbId}/videos`, {
-                  language: "pt-BR",
-                  include_video_language: `pt,${d.original_language}`,
-              });
-        const date = type === "movie" ? d.release_date : d.first_air_date;
-        return {
-            tmdbId: d.id,
-            type,
-            displayTitle: (type === "movie" ? d.title : d.name) ?? "",
-            originalTitle: (type === "movie" ? d.original_title : d.original_name) ?? "",
-            originalLanguage: d.original_language,
-            tagline: cleanText(d.tagline),
-            synopsis: cleanText(d.overview),
-            posterImagePath: d.poster_path,
-            backdropImagePath: d.backdrop_path,
-            releaseYear: date ? Number(date.slice(0, 4)) : null,
-            runtimeMinutes: (type === "movie" ? d.runtime : d.episode_run_time?.[0]) || null,
-            rating: d.vote_average,
-            voteCount: d.vote_count,
-            genres: d.genres.map(toTag),
-            keywords: (d.keywords.keywords ?? d.keywords.results ?? []).map(toTag),
-            videos: videos.results.map((v) => ({
+    async changedIds(type: TitleType, from: Date, to: Date): Promise<Set<number> | null> {
+        const query = (page: number) =>
+            this.client
+                .get(`/${tmdbPath(type)}/changes`, {
+                    start_date: day(from),
+                    end_date: day(to),
+                    page,
+                })
+                .then((r) => changesPageSchema.parse(r));
+        const first = await query(1);
+        if (first.total_pages > MAX_CHANGES_PAGES) return null;
+        const rest = await Promise.all(
+            Array.from({ length: first.total_pages - 1 }, (_, i) => query(i + 2)),
+        );
+        return new Set([first, ...rest].flatMap((p) => p.results.map((r) => r.id)));
+    }
+
+    async details(type: TitleType, tmdbId: number): Promise<DetailsResult> {
+        let raw: unknown;
+        try {
+            raw = await this.client.get(`/${tmdbPath(type)}/${tmdbId}`, {
+                language: "pt-BR",
+                append_to_response:
+                    type === "movie"
+                        ? "credits,videos,images,keywords,release_dates,recommendations"
+                        : "credits,videos,images,keywords,content_ratings,recommendations",
+                include_video_language: VIDEO_LANGUAGES,
+                include_image_language: "null,pt,en",
+            });
+        } catch (e) {
+            if (e instanceof TmdbHttpError && e.status === 404) return { status: "gone" };
+            throw e;
+        }
+
+        const common = (type === "movie" ? movieDetailsSchema : seriesDetailsSchema).safeParse(raw);
+        if (!common.success) return { status: "rejected" };
+        const d = common.data;
+
+        const directors = new Map(
+            d.credits.crew.filter((c) => c.job === "Director").map((c) => [c.id, c.name]),
+        );
+        const writers = new Map(
+            d.credits.crew
+                .filter((c) => WRITER_JOBS.has(c.job))
+                .slice(0, MAX_WRITERS)
+                .map((c) => [c.id, c.name]),
+        );
+        const creators = "created_by" in d ? d.created_by : [];
+        const credits: Credit[] = [
+            ...[...directors].map(([id, name], order) => ({
+                tmdbPersonId: id,
+                name,
+                role: "director" as const,
+                order,
+            })),
+            ...[...new Map(d.credits.cast.map((c) => [c.id, c])).values()]
+                .sort((a, b) => a.order - b.order)
+                .slice(0, MAX_CAST)
+                .map((c, order) => ({
+                    tmdbPersonId: c.id,
+                    name: c.name,
+                    role: "cast" as const,
+                    order,
+                })),
+            ...[...writers].map(([id, name], order) => ({
+                tmdbPersonId: id,
+                name,
+                role: "writer" as const,
+                order,
+            })),
+            ...[...new Map(creators.map((c) => [c.id, c.name]))].map(([id, name], order) => ({
+                tmdbPersonId: id,
+                name,
+                role: "creator" as const,
+                order,
+            })),
+        ];
+        const trailer = pickTrailer(
+            d.videos.results.map((v) => ({
                 site: v.site,
                 type: v.type,
                 key: v.key,
                 languageCode: v.iso_639_1,
             })),
+            d.original_language,
+        );
+        const base = {
+            tmdbId: d.id,
+            type,
+            tagline: d.tagline,
+            synopsis: d.overview,
+            posterImagePath: d.poster_path ?? null,
+            backdrop: pickBackdrop(
+                d.images.backdrops.map((i) => ({
+                    path: i.file_path,
+                    width: i.width,
+                    languageCode: i.iso_639_1,
+                })),
+            ),
+            trailerYoutubeKey: trailer?.youtubeKey ?? null,
+            trailerLanguageCode: trailer?.languageCode ?? null,
+            rating: d.vote_average,
+            voteCount: d.vote_count,
+            genres: d.genres.map(toTag),
+            credits,
+            companies: d.production_companies.map(toTag),
+            // a recomendação de um filme é filme e a de uma série é série, salvo indicação
+            recommendations: d.recommendations.map((r) => ({
+                tmdbId: r.id,
+                type:
+                    (r.media_type ?? (type === "movie" ? "movie" : "tv")) === "movie"
+                        ? ("movie" as const)
+                        : ("series" as const),
+            })),
+        };
+
+        if ("title" in d) {
+            const countries = (c: string) =>
+                d.release_dates.results
+                    .filter((r) => r.iso_3166_1 === c)
+                    .flatMap((r) => r.release_dates.map((x) => x.certification));
+            const cert = pickCertification("movie", countries("BR"), countries("US"));
+            return {
+                status: "ok",
+                title: {
+                    ...base,
+                    displayTitle: d.title,
+                    originalTitle: d.original_title,
+                    releaseYear: d.release_date,
+                    runtimeMinutes: d.runtime || null,
+                    certification: cert.certification,
+                    certificationSource: cert.source,
+                    keywords: d.keywords.keywords.map(toTag),
+                    seriesType: null,
+                    collectionTmdbId: d.belongs_to_collection?.id ?? null,
+                },
+            };
+        }
+        const countries = (c: string) =>
+            d.content_ratings.results.filter((r) => r.iso_3166_1 === c).map((r) => r.rating);
+        const cert = pickCertification("series", countries("BR"), countries("US"));
+        return {
+            status: "ok",
+            title: {
+                ...base,
+                displayTitle: d.name,
+                originalTitle: d.original_name,
+                releaseYear: d.first_air_date,
+                runtimeMinutes: d.episode_run_time[0] || null,
+                certification: cert.certification,
+                certificationSource: cert.source,
+                keywords: d.keywords.results.map(toTag),
+                seriesType: (d.type && SERIES_TYPE_BY_TMDB[d.type]) || null,
+                collectionTmdbId: null,
+            },
         };
     }
 }

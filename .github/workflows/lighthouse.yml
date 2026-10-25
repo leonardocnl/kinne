@@ -1,0 +1,47 @@
+name: Lighthouse
+
+# Performance budget (LCP ≤ 2.0 s, CLS ≤ 0.05, TBT ≤ 200 ms as the lab proxy for INP, score ≥ 90)
+# on the Vercel preview of develop, which is what every PR into main carries. CI has no database,
+# so it cannot render the real pages itself. Budgets live in lighthouserc.json.
+on:
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Deployment URL to test (https://…)"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' &&
+       startsWith(github.event.deployment.environment, 'Preview') &&
+       github.event.deployment.ref == 'develop')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      # No secret is ever in this job: @lhci/cli comes from npx, outside the lockfile, so its
+      # dependencies must not see anything worth stealing. Previews must be reachable without
+      # Vercel Deployment Protection for this check to pass.
+      - name: Run Lighthouse CI
+        env:
+          TARGET_URL: ${{ github.event.inputs.url || github.event.deployment_status.environment_url || github.event.deployment_status.target_url }}
+        run: |
+          if ! printf '%s' "$TARGET_URL" | grep -Eq '^https://[a-z0-9-]+\.vercel\.app/?$'; then
+            echo "Target must be an https://*.vercel.app deployment URL"
+            exit 1
+          fi
+          npx --yes @lhci/cli@0.15.1 autorun --collect.url="${TARGET_URL%/}/"
+      - name: Summary
+        if: always()
+        run: node scripts/lighthouse-summary.mjs

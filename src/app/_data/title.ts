@@ -1,10 +1,13 @@
-import { cacheLife } from "next/cache";
+import "server-only";
+import { cacheLife, cacheTag } from "next/cache";
 import type { CatalogEntry } from "@/application/titles";
-import { formatRuntime } from "@/domain/catalog";
+import { formatRuntime, isSlug } from "@/domain/catalog";
+import { castLine, directionLine } from "@/domain/credits";
 import { GENRE_LABELS, mainGenre } from "@/domain/genre";
 import { primaryStreaming, type StreamingService } from "@/domain/streaming";
 import { createDb } from "@/infrastructure/db/client";
 import { DrizzleTitlesRepository } from "@/infrastructure/db/titles-repository";
+import { CATALOG_TAG, titleTag } from "@/infrastructure/revalidation";
 
 // Um título já pronto para a tela do título (US004 C1).
 export type TitleScreen = {
@@ -21,18 +24,25 @@ export type TitleScreen = {
     streaming: StreamingService | null;
     trailerUrl: string | null;
     backdropImagePath: string | null;
+    backdropWidth: number | null;
+    // não recomendável: sem dado, sem "Outra opção" e fora dos buscadores (busca H6)
+    recommendable: boolean;
+    // "Direção de X" e "Com A, B e C"; null quando não há crédito
+    direction: string | null;
+    cast: string | null;
 };
 
 /** O título do endereço, ou null se não existe. Em cache por slug: o catálogo muda uma vez por dia. */
 export async function titleScreen(slug: string): Promise<TitleScreen | null> {
     // slugs são sempre assim; o resto nem chega ao banco nem ocupa o cache
-    if (!/^[a-z0-9-]{1,200}$/.test(slug)) return null;
+    if (!isSlug(slug)) return null;
     return cachedTitleScreen(slug);
 }
 
 async function cachedTitleScreen(slug: string): Promise<TitleScreen | null> {
     "use cache: remote";
     cacheLife("days");
+    cacheTag(CATALOG_TAG, titleTag(slug));
     const entry = await new DrizzleTitlesRepository(createDb()).bySlug(slug);
     return entry && toTitleScreen(entry);
 }
@@ -59,5 +69,9 @@ function toTitleScreen(t: CatalogEntry): TitleScreen {
             ? `https://www.youtube.com/watch?v=${encodeURIComponent(t.trailerYoutubeKey)}`
             : null,
         backdropImagePath: t.backdropImagePath,
+        backdropWidth: t.backdropWidth,
+        recommendable: t.recommendable,
+        direction: directionLine(t.directors),
+        cast: castLine(t.cast),
     };
 }

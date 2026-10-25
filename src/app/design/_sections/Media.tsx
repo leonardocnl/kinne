@@ -1,6 +1,7 @@
 import { Button } from "../../_components/ui/Button";
 import { Frame } from "../../_components/ui/Frame";
 import { Score } from "../../_components/ui/Score";
+import { QrCode } from "../../_components/ui/QrCode";
 import { Skeleton } from "../../_components/ui/Skeleton";
 import { Toast } from "../../_components/ui/Toast";
 import { Wordmark } from "../../_components/ui/Wordmark";
@@ -15,8 +16,8 @@ export function Media() {
                 name="Frame · FrameImage · TmdbImage · Score"
                 props={[
                     "Frame: bottomShade?, children",
-                    "FrameImage: path, visible?, priority?",
-                    "TmdbImage: path, widths, priority?",
+                    "FrameImage: path, width, visible?, priority?",
+                    "TmdbImage: sources, sizes?, priority?",
                     "Score: value",
                 ]}
                 does="O quadro mostra a imagem do título com gradiente e grão; a nota do TMDB fica por cima, como texto. As imagens vêm direto do TMDB, com os tamanhos dele no srcset, sem a otimização da hospedagem (RNF08)."
@@ -77,11 +78,22 @@ export function Media() {
 
             <Spec
                 name="Toast"
-                props={["message?", "className?"]}
-                does="Confirma em poucas palavras o que acabou de acontecer. Fica sempre na página, vazio e invisível, para o leitor de tela anunciar o texto novo."
+                props={["message?", "children?", "className?"]}
+                does="Confirma em poucas palavras o que acabou de acontecer, com ações curtas ao lado se preciso (a pergunta “Curtiu?”). Fica sempre na página, vazio e invisível, para o leitor de tela anunciar o texto novo."
             >
                 <Row label="com texto">
                     <Toast message="Anotado: você já viu Chernobyl." />
+                </Row>
+                <Row label="com pergunta">
+                    <Toast message="Anotado: você já viu Chernobyl.">
+                        <span className="font-medium">Curtiu?</span>
+                        <Button variant="round" aria-label="Curti">
+                            <span aria-hidden="true">👍</span>
+                        </Button>
+                        <Button variant="round" aria-label="Não curti">
+                            <span aria-hidden="true">👎</span>
+                        </Button>
+                    </Toast>
                 </Row>
                 <DoDont
                     use={{
@@ -95,6 +107,20 @@ export function Media() {
                         ),
                     }}
                 />
+            </Spec>
+
+            <Spec
+                name="QrCode"
+                props={["text", "label", "className?"]}
+                does="QR code de um texto, em SVG, sem biblioteca. Módulos escuros em ink sobre o papel claro, com a margem de silêncio que a leitura pede. O tamanho vem de quem usa; o label diz para que serve."
+            >
+                <Row label="endereço da sala">
+                    <QrCode
+                        text="https://kinne.app/sala/ABCD2345"
+                        label="QR code de exemplo"
+                        className="size-40"
+                    />
+                </Row>
             </Spec>
 
             <Spec

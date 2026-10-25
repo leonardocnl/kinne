@@ -13,18 +13,28 @@
         "format:check": "prettier --check .",
         "db:generate": "drizzle-kit generate",
         "db:migrate": "drizzle-kit migrate",
-        "db:seed": "tsx --env-file=.env.local scripts/seed.ts",
-        "catalog:sync": "tsx --env-file-if-exists=.env.local scripts/sync-catalog.ts",
-        "daily:pick": "tsx --env-file-if-exists=.env.local scripts/daily-pick.ts",
-        "events:delete": "tsx --env-file-if-exists=.env.local scripts/delete-test-events.ts",
-        "smoke:title": "tsx scripts/smoke-title.ts"
+        "db:migrate:guard": "tsx scripts/migrate-develop.ts guard",
+        "db:migrate:verify": "tsx scripts/migrate-develop.ts verify",
+        "db:seed": "tsx --conditions=react-server --env-file=.env.local scripts/seed.ts",
+        "catalog:sync": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/sync-catalog.ts",
+        "graph:build": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/build-taste-graph.ts",
+        "daily:pick": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/daily-pick.ts",
+        "events:delete": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/delete-test-events.ts",
+        "bundle:check": "node scripts/check-bundle-size.mjs",
+        "smoke:title": "tsx --conditions=react-server scripts/smoke-title.ts",
+        "search:check-normalization": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/check-search-normalization.ts",
+        "feelings:calibrate": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/calibrate-feelings.ts",
+        "test:e2e": "vitest run -c vitest.e2e.config.ts",
+        "test:db": "KINNE_TEST_DB=1 vitest run --no-file-parallelism src/app/_actions/account.db.test.ts src/app/_actions/room-account.db.test.ts src/infrastructure/db/accounts.db.test.ts"
     },
     "dependencies": {
         "@neondatabase/serverless": "^1.2.0",
         "drizzle-orm": "^0.45.4",
-        "next": "16.4.0",
+        "next": "16.4.1",
         "react": "19.3.0",
-        "react-dom": "19.3.0"
+        "react-dom": "19.3.0",
+        "server-only": "0.0.1",
+        "zod": "^4.6.6"
     },
     "devDependencies": {
         "@tailwindcss/turbopack": "^4",

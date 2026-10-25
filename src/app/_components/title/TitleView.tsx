@@ -2,10 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
-import { endOfOptionsHeading } from "@/domain/filters";
-import { filteredRun, shownTitles, watchedTitles } from "@/infrastructure/browser-storage";
+import { nextRoundLabel, roundEndHeading } from "@/domain/rounds";
+import { filteredRun, filtersOnArrival, shownTitles } from "@/infrastructure/browser-storage";
 import type { TitleScreen } from "../../_data/title";
 import { screenMain } from "../layout";
+import { markSignal, markWatched } from "../account/marks";
 import { track } from "../measure";
 import { StateScreen } from "../StateScreen";
 import { showToast } from "../toast";
@@ -17,15 +18,14 @@ import { Frame, FrameImage } from "../ui/Frame";
 import { BackIcon, CheckIcon, DiceIcon, PlayIcon } from "../ui/icons";
 import { Score } from "../ui/Score";
 import { TextLink } from "../ui/TextLink";
-import { RECOMMENDATION_SOURCE, titleHref, type Origin } from "./origin";
+import { goToTitle, RECOMMENDATION_SOURCE, useOrigin } from "./origin";
 import { useFilteredDraw } from "./useFilteredDraw";
 import { useSurprise } from "./useSurprise";
 
 type TitleViewProps = {
     title: TitleScreen;
-    origin: Origin;
-    /** a indicação seguinte do dia, só na origem "dia" (US004 C5) */
-    nextDailySlug: string | null;
+    /** o título entre as indicações de hoje: gênero e a seguinte, usados na origem "dia" (C5) */
+    daily: { genre: string; nextSlug: string } | null;
 };
 
 // O botão que levou ao título seguinte. A tela é outra depois da navegação, então o foco é
@@ -33,7 +33,12 @@ type TitleViewProps = {
 let focusOnArrival: "seen" | "another" | null = null;
 
 /** Tela do título (US004) com as respostas "Vou assistir" e "Já vi" (US005). */
-export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
+export function TitleView({ title, daily }: TitleViewProps) {
+    // a origem vem da aba (security §8, §9); até a hidratação terminar, ainda não se sabe
+    const knownOrigin = useOrigin(title.slug);
+    const origin = knownOrigin ?? "link";
+    const nextDailySlug = daily?.nextSlug ?? null;
+    const genre = origin === "dia" && daily ? daily.genre : title.genre;
     const router = useRouter();
     const surprise = useSurprise("replace");
     const filtered = useFilteredDraw(title.slug);
@@ -44,16 +49,21 @@ export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
     const anotherRef = useRef<HTMLButtonElement>(null);
     const homeRef = useRef<HTMLAnchorElement>(null);
     const changeRef = useRef<HTMLAnchorElement>(null);
+    const nextRoundRef = useRef<HTMLButtonElement>(null);
 
-    // "Ver de novo" pode voltar ao mesmo título sem trocar de endereço: ele conta como mostrado
+    // "Recomeçar" pode voltar ao mesmo título sem trocar de endereço: ele conta como mostrado
     useEffect(() => {
-        if (ended) return changeRef.current?.focus();
+        // no fim da rodada, o foco vai para a ação principal (recommendation-rounds F2)
+        if (ended) return (nextRoundRef.current ?? changeRef.current)?.focus();
+        // o evento sai uma vez, com a origem certa, e não com a do servidor
+        if (knownOrigin === null) return;
+        const origin = knownOrigin;
         shownTitles.add(title.id);
         if (origin === "filtros") filteredRun.see(title.id);
         track("recommendation_shown", { source: RECOMMENDATION_SOURCE[origin], titleId: title.id });
         if (focusOnArrival) (focusOnArrival === "seen" ? seenRef : anotherRef).current?.focus();
         focusOnArrival = null;
-    }, [title.id, origin, ended]);
+    }, [title.id, knownOrigin, ended]);
 
     useEffect(() => {
         if (done) homeRef.current?.focus();
@@ -66,19 +76,24 @@ export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
         const stay = () => {
             focusOnArrival = null;
         };
-        if (origin === "dia" && nextDailySlug) router.replace(titleHref(nextDailySlug, "dia"));
+        if (origin === "dia" && nextDailySlug) goToTitle(router, "replace", nextDailySlug, "dia");
         else if (origin === "filtros") filtered.draw(stay);
         else surprise.draw(stay);
     }
 
     function markSeen() {
-        watchedTitles.add(title.id);
-        showToast(`Anotado: você já viu ${title.title}.`);
-        next("seen");
+        void markWatched({ id: title.id, slug: title.slug });
+        showToast(`Anotado: você já viu ${title.title}.`, {
+            asking: { id: title.id, slug: title.slug },
+        });
+        // fora das recomendações não há próxima opção: a tela fica onde está
+        if (title.recommendable) next("seen");
         track("already_watched_clicked", { titleId: title.id });
     }
 
     function watch() {
+        // "Vou assistir" também é sinal de gosto (US009 RNE001)
+        void markSignal({ id: title.id, slug: title.slug }, "will_watch");
         showToast("");
         setDone(true);
         track("will_watch_clicked", { titleId: title.id });
@@ -87,19 +102,46 @@ export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
     const anotherLabel = origin === "dia" ? "Próxima de hoje" : "Outra opção";
     const where = title.streaming && `${title.streaming.preposition} ${title.streaming.name}`;
 
-    if (ended) {
-        // US004 C3: acabaram os 10 da rodada
+    if (filtered.end) {
+        // US004 C3: acabou a rodada de 10; há a seguinte ou acabaram todas
+        const end = filtered.end;
+        const changeFilters = (variant: "primary" | "quiet") => (
+            <ButtonLink
+                ref={changeRef}
+                variant={variant}
+                href="/"
+                replace
+                onClick={filtersOnArrival.request}
+            >
+                Mudar filtros
+            </ButtonLink>
+        );
         return (
             <StateScreen
-                heading={endOfOptionsHeading(filtered.end ?? 0)}
+                heading={roundEndHeading(end)}
                 action={
-                    <div className="flex gap-2.5" aria-busy={pending}>
-                        <ButtonLink ref={changeRef} variant="primary" href="/?filtros" replace>
-                            Mudar filtros
-                        </ButtonLink>
-                        <Button variant="quiet" onClick={filtered.again}>
-                            Ver de novo
-                        </Button>
+                    <div className="flex flex-wrap gap-2.5" aria-busy={pending}>
+                        {end.kind === "next" ? (
+                            <>
+                                <Button
+                                    ref={nextRoundRef}
+                                    variant="primary"
+                                    onClick={filtered.nextRound}
+                                >
+                                    {nextRoundLabel(end.size)}
+                                </Button>
+                                {changeFilters("quiet")}
+                            </>
+                        ) : (
+                            <>
+                                {changeFilters("primary")}
+                                {end.total > 0 && (
+                                    <Button variant="quiet" onClick={filtered.again}>
+                                        Recomeçar
+                                    </Button>
+                                )}
+                            </>
+                        )}
                     </div>
                 }
             />
@@ -109,7 +151,13 @@ export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
     return (
         <main className={screenMain}>
             <Frame bottomShade>
-                {title.backdropImagePath && <FrameImage path={title.backdropImagePath} priority />}
+                {title.backdropImagePath && (
+                    <FrameImage
+                        path={title.backdropImagePath}
+                        width={title.backdropWidth}
+                        priority
+                    />
+                )}
                 <ButtonLink
                     variant="round"
                     href="/"
@@ -135,18 +183,21 @@ export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
                 <Score value={title.score} />
             </Frame>
 
-            {/* no computador, os botões ficam no canto inferior direito, por cima do texto (C10) */}
-            <div className="pt-2 desktop:grid desktop:pt-3.5">
-                <div className="flex min-w-0 flex-col desktop:col-start-1 desktop:row-start-1 desktop:gap-3.5">
+            {/* no computador, os botões ficam à direita, na altura da primeira linha do título, e
+                o texto vai até eles: o tamanho da sinopse não os move (C10) */}
+            <div className="pt-2 desktop:flex desktop:items-start desktop:gap-12 desktop:pt-3.5">
+                <div className="flex min-w-0 flex-col desktop:flex-1 desktop:gap-3.5">
                     <h1 className="pb-1 font-display text-title font-medium text-balance max-desktop:mb-3 desktop:text-wrap">
                         {title.title}
                     </h1>
                     {title.tagline && (
-                        <p className="text-tagline text-paper max-desktop:mb-5">{title.tagline}</p>
+                        <p className="max-w-measure text-tagline text-balance text-paper max-desktop:mb-5">
+                            {title.tagline}
+                        </p>
                     )}
                     {title.synopsis && <Synopsis text={title.synopsis} />}
                     <Facts className="max-desktop:mt-4">
-                        {[title.genre, ...title.facts].map(
+                        {[genre, ...title.facts].map(
                             (text) => text && <Fact key={text}>{text}</Fact>,
                         )}
                     </Facts>
@@ -156,11 +207,18 @@ export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
                             <b className="font-medium text-paper">{title.streaming.name}</b>
                         </p>
                     )}
+                    {/* direção e elenco: só texto; sem crédito, a linha não aparece */}
+                    {(title.direction || title.cast) && (
+                        <div className="flex max-w-measure flex-col text-data text-soft max-desktop:mt-2">
+                            {title.direction && <p>{title.direction}</p>}
+                            {title.cast && <p>{title.cast}</p>}
+                        </div>
+                    )}
                 </div>
 
                 <Dock
                     tall={done}
-                    className="desktop:col-start-1 desktop:row-start-1 desktop:self-end desktop:justify-self-end"
+                    className="desktop:flex desktop:h-title-line desktop:shrink-0 desktop:items-center"
                 >
                     {done ? (
                         // US005 C1: no lugar e na altura da fileira de botões
@@ -190,20 +248,22 @@ export function TitleView({ title, origin, nextDailySlug }: TitleViewProps) {
                             >
                                 Já vi
                             </Button>
-                            <Button
-                                ref={anotherRef}
-                                variant="round"
-                                spinIcon
-                                aria-label={anotherLabel}
-                                title={anotherLabel}
-                                onClick={() => {
-                                    next("another");
-                                    // depois do sorteio: as server actions saem uma por vez
-                                    track("another_option_clicked", { titleId: title.id });
-                                }}
-                            >
-                                <DiceIcon />
-                            </Button>
+                            {title.recommendable && (
+                                <Button
+                                    ref={anotherRef}
+                                    variant="round"
+                                    spinIcon
+                                    aria-label={anotherLabel}
+                                    title={anotherLabel}
+                                    onClick={() => {
+                                        next("another");
+                                        // depois do sorteio: as server actions saem uma por vez
+                                        track("another_option_clicked", { titleId: title.id });
+                                    }}
+                                >
+                                    <DiceIcon />
+                                </Button>
+                            )}
                         </div>
                     )}
                 </Dock>
@@ -234,7 +294,7 @@ function Synopsis({ text }: { text: string }) {
                 id={id}
                 ref={ref}
                 className={cx(
-                    "max-w-measure text-synopsis text-soft",
+                    "max-w-measure text-synopsis text-pretty text-soft",
                     !open && "max-desktop:line-clamp-4",
                 )}
             >

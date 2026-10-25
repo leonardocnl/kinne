@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useReducer, useRef, useState, useSyncExternalStore } from "react";
+import {
+    lazy,
+    Suspense,
+    useEffect,
+    useReducer,
+    useRef,
+    useState,
+    useSyncExternalStore,
+} from "react";
 import type { HomePick } from "../../_data/home";
 import { Button } from "../ui/Button";
 import { cx } from "../ui/cx";
@@ -9,10 +17,17 @@ import { Fact, Facts } from "../ui/Facts";
 import { PauseIcon, PlayIcon } from "../ui/icons";
 import { TextLink } from "../ui/TextLink";
 import { billingRow, screenMain } from "../layout";
+import { titleOrigin } from "@/infrastructure/browser-storage";
 import { titleHref } from "../title/origin";
 import { useSurprise } from "../title/useSurprise";
-import { FiltersPanel, useFiltersRoute } from "./FiltersPanel";
+import { useFiltersRoute } from "./filtersRoute";
 import { initialRotation, rotate } from "./rotation";
+
+// O painel dos filtros só é baixado quando a pessoa chega perto de "Escolher agora" (orçamento de
+// JS da tela inicial); o hook que diz se ele está aberto fica fora dele.
+const loadFiltersPanel = () => import("./FiltersPanel");
+const FiltersPanel = lazy(loadFiltersPanel);
+const preloadFiltersPanel = () => void loadFiltersPanel();
 import { TodayReel } from "./TodayReel";
 
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
@@ -46,6 +61,14 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
     // o painel fica montado enquanto sai, depois que o endereço já o fechou
     const [panelMounted, setPanelMounted] = useState(filters.open);
     if (filters.open && !panelMounted) setPanelMounted(true);
+    // ao fechar, o foco volta a "Escolher agora" (C5). Só depois que o painel desmonta: no
+    // celular ele é modal, e enquanto existe o resto da página é inerte e não aceita o foco
+    const returnFocus = useRef(false);
+    useEffect(() => {
+        if (panelMounted || !returnFocus.current) return;
+        returnFocus.current = false;
+        chooseRef.current?.focus();
+    }, [panelMounted]);
 
     const { current, playing } = rotation;
     const rotating = playing && !reducedMotion;
@@ -84,12 +107,13 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
                                 <FrameImage
                                     key={p.slug}
                                     path={p.backdropImagePath}
+                                    width={p.backdropWidth}
                                     visible={i === current}
                                     priority={i === 0}
                                 />
                             ),
                     )}
-                    <div className="absolute top-2.5 left-3 flex items-center gap-2 text-caption text-paper">
+                    <div className="absolute top-2.5 left-3 flex items-center gap-2 rounded-tag bg-scrim-strong p-tag text-caption text-paper backdrop-blur-veil">
                         {!reducedMotion && (
                             <Button
                                 ref={pauseRef}
@@ -104,7 +128,7 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
                                 {rotating ? <PauseIcon /> : <PlayIcon />}
                             </Button>
                         )}
-                        <span>
+                        <span className="pr-2 pl-1">
                             {current + 1} de {picks.length}
                         </span>
                     </div>
@@ -131,7 +155,7 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
                 <div className={billingRow}>
                     <div
                         className={cx(
-                            "flex min-w-0 flex-col gap-3.5 transition-opacity duration-fade motion-reduce:transition-none max-desktop:gap-3",
+                            "flex min-w-0 flex-col gap-3.5 transition-opacity duration-fade motion-reduce:transition-none max-desktop:gap-3 desktop:flex-1",
                             filters.open && "opacity-35",
                         )}
                     >
@@ -155,7 +179,7 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
                         </h1>
                         <p
                             className={cx(
-                                "max-w-measure text-tagline text-soft transition-opacity duration-fade motion-reduce:transition-none",
+                                "max-w-measure text-tagline text-balance text-soft transition-opacity duration-fade motion-reduce:transition-none",
                                 swap === "out" && "opacity-0",
                             )}
                         >
@@ -177,7 +201,11 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
                                 </Fact>
                             )}
                         </Facts>
-                        <TextLink href={titleHref(pick.slug, "dia")} className="-mt-1.5 -mb-2.5">
+                        <TextLink
+                            href={titleHref(pick.slug)}
+                            onClick={() => titleOrigin.set(pick.slug, "dia")}
+                            className="-mt-1.5 -mb-2.5"
+                        >
                             Ver este título<span className="sr-only">: {pick.title}</span>{" "}
                             <span aria-hidden="true">→</span>
                         </TextLink>
@@ -185,38 +213,47 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
                     {/* um amarelo por tela (CM003): com os filtros abertos, o de trás some */}
                     <div
                         className={cx(
-                            "flex gap-2.5 transition-opacity duration-fade motion-reduce:transition-none desktop:pb-11.5",
+                            "flex flex-col gap-2 transition-opacity duration-fade motion-reduce:transition-none desktop:pb-11.5",
                             filters.open && "invisible opacity-0",
                         )}
                     >
-                        <Button
-                            ref={chooseRef}
-                            variant="primary"
-                            onClick={filters.show}
-                            className="max-desktop:min-w-0 max-desktop:flex-1 max-desktop:px-2.5 desktop:min-w-42"
-                        >
-                            Escolher agora
-                        </Button>
-                        <Button
-                            variant="quiet"
-                            onClick={() => surprise.draw()}
-                            aria-busy={surprise.pending}
-                            className="max-desktop:min-w-0 max-desktop:flex-1 max-desktop:px-2.5 desktop:min-w-42"
-                        >
-                            Me surpreenda
-                        </Button>
+                        <div className="flex gap-2.5">
+                            <Button
+                                ref={chooseRef}
+                                variant="primary"
+                                onClick={filters.show}
+                                onPointerEnter={preloadFiltersPanel}
+                                onFocus={preloadFiltersPanel}
+                                className="max-desktop:min-w-0 max-desktop:flex-1 max-desktop:px-2.5 desktop:min-w-42"
+                            >
+                                Escolher agora
+                            </Button>
+                            <Button
+                                variant="quiet"
+                                onClick={() => surprise.draw()}
+                                aria-busy={surprise.pending}
+                                className="max-desktop:min-w-0 max-desktop:flex-1 max-desktop:px-2.5 desktop:min-w-42"
+                            >
+                                Me surpreenda
+                            </Button>
+                        </div>
+                        {/* discreto, sem a cor de destaque (US011 C1, CM003) */}
+                        <TextLink href="/sala" className="self-center desktop:self-end">
+                            Assistir em grupo
+                        </TextLink>
                     </div>
                 </div>
                 {panelMounted && (
-                    <FiltersPanel
-                        leaving={!filters.open}
-                        onClose={filters.hide}
-                        onLeft={() => {
-                            setPanelMounted(false);
-                            // ao fechar, o foco volta a "Escolher agora" (C5)
-                            chooseRef.current?.focus();
-                        }}
-                    />
+                    <Suspense>
+                        <FiltersPanel
+                            leaving={!filters.open}
+                            onClose={filters.hide}
+                            onLeft={() => {
+                                returnFocus.current = true;
+                                setPanelMounted(false);
+                            }}
+                        />
+                    </Suspense>
                 )}
             </div>
 
