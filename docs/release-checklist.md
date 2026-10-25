@@ -114,11 +114,13 @@ Preview keeps the **develop** branch values: no production credential in Preview
 
 Open the PR `develop` → `main`, wait for CI, merge. Vercel deploys Production from `main`.
 
-Then put `.github/workflows/sync-catalog.yml` back to its production form: `ref: main` on the checkout, `SYNC_TARGET: production`, `secrets.SYNC_DATABASE_URL` in both steps, and the `REVALIDATE_ORIGIN` / `REVALIDATE_SECRET` env lines. Remove the temporary rows in security §17 and in catalog-sync trust boundary 4. Do this before the first production sync (§7).
+`.github/workflows/sync-catalog.yml` is already in its production form (`ref: main`, `SYNC_TARGET: production`, `secrets.SYNC_DATABASE_URL` in the three steps that use a database, and the `REVALIDATE_ORIGIN` / `REVALIDATE_SECRET` env lines); the temporary rows in security §17 and in catalog-sync trust boundary 4 are gone. The develop database is refreshed by hand with `.github/workflows/sync-develop.yml` (Actions → **Sync catalog (develop)** → Run workflow), which has no schedule.
+
+**Order matters.** The repository's default branch is `develop`, and scheduled workflows run the file on the default branch, but the job checks out `main`. Until `main` carries the new code (`SYNC_TARGET`, `graph:build`, the account tables), a scheduled run fails early on the old code. So: finish steps 3–5 first, merge the sync PR into `develop`, then promote to `main` right away, before the next 06:17 UTC run. If that is not possible, Actions → Sync catalog → ⋯ → **Disable workflow** until `main` is promoted, then enable it again. Do this before the first production sync (§7).
 
 ## 7. First production sync
 
-1. Actions → **Sync catalog** → Run workflow (branch `main`). The first full load reads about 22k titles; the job allows 60 minutes.
+1. Actions → **Sync catalog** → Run workflow, **Use workflow from: `main`**, and tick **Carga completa** (`full`, which sets `SYNC_FULL=1`). The first load reads about 22k titles; the job allows 60 minutes. Later runs leave `full` unticked (daily, incremental). Never start it before the promotion (§6) and the production migrations (§3). A run aborts, with no write, if the database's `meta.environment` is not `production`.
 2. Check the run summary (counts only), then the database:
 
    ```sql

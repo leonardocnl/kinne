@@ -21,8 +21,7 @@ Daily GitHub Actions job (plus manual dispatch) that reads every subscription ti
 1. TMDB API → sync process: **untrusted**. Community-edited data, third-party service.
 2. Sync process → database: trusted code, restricted role.
 3. Database → cached pages → browser: rendered as text only.
-4. GitHub repository → workflow → secrets: only code on `main` runs with secrets.
-   **Temporary exception until launch:** the workflow checks out `develop`, with the develop-database secret only. `develop` changes only through PRs the owner merges. Back to `main`, `SYNC_TARGET: production` and the revalidation secrets at launch (release checklist §6). Recorded in security §17.
+4. GitHub repository → workflow → secrets: only code on `main` runs with the production secrets. The one exception, `sync-develop.yml` (manual only, develop database secret only), is recorded in security §17.
 5. Developer machine → database: environment selection by humans (error-prone).
 
 ## Threats
