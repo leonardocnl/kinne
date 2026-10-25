@@ -29,6 +29,7 @@ const groups = [
                 className: "bg-scrim-strong",
                 role: "Tinta do painel (celular)",
             },
+            { name: "nav", className: "bg-nav", role: "Vidro escuro da navbar" },
             { name: "veil", className: "bg-veil", role: "Botão overlay sobre a imagem" },
         ],
     },

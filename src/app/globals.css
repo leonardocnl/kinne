@@ -30,6 +30,9 @@
     --color-veil: rgb(2 2 2 / 0.35); /* botão pequeno sobre a imagem (pausar) */
     --color-frame: #0a0a0a; /* quadro sem imagem */
     --color-toast: #161616; /* aviso */
+    --color-nav: rgb(
+        2 2 2 / 0.86
+    ); /* vidro da navbar: mais escuro que o painel, para dar 7:1 até sobre imagem clara */
 
     /* fontes (as variáveis vêm do next/font, em layout.tsx) */
     --font-*: initial;
@@ -108,6 +111,13 @@
             var(--spacing-dock-gap)
     ); /* com "Combinado", em uma linha */
 
+    /* navbar flutuante: no computador no topo, no celular na base */
+    --spacing-nav-edge: 1.375rem; /* da borda da tela à navbar; no topo é o respiro da página */
+    --spacing-nav-gap: 0.875rem; /* da navbar ao conteúdo */
+    --spacing-nav: calc(
+        var(--spacing-nav-edge) + var(--spacing-control) + var(--spacing-nav-gap)
+    ); /* espaço que a navbar toma, antes da área segura */
+
     --container-*: initial;
     --container-page: calc(
         100vh * 16 / 9
@@ -138,6 +148,7 @@
     --shadow-*: initial;
     --shadow-glass: inset 0 1px 0 rgb(255 255 255 / 0.2), 0 24px 60px -28px rgb(0 0 0 / 0.8);
     --shadow-focus: 0 0 0 3px var(--color-ink); /* fio escuro por dentro do anel de foco */
+    --shadow-limelight: 0 0 0.875rem 0.125rem rgb(242 242 238 / 0.55); /* brilho da barra de luz */
     --shadow-toast: 0 12px 30px -10px rgb(0 0 0 / 0.9);
     --inset-shadow-*: initial;
     --drop-shadow-*: initial;
@@ -163,6 +174,8 @@
     /* base da área que rola nos filtros, quando há mais campos abaixo */
     --background-image-scroll-hint: linear-gradient(rgb(2 2 2 / 0), var(--color-scrim-strong));
     --background-image-panel-foot: linear-gradient(rgb(14 14 14 / 0), rgb(14 14 14 / 0.94) 18px);
+    /* cone de luz da aba ativa: paper que se desfaz para baixo, atrás do ícone e do rótulo */
+    --background-image-limelight: linear-gradient(rgb(242 242 238 / 0.26), rgb(242 242 238 / 0));
     --background-image-grain: url("/grain.svg");
     --opacity-grain: 0.42;
 
@@ -185,6 +198,8 @@
     --animate-rise-in: rise-in 640ms var(--ease-settle);
     /* barra de progresso da capa; a duração vem de quem usa (US001 RNE002) */
     --animate-fill: fill linear forwards;
+    /* luz da aba ativa acendendo no lugar */
+    --animate-limelight: limelight var(--transition-duration-fade) ease-out;
     /* painel de filtros entrando: da direita no computador, de baixo no celular */
     --animate-panel-in: panel-in var(--transition-duration-panel) var(--ease-settle);
     --animate-panel-up: panel-up var(--transition-duration-panel) var(--ease-settle);
@@ -229,6 +244,12 @@
         to {
             opacity: 0;
             transform: translateY(0.875rem);
+        }
+    }
+
+    @keyframes limelight {
+        from {
+            opacity: 0;
         }
     }
 
@@ -289,6 +310,21 @@
     bottom: var(--toast-bottom, 1.5rem);
 }
 
+/* aviso e Dock ficam em z-10 e z-20, o painel de filtros em z-2: a navbar fica abaixo de todos */
+@utility z-nav {
+    z-index: 1;
+}
+
+/* base da navbar no celular, acima da área segura do aparelho */
+@utility nav-bottom {
+    bottom: calc(var(--spacing-nav-edge) + env(safe-area-inset-bottom));
+}
+
+/* cone de luz: estreito em cima, na barra, e largo embaixo */
+@utility clip-limelight {
+    clip-path: polygon(35% 0, 65% 0, 100% 100%, 0 100%);
+}
+
 /* lista que rola na horizontal no celular sem mostrar a barra (faixa "Hoje") */
 @utility scrollbar-none {
     scrollbar-width: none;
@@ -319,6 +355,21 @@
             & body {
                 padding-bottom: calc(var(--dock) + env(safe-area-inset-bottom));
             }
+        }
+    }
+
+    /* navbar: no celular, espaço embaixo da página, scroll-padding e o aviso logo acima dela; no
+       computador ela fica no topo e o scroll-padding evita que cubra o elemento em foco */
+    html:has([data-nav]) {
+        @variant max-desktop {
+            --toast-bottom: calc(var(--spacing-nav) + env(safe-area-inset-bottom));
+            scroll-padding-bottom: calc(var(--spacing-nav) + env(safe-area-inset-bottom));
+            & body {
+                padding-bottom: calc(var(--spacing-nav) + env(safe-area-inset-bottom));
+            }
+        }
+        @variant desktop {
+            scroll-padding-top: var(--spacing-nav);
         }
     }
 

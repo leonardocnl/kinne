@@ -45,3 +45,6 @@ next-env.d.ts
 # catalog count output (scripts/contar.mjs)
 resultado.md
 .lighthouseci/
+
+# capturas de verificação visual
+/diagnostico/

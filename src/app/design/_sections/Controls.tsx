@@ -12,6 +12,7 @@ import {
 } from "../../_components/ui/icons";
 import { Chip } from "../../_components/ui/Chip";
 import { GlassPanel } from "../../_components/ui/GlassPanel";
+import { Navbar } from "../../_components/ui/Navbar";
 import { Slider } from "../../_components/ui/Slider";
 import { TextLink } from "../../_components/ui/TextLink";
 import { Wordmark } from "../../_components/ui/Wordmark";
@@ -153,6 +154,27 @@ export function Controls() {
                     Espaço embaixo da página: <TokenValue name="--spacing-dock" />; com{" "}
                     <code>tall</code>, para “Combinado” e o botão,{" "}
                     <TokenValue name="--spacing-dock-tall" />.
+                </p>
+            </Spec>
+
+            <Spec
+                name="Navbar"
+                props={['current: "inicio" | "sobre"']}
+                does="Chip de vidro escuro com as abas Início e Sobre, no topo no computador e na base no celular, centralizado. É de servidor e sem estado: a página diz qual aba está ativa, e a luz (barra com brilho e cone, em paper, nunca no amarelo) acende nela. Fica fora da tela do título, da sala de grupo e da busca; painéis e avisos ficam acima dela."
+            >
+                <Row label="Início ativo, sobre uma imagem clara (aqui solta para caber na página)">
+                    <div className="relative h-28 w-full transform-gpu overflow-hidden bg-paper">
+                        <Navbar current="inicio" />
+                    </div>
+                </Row>
+                <Row label="Sobre ativo">
+                    <div className="relative h-28 w-full transform-gpu overflow-hidden bg-frame">
+                        <Navbar current="sobre" />
+                    </div>
+                </Row>
+                <p className="text-caption text-soft">
+                    Espaço que ela toma: <TokenValue name="--spacing-nav" />; vidro{" "}
+                    <TokenValue name="--color-nav" />.
                 </p>
             </Spec>
 

@@ -5,6 +5,7 @@ import { CONTACT_EMAIL } from "@/domain/contact";
 import { PIX } from "@/domain/pix";
 import { PageFrame } from "../_components/account/PageFrame";
 import { SHOW_SIGN_IN } from "../_components/account/signIn";
+import { Navbar } from "../_components/ui/Navbar";
 import { PixCopy } from "./PixCopy";
 
 export const metadata: Metadata = {
@@ -217,6 +218,7 @@ export default function AboutPage() {
                     assistir por <External href="https://www.justwatch.com">JustWatch</External>.
                 </p>
             </main>
+            <Navbar current="sobre" />
         </PageFrame>
     );
 }

@@ -2,7 +2,7 @@
 
 Leitura obrigatória antes de qualquer tarefa de interface. A fonte da verdade visual é a maquete aprovada, `docs/design/maquete-kinnemix.html`. Os tokens estão em `src/app/globals.css`, os componentes em `src/app/_components/ui/` e a referência viva em `/design`.
 
-Última atualização: 12 de outubro de 2026.
+Última atualização: 25 de outubro de 2026.
 
 ## Tokens
 
@@ -32,6 +32,16 @@ Leitura obrigatória antes de qualquer tarefa de interface. A fonte da verdade v
 - Tela do título no computador: o grupo de ações ("Vou assistir", "Já vi", dado) fica à direita, centrado na primeira linha do título (`--spacing-title-line`), e não se move com o tamanho da sinopse. O texto vai até o vão do grupo. No celular, as ações ficam presas à base (`Dock`).
 - Texto corrido com `text-wrap: pretty` (sinopse); chamadas e frases curtas com `text-wrap: balance`.
 - Painel de busca no computador: o pé nunca passa do pé da imagem grande (`--spacing-search-panel`); a lista rola por dentro.
+
+## Navegação
+
+- Navbar flutuante em chip (pílula) de vidro escuro, com as abas Início e Sobre. No computador fica fixa no topo, centralizada; no celular, fixa na base, acima da área segura (`nav-bottom`). A data do dia, no computador, fica junto da busca.
+- O vidro (`bg-nav`) é mais escuro que o painel de filtros e tem 7:1 no texto até sobre imagem branca; o teste da navbar confere.
+- Luz "limelight" na aba ativa: barra fina com brilho (`shadow-limelight`) na borda de cima e cone em degradê (`bg-limelight`) que se desfaz atrás do ícone e do rótulo. É sempre paper, nunca `signal`. Acende no lugar, com fade; sem deslizar entre abas e sem movimento com `prefers-reduced-motion`.
+- Abas inativas em `soft`; no hover seguem o do quiet (fundo `hover`, borda `line-strong`) e sobem para `paper`. A ativa não muda.
+- Componente de servidor, sem JS novo no cliente: a página passa `current` e a navbar marca `aria-current="page"`.
+- Aparece só no Início e no Sobre. Fora da tela do título (Dock), da sala de grupo e da busca. Camadas: navbar `z-nav` (1) abaixo do painel de filtros (2), do Dock (10), da busca e do aviso (20).
+- Respiro: `[data-nav]` dá à página `--spacing-nav` embaixo no celular e `scroll-padding-top` no computador, para a navbar não cobrir conteúdo nem o foco.
 
 ## Imagens
 

@@ -10,15 +10,16 @@ type TopBarProps = {
     back?: boolean;
 };
 
-/** Barra do topo: wordmark, data, busca, "Voltar" fora da tela inicial e "Entrar" ou o perfil (US012, US014). */
+/** Barra do topo: wordmark, busca com a data ao lado (computador), "Voltar" fora da tela inicial e "Entrar" ou o perfil (US012, US014). */
 export function TopBar({ date, back }: TopBarProps) {
     return (
-        <header className="grid grid-cols-3 items-center gap-3 max-desktop:grid-cols-2">
+        <header className="flex items-center justify-between gap-3">
             <Wordmark />
-            <p className="justify-self-center text-data whitespace-nowrap text-soft max-desktop:hidden">
-                {date}
-            </p>
-            <div className="flex items-center gap-2.5 justify-self-end">
+            <div className="flex items-center gap-2.5">
+                {/* no computador a data fica junto da busca, deixando o centro para a navbar */}
+                <p className="mr-2 text-data whitespace-nowrap text-soft max-desktop:hidden">
+                    {date}
+                </p>
                 <SearchLauncher />
                 {back && (
                     <ButtonLink

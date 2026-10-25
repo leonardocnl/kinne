@@ -6,6 +6,7 @@ import { DailyPicks } from "./_components/home/DailyPicks";
 import { HomeErrorBoundary } from "./_components/home/HomeError";
 import { HomeSkeleton } from "./_components/home/HomeSkeleton";
 import { Shell } from "./_components/Shell";
+import { Navbar } from "./_components/ui/Navbar";
 import { TopBar } from "./_components/TopBar";
 import { homePicks } from "./_data/home";
 
@@ -18,6 +19,7 @@ export default function Home() {
                     <Today />
                 </Suspense>
             </HomeErrorBoundary>
+            <Navbar current="inicio" />
         </Shell>
     );
 }

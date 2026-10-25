@@ -22,6 +22,7 @@ Cópia em Markdown dos requisitos mantidos no Google Drive (pasta KINNE › 01 �
 | US013  | [us013-onboarding.md](us013-onboarding.md)                                     | Onboarding (pós-MVP)                                               |
 | US014  | [us014-perfil-e-meus-dados.md](us014-perfil-e-meus-dados.md)                   | Perfil, baixar e apagar dados, privacidade (pós-MVP)               |
 | US015  | [us015-gosto-na-conta.md](us015-gosto-na-conta.md)                             | Gosto, "Já vi" e streamings na conta (pós-MVP)                     |
+| US016  | [us016-navegacao.md](us016-navegacao.md)                                       | Navbar flutuante com Início e Sobre (pós-MVP)                      |
 | 02     | [02-requisitos-nao-funcionais.md](02-requisitos-nao-funcionais.md)             | RNF01 a RNF11                                                      |
 | 03     | [03-medicao-da-semana-0.md](03-medicao-da-semana-0.md)                         | Critérios, definições, eventos                                     |
 | 04     | [04-mudancas-e-pendencias.md](04-mudancas-e-pendencias.md)                     | O que mudou e o que falta decidir                                  |
