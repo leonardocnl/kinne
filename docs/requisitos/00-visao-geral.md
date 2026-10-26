@@ -73,7 +73,7 @@ Este conjunto especifica o modo visitante do Kinne: indicação do dia, Escolher
 ### CM003 – Identidade visual
 
 **Dado** qualquer tela do sistema  
-**Então** a cor de destaque #FFF340 aparece só no controle mais importante da tela e na wordmark  
+**Então** a cor de destaque #FFDF25 aparece só no controle mais importante da tela e no ícone da marca  
 **E** imagens de filmes e séries têm cantos retos  
 **E** todo controle tocável tem forma de pílula, com cantos totalmente arredondados; botões só de ícone são círculos; o que não se toca nunca é pílula  
 **E** o fundo é #020202, os títulos usam Darker Grotesque 500 e a interface usa Manrope
