@@ -33,7 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 {/* a imagem grande de cada tela vem do TMDB: a conexão abre antes de o HTML pedi-la */}
                 <link rel="preconnect" href={TMDB_IMAGE_ORIGIN} />
             </head>
-            <body className="flex min-h-full flex-col">
+            <body className="flex min-h-full flex-col overflow-x-clip">
                 <InputModality />
                 {children}
             </body>

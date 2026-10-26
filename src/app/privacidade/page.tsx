@@ -35,6 +35,9 @@ export default function PrivacyPage() {
                     Só para recomendar filmes e séries a você e para mantê-lo conectado. Não
                     vendemos nem compartilhamos esses dados para propaganda.
                 </p>
+                <p className="text-small text-soft">
+                    O Kinne conta visitas sem identificar quem você é.
+                </p>
 
                 <h2 className="font-display text-heading font-medium">Por quanto tempo</h2>
                 <p className="text-small text-soft">

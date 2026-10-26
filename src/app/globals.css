@@ -30,6 +30,7 @@
     --color-veil: rgb(2 2 2 / 0.35); /* botão pequeno sobre a imagem (pausar) */
     --color-frame: #0a0a0a; /* quadro sem imagem */
     --color-toast: #161616; /* aviso */
+    --color-signal-deep: #b8960c; /* tom escuro do signal, no horizonte do rodapé */
     --color-nav: rgb(
         2 2 2 / 0.35
     ); /* vidro preto translúcido da navbar: o fundo aparece, escurecido pelo backdrop-brightness (4,5:1, exceção da navbar) */
@@ -37,6 +38,7 @@
 
     /* fontes (as variáveis vêm do next/font, em layout.tsx) */
     --font-*: initial;
+    --font-ascii: ui-monospace, Menlo, Consolas, monospace; /* caracteres do horizonte do rodapé */
 
     /* escala de texto */
     --text-*: initial;
@@ -71,6 +73,8 @@
     --text-caption--line-height: 1.5;
     --text-footnote: 0.75rem; /* rodapé; menor no celular */
     --text-footnote--line-height: 1.5;
+    --text-ascii: 0.75rem; /* caracteres do horizonte do rodapé */
+    --text-ascii--line-height: 1;
 
     --tracking-*: initial;
     --tracking-score: 0.06em; /* "TMDB" ao lado da nota */
@@ -120,6 +124,7 @@
     --spacing-nav-gap: 0.875rem; /* da navbar ao conteúdo */
     --spacing-nav-part: 7.5rem; /* cada parte do chip no computador: marca e abas */
     --spacing-nav-search: 20rem; /* lupa aberta em campo, no computador */
+    --spacing-footer: 44rem; /* altura mínima do rodapé */
     --spacing-nav-gap-x: 0.5rem; /* entre o chip e a lupa */
     /* resultados da busca no computador: da borda do chip à da busca aberta (o chip tem 1px de
        borda de cada lado) */
@@ -180,6 +185,7 @@
     --aspect-*: initial;
     --aspect-scope: 2.39 / 1; /* computador */
     --aspect-video: 16 / 9; /* celular */
+    --aspect-kinne: 1000 / 250; /* "kinne" gigante do rodapé (viewBox do SVG) */
     --object-position-focus: 50% 25%; /* não corta cabeças */
     --background-image-shade-full: linear-gradient(
         to bottom,
@@ -202,6 +208,15 @@
         rgb(255 223 37 / 0.2) 35%,
         rgb(255 223 37 / 0)
     );
+    /* horizonte do rodapé: o amarelo nasce abaixo da base e se apaga no preto, para cima */
+    --background-image-horizon: radial-gradient(
+        70% 160% at 50% 110%,
+        var(--color-signal) 0%,
+        var(--color-signal) 18%,
+        var(--color-signal-deep) 42%,
+        rgb(2 2 2 / 0) 78%
+    );
+    --opacity-horizon: 0.8;
     --background-image-grain: url("/grain.svg");
     --opacity-grain: 0.42;
     --opacity-grain-fine: 0.22; /* granulado fino */
@@ -228,6 +243,10 @@
     /* barra de progresso da capa; a duração vem de quem usa (US001 RNE002) */
     --animate-fill: fill linear forwards;
     /* busca: o campo aparece depois de a lupa se alargar */
+    /* horizonte do rodapé: a luz respira devagar e os caracteres cintilam, trocando de camada */
+    --animate-horizon-flow: horizon-flow 14s ease-in-out infinite alternate;
+    --animate-ascii-a: ascii-a 3.2s steps(1) infinite;
+    --animate-ascii-b: ascii-b 3.2s steps(1) infinite;
     --animate-goo-neck: goo-neck var(--transition-duration-panel) var(--ease-settle) forwards;
     --animate-search-in: search-in var(--transition-duration-panel) ease both;
     /* painel de filtros entrando: da direita no computador, de baixo no celular */
@@ -554,5 +573,38 @@
 @supports not (d: path("M0 0")) {
     [data-search-rim] {
         display: none;
+    }
+}
+
+@keyframes horizon-flow {
+    from {
+        transform: translateX(-2%) scaleY(0.96);
+    }
+    to {
+        transform: translateX(2%) scaleY(1.04);
+    }
+}
+
+@keyframes ascii-a {
+    0% {
+        opacity: 1;
+    }
+    40% {
+        opacity: 0.5;
+    }
+    70% {
+        opacity: 1;
+    }
+}
+
+@keyframes ascii-b {
+    0% {
+        opacity: 0;
+    }
+    40% {
+        opacity: 0.8;
+    }
+    70% {
+        opacity: 0.2;
     }
 }

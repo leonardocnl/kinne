@@ -4,6 +4,7 @@ import { Score } from "../../_components/ui/Score";
 import { QrCode } from "../../_components/ui/QrCode";
 import { Skeleton } from "../../_components/ui/Skeleton";
 import { Toast } from "../../_components/ui/Toast";
+import { AsciiHorizon } from "../../_components/ui/AsciiHorizon";
 import { BackIcon, PlayIcon } from "../../_components/ui/icons";
 import { TokenValue } from "./live";
 import { DoDont, Row, Spec } from "./Spec";
@@ -165,6 +166,17 @@ export function Media() {
                         ),
                     }}
                 />
+            </Spec>
+            <Spec
+                name="AsciiHorizon"
+                props={["className?"]}
+                does="Fundo do rodapé: o horizonte de caracteres nasce na linha do rodapé e clareia até a base, onde fica “kinne” gigante em preto. Em CSS, do servidor, até o animado (WebGL, com mouse e clique) baixar quando o rodapé chega perto; com movimento reduzido fica o de CSS, parado. Decorativo (aria-hidden)."
+            >
+                <Row label="fundo do rodapé de toda tela">
+                    <div className="relative aspect-kinne w-full">
+                        <AsciiHorizon className="absolute inset-0" />
+                    </div>
+                </Row>
             </Spec>
         </>
     );

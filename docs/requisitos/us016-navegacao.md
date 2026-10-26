@@ -66,5 +66,5 @@ Eu, como visitante, quero uma navegação curta e sempre à mão, para ir do in�
 
 ## Regras de negócio específicas
 
-- **RNE001 – Sem JS de cliente novo.** A navbar é componente de servidor, sem estado nem leitura do caminho; o único JS é o botão de busca que já existia. Cada página diz qual aba está ativa. A luz fica pela posição da aba (índice) e desliza com o `ViewTransition` do React, sem JS de cliente novo; sem suporte ela aparece no lugar e, em `prefers-reduced-motion`, nada se move. Motivo: o orçamento de JS da tela inicial (150 KB gzip, RNF) já está no limite.
+- **RNE001 – Sem JS de cliente novo.** A navbar é componente de servidor, sem estado nem leitura do caminho; o único JS é o botão de busca que já existia. Cada página diz qual aba está ativa. A luz fica pela posição da aba (índice) e desliza com o `ViewTransition` do React, sem JS de cliente novo; sem suporte ela aparece no lugar e, em `prefers-reduced-motion`, nada se move. Motivo: o orçamento de JS da tela inicial (151 KB gzip, RNF) já está no limite.
 - **RNE002 – Sem eventos.** Trocar de aba não gera evento de medição.

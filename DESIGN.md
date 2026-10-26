@@ -54,7 +54,7 @@ Leitura obrigatória antes de qualquer tarefa de interface. A fonte da verdade v
 
 ## Orçamento
 
-- JS da tela inicial: no máximo 150 KB gzip no que um navegador moderno baixa (`npm run bundle:check`, no CI). Painéis que abrem por ação (filtros, busca) carregam sob demanda.
+- JS da tela inicial: no máximo 151 KB gzip (era 150; o dono subiu em 25/10/2026 para o gatilho do horizonte animado do rodapé, que baixa o WebGL só quando o rodapé chega perto) no que um navegador moderno baixa (`npm run bundle:check`, no CI). Painéis que abrem por ação (filtros, busca) carregam sob demanda.
 - Lighthouse na prévia do `develop`: nota ≥ 90, LCP ≤ 2,0 s, CLS ≤ 0,05, TBT ≤ 200 ms (`lighthouserc.json`).
 
 ## Componentes
