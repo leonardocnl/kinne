@@ -2,7 +2,7 @@
 
 Leitura obrigatória antes de qualquer tarefa de interface. A fonte da verdade visual é a maquete aprovada, `docs/design/maquete-kinnemix.html`. Os tokens estão em `src/app/globals.css`, os componentes em `src/app/_components/ui/` e a referência viva em `/design`.
 
-Última atualização: 12 de outubro de 2026.
+Última atualização: 25 de outubro de 2026.
 
 ## Tokens
 
@@ -14,7 +14,7 @@ Leitura obrigatória antes de qualquer tarefa de interface. A fonte da verdade v
 
 ## Cor
 
-- O amarelo (`signal`) aparece só no controle mais importante de cada tela e na wordmark. Um amarelo por tela.
+- O amarelo (`signal`) aparece só no controle mais importante de cada tela e no ícone da marca. Um amarelo por tela.
 - No hover, todo controle segue o do quiet: fundo `hover` e borda `line-strong`. Nenhum controle ganha cor nova no hover. O primary não muda de cor; só encolhe ao ser pressionado. O chip marcado não muda.
 
 ## Forma
@@ -33,17 +33,28 @@ Leitura obrigatória antes de qualquer tarefa de interface. A fonte da verdade v
 - Texto corrido com `text-wrap: pretty` (sinopse); chamadas e frases curtas com `text-wrap: balance`.
 - Painel de busca no computador: o pé nunca passa do pé da imagem grande (`--spacing-search-panel`); a lista rola por dentro.
 
+## Navegação
+
+- Navbar flutuante em todas as telas (padrão do Kinne): chip com a marca (link para o início), "Início" e "Sobre", só texto, em partes iguais; ao lado, fora do chip, a lupa da busca. No computador, fixa no topo e centralizada; no celular, na base, acima da área segura (`nav-bottom`) e, na tela do título, acima do Dock (`--nav-lift`). A data fica à direita da barra do topo só em tela larga (`wide:`). O "Voltar" é redondo, só com a seta (`aria-label`), à esquerda.
+- Vidro preto translúcido (`glass`, `smoke` em `ui/navItem.ts`): `bg-nav` a 35%, reflexo `sheen`, desfoque leve (`blur-veil`) e o que passa por trás escurecido (`backdrop-brightness-45`). Exceção da navbar à regra de 7:1: 4,5:1 (AA) até sobre imagem branca, decisão do dono; o teste da navbar confere.
+- Aba ativa: traço amarelo (`signal`) de 1px na borda de baixo, com halo (`drop-shadow-limelight`), e um brilho amarelo que sobe atrás do rótulo (`bg-limelight`, com granulado fino), fraco onde há texto. Exceção à regra de um amarelo por tela. A posição vem de `--nav-index` (prop `current`) e desliza entre páginas com o `ViewTransition` do React; sem suporte aparece no lugar, e com `prefers-reduced-motion` nada desliza. Fora do Início e do Sobre, nenhuma aba fica ativa.
+- Abas inativas em `soft`; no hover só sobem para `paper`, sem fundo nem contorno.
+- Busca (computador): um vidro só, recortado por um caminho com duas partes (`clip-search`, `clip-search-open`), mais um contorno no mesmo caminho (`rim-search`): fechada é a lupa; aberta, o campo se estica e a gota do fechar sai na frente, com um fio que afina e some (gosma). O espaço do campo fica reservado e o grupo só desliza (`translate-x-nav-shift`): nada anima largura. Os resultados aparecem depois da primeira letra, no mesmo vidro, da largura de navbar + busca, com pôster maior. No celular, a busca abre em tela cheia.
+- A navbar é componente de servidor; a lupa é o único JS dela e recebe as classes como prop, para irem no HTML e não no JS da home.
+- Camadas: navbar `z-nav` (1) abaixo do painel de filtros (2), do Dock (10) e do aviso (20); com a busca aberta ela sobe acima de todos.
+- Respiro: `[data-nav]` dá à página `--spacing-nav` embaixo no celular (mais o Dock, quando há) e `scroll-padding-top` no computador.
+
 ## Imagens
 
 - Sempre do `image.tmdb.org`, em `<img>` simples (`TmdbImage`), nunca `next/image` nem a otimização da hospedagem (RNF08). Os endereços saem de `ui/tmdb-sources.ts`.
 - Imagem grande (quadro): `w780`, `w1280` e `original` com a largura real guardada pela carga, com `sizes` do quadro (página menos as margens no computador, tela toda no celular). A primeira imagem da tela carrega já, com `fetchpriority="high"`.
 - Miniaturas da faixa "Hoje": `w300` e `w780`. Pôsteres pequenos: `w92`, com `w185` nas telas 2x.
 - O layout raiz abre a conexão com o `image.tmdb.org` (`preconnect`).
-- A wordmark é um `<img>` do SVG em `public/`, sem `next/image`: o JS do `next/image` passaria a ir em toda página.
+- O ícone da marca (`public/icon.svg`, dentro da navbar) é um `<img>` do SVG em `public/`, sem `next/image`: o JS do `next/image` passaria a ir em toda página.
 
 ## Orçamento
 
-- JS da tela inicial: no máximo 150 KB gzip no que um navegador moderno baixa (`npm run bundle:check`, no CI). Painéis que abrem por ação (filtros, busca) carregam sob demanda.
+- JS da tela inicial: no máximo 151 KB gzip (era 150; o dono subiu em 25/10/2026 para o gatilho do horizonte animado do rodapé, que baixa o WebGL só quando o rodapé chega perto) no que um navegador moderno baixa (`npm run bundle:check`, no CI). Painéis que abrem por ação (filtros, busca) carregam sob demanda.
 - Lighthouse na prévia do `develop`: nota ≥ 90, LCP ≤ 2,0 s, CLS ≤ 0,05, TBT ≤ 200 ms (`lighthouserc.json`).
 
 ## Componentes

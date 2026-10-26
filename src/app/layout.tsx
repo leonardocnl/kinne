@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Darker_Grotesque, Manrope } from "next/font/google";
 import { InputModality } from "./_components/InputModality";
 import { TMDB_IMAGE_ORIGIN } from "./_components/ui/tmdb-sources";
@@ -20,6 +20,9 @@ export const metadata: Metadata = {
     description: "Um filme ou série por vez, só entre os streamings que você assina no Brasil.",
 };
 
+// a navbar fica presa à base no celular, acima da área segura do iPhone (safe-area-inset-bottom)
+export const viewport: Viewport = { viewportFit: "cover" };
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
     return (
         <html
@@ -30,7 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 {/* a imagem grande de cada tela vem do TMDB: a conexão abre antes de o HTML pedi-la */}
                 <link rel="preconnect" href={TMDB_IMAGE_ORIGIN} />
             </head>
-            <body className="flex min-h-full flex-col">
+            <body className="flex min-h-full flex-col overflow-x-clip">
                 <InputModality />
                 {children}
             </body>

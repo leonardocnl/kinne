@@ -5,9 +5,7 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { parseSearchTerm, type SearchOutcome, type SearchResult } from "@/domain/search";
 import { searchTitles } from "../../_actions/search";
 import { goToTitle } from "../title/origin";
-import { Button } from "../ui/Button";
 import { cx } from "../ui/cx";
-import { GlassPanel } from "../ui/GlassPanel";
 import { CloseIcon } from "../ui/icons";
 import { TmdbImage } from "../ui/TmdbImage";
 import { posterSources } from "../ui/tmdb-sources";
@@ -108,7 +106,7 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
     }
 
     const status = !ready
-        ? "Digite o nome de um filme ou série."
+        ? "Continue digitando."
         : !outcome
           ? "Buscando…"
           : outcome.kind === "results"
@@ -127,42 +125,54 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
                 event.preventDefault();
                 onClose(true);
             }}
-            className="z-20 max-desktop:fixed max-desktop:inset-x-0 max-desktop:top-0 desktop:absolute desktop:top-full desktop:right-0 desktop:mt-2 desktop:w-104"
+            className="pointer-events-auto z-1 max-desktop:fixed max-desktop:inset-0 max-desktop:flex max-desktop:flex-col max-desktop:gap-3.5 max-desktop:bg-scrim-strong max-desktop:px-4 max-desktop:pt-5.5 max-desktop:pb-5 max-desktop:backdrop-blur-glass desktop:absolute desktop:inset-0"
         >
-            {/* no computador o pé do painel nunca passa do pé da imagem; a lista rola por dentro */}
-            <GlassPanel className="max-desktop:max-h-dvh max-desktop:pb-5 desktop:max-h-search-panel">
-                <div className="flex items-center gap-2.5">
-                    <input
-                        // abre já com o cursor no campo: foi para isso que a pessoa tocou na lupa
-                        autoFocus
-                        // o cursor vai para o fim do que já foi digitado
-                        onFocus={(event) => {
-                            const end = event.currentTarget.value.length;
-                            event.currentTarget.setSelectionRange(end, end);
-                        }}
-                        type="text"
-                        role="combobox"
-                        aria-label="Nome do filme ou série"
-                        aria-autocomplete="list"
-                        aria-expanded={results.length > 0}
-                        aria-controls={listId}
-                        aria-activedescendant={active >= 0 ? optionId(active) : undefined}
-                        autoComplete="off"
-                        autoCorrect="off"
-                        spellCheck={false}
-                        enterKeyHint="search"
-                        maxLength={80}
-                        placeholder="Buscar filme ou série"
-                        value={term}
-                        onChange={(event) => setTerm(event.target.value)}
-                        onKeyDown={onKeyDown}
-                        className="h-control min-w-0 flex-1 rounded-pill border border-line bg-scrim-strong px-5 text-small text-paper placeholder:text-soft"
-                    />
-                    <Button variant="round" aria-label="Fechar busca" onClick={() => onClose(true)}>
-                        <CloseIcon />
-                    </Button>
-                </div>
+            <div className="flex items-center gap-2.5 motion-reduce:animate-none desktop:absolute desktop:inset-0 desktop:animate-search-in desktop:gap-1.5">
+                <input
+                    // abre já com o cursor no campo: foi para isso que a pessoa tocou na lupa
+                    autoFocus
+                    // o cursor vai para o fim do que já foi digitado
+                    onFocus={(event) => {
+                        const end = event.currentTarget.value.length;
+                        event.currentTarget.setSelectionRange(end, end);
+                    }}
+                    type="text"
+                    role="combobox"
+                    aria-label="Nome do filme ou série"
+                    aria-autocomplete="list"
+                    aria-expanded={results.length > 0}
+                    aria-controls={listId}
+                    aria-activedescendant={active >= 0 ? optionId(active) : undefined}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    enterKeyHint="search"
+                    maxLength={80}
+                    placeholder="Buscar filme ou série"
+                    value={term}
+                    onChange={(event) => setTerm(event.target.value)}
+                    onKeyDown={onKeyDown}
+                    className="h-full min-w-0 flex-1 rounded-pill bg-transparent px-5 text-small text-paper placeholder:text-soft max-desktop:h-control max-desktop:border max-desktop:border-line max-desktop:bg-scrim-strong"
+                />
+                <button
+                    type="button"
+                    aria-label="Fechar busca"
+                    onClick={() => onClose(true)}
+                    className="flex size-control shrink-0 cursor-pointer items-center justify-center rounded-pill text-paper transition-colors duration-hover hover:bg-hover motion-reduce:transition-none max-desktop:border max-desktop:border-line max-desktop:bg-quiet desktop:size-12"
+                >
+                    <CloseIcon />
+                </button>
+            </div>
 
+            {/* resultados: no computador, embaixo de navbar e busca, da largura das duas; no celular,
+                embaixo do campo. Só depois da primeira letra */}
+            <div
+                className={cx(
+                    "flex min-h-0 flex-col gap-3.5 max-desktop:flex-1 desktop:absolute desktop:top-full desktop:right-0 desktop:mt-2 desktop:max-h-search-panel desktop:w-search-results desktop:rounded-panel desktop:border desktop:border-line desktop:bg-nav desktop:bg-linear-to-b desktop:from-sheen desktop:to-transparent desktop:p-panel desktop:shadow-nav desktop:backdrop-blur-veil desktop:backdrop-brightness-45 desktop:backdrop-saturate-glass",
+                    // o painel só aparece depois que a pessoa começa a digitar: antes, o lugar dela é o campo
+                    term === "" && "hidden",
+                )}
+            >
                 <ul
                     id={listId}
                     role="listbox"
@@ -181,26 +191,28 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
                             onClick={() => open(result)}
                             onPointerMove={() => setActive(i)}
                             className={cx(
-                                "flex h-result shrink-0 cursor-pointer items-center gap-3.5 rounded-control pr-5 pl-3 transition duration-hover motion-reduce:transition-none",
+                                "flex h-result shrink-0 cursor-pointer items-center gap-3.5 rounded-control pr-5 pl-3 transition duration-hover motion-reduce:transition-none desktop:h-result-lg",
                                 i === active && "bg-hover outline outline-line-strong",
                             )}
                         >
                             {result.posterPath ? (
                                 <TmdbImage
                                     sources={posterSources(result.posterPath)}
-                                    className="h-poster w-poster-width shrink-0"
+                                    className="h-poster w-poster-width shrink-0 desktop:h-poster-lg desktop:w-poster-lg-width"
                                 />
                             ) : (
                                 <span
                                     aria-hidden="true"
-                                    className="h-poster w-poster-width shrink-0 bg-frame"
+                                    className="h-poster w-poster-width shrink-0 bg-frame desktop:h-poster-lg desktop:w-poster-lg-width"
                                 />
                             )}
                             <span className="flex min-w-0 flex-col">
-                                <span className="truncate text-body text-paper">
+                                <span className="truncate text-body text-paper desktop:font-display desktop:text-shot">
                                     {result.title}
                                 </span>
-                                <span className="text-data text-faint">{resultFacts(result)}</span>
+                                <span className="text-data text-faint desktop:text-small">
+                                    {resultFacts(result)}
+                                </span>
                             </span>
                         </li>
                     ))}
@@ -209,7 +221,7 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
                 <p role="status" className={cx("px-1 text-small text-soft", !status && "sr-only")}>
                     {status ?? count}
                 </p>
-            </GlassPanel>
+            </div>
         </div>
     );
 }

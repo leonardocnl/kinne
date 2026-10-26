@@ -19,7 +19,7 @@ Eu, como visitante, quero ver ao abrir o app cinco indicações do dia, uma por 
 
 **Dado** que acesso o endereço do Kinne  
 **Quando** a tela inicial termina de carregar  
-**Então** o sistema exibe a barra do topo com a wordmark, a data do dia e o botão "Entrar"  
+**Então** o sistema exibe a barra do topo com a data do dia e o botão "Entrar"  
 **E** exibe o quadro com a capa da primeira indicação, o contador "1 de 5", o botão de pausar e a barra de progresso  
 **E** exibe, abaixo do quadro, os seguintes campos da indicação em destaque:
 

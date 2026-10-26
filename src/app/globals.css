@@ -12,7 +12,7 @@
     --color-*: initial;
     --color-ink: #020202; /* fundo */
     --color-paper: #f2f2ee; /* texto */
-    --color-signal: #fff340; /* só no controle principal de cada tela e na wordmark */
+    --color-signal: #ffdf25; /* só no controle principal de cada tela e no ícone da marca */
     --color-soft: rgb(242 242 238 / 0.74); /* texto secundário */
     --color-faint: rgb(242 242 238 / 0.64); /* texto apagado */
     --color-line: rgb(255 255 255 / 0.14); /* bordas e divisórias */
@@ -30,9 +30,15 @@
     --color-veil: rgb(2 2 2 / 0.35); /* botão pequeno sobre a imagem (pausar) */
     --color-frame: #0a0a0a; /* quadro sem imagem */
     --color-toast: #161616; /* aviso */
+    --color-signal-deep: #b8960c; /* tom escuro do signal, no horizonte do rodapé */
+    --color-nav: rgb(
+        2 2 2 / 0.35
+    ); /* vidro preto translúcido da navbar: o fundo aparece, escurecido pelo backdrop-brightness (4,5:1, exceção da navbar) */
+    --color-sheen: rgb(255 255 255 / 0.04); /* reflexo de cima para baixo no vidro */
 
     /* fontes (as variáveis vêm do next/font, em layout.tsx) */
     --font-*: initial;
+    --font-ascii: ui-monospace, Menlo, Consolas, monospace; /* caracteres do horizonte do rodapé */
 
     /* escala de texto */
     --text-*: initial;
@@ -67,6 +73,8 @@
     --text-caption--line-height: 1.5;
     --text-footnote: 0.75rem; /* rodapé; menor no celular */
     --text-footnote--line-height: 1.5;
+    --text-ascii: 0.75rem; /* caracteres do horizonte do rodapé */
+    --text-ascii--line-height: 1;
 
     --tracking-*: initial;
     --tracking-score: 0.06em; /* "TMDB" ao lado da nota */
@@ -95,6 +103,9 @@
     --spacing-search-panel: calc(var(--spacing-hero-height) + 0.375rem - 1rem);
     --spacing-poster: 3.5rem; /* pôster na lista da busca (2:3) */
     --spacing-poster-width: calc(var(--spacing-poster) * 2 / 3);
+    --spacing-poster-lg: 5.5rem; /* pôster nos resultados da busca no computador (2:3) */
+    --spacing-poster-lg-width: calc(var(--spacing-poster-lg) * 2 / 3);
+    --spacing-result-lg: calc(var(--spacing-poster-lg) + 1rem);
     --spacing-result: calc(var(--spacing-poster) + 1rem); /* linha da busca: pôster e respiro */
     /* barra presa à base (Dock): a altura sai das mesmas peças que a montam, sem a área segura */
     --spacing-dock-top: 1.75rem; /* acima dos botões */
@@ -108,10 +119,33 @@
             var(--spacing-dock-gap)
     ); /* com "Combinado", em uma linha */
 
+    /* navbar flutuante: no computador no topo, no celular na base */
+    --spacing-nav-edge: 1.375rem; /* da borda da tela à navbar; no topo é o respiro da página */
+    --spacing-nav-gap: 0.875rem; /* da navbar ao conteúdo */
+    --spacing-nav-part: 7.5rem; /* cada parte do chip no computador: marca e abas */
+    --spacing-nav-search: 20rem; /* lupa aberta em campo, no computador */
+    --spacing-footer: 44rem; /* altura mínima do rodapé */
+    --spacing-nav-gap-x: 0.5rem; /* entre o chip e a lupa */
+    /* resultados da busca no computador: da borda do chip à da busca aberta (o chip tem 1px de
+       borda de cada lado) */
+    /* busca fechada no computador: o grupo desliza meio campo para a direita */
+    --spacing-nav-shift: calc((var(--spacing-nav-search) - var(--spacing-control)) / 2);
+    --spacing-search-results: calc(
+        3 * var(--spacing-nav-part) + 2 * var(--spacing-nav-pad) + 2px + var(--spacing-nav-gap-x) +
+            var(--spacing-nav-search)
+    );
+    --spacing-nav-pad: 0.125rem; /* respiro do chip em volta das abas */
+    --spacing-nav-light: 3.25rem; /* largura da barra de luz: o topo do cone */
+    --spacing-nav-cone: 8rem; /* largura do brilho da aba ativa */
+    --spacing-nav: calc(
+        var(--spacing-nav-edge) + var(--spacing-control) + var(--spacing-nav-gap)
+    ); /* espaço que a navbar toma, antes da área segura */
+
     --container-*: initial;
     --container-page: calc(
         100vh * 16 / 9
     ); /* largura máxima da página: nunca mais larga que um quadro 16:9 da altura da janela */
+    --container-navbar: 30rem; /* largura máxima da navbar; no celular ocupa a tela menos as margens */
     --container-measure: 80ch; /* texto corrido */
     /* painel de filtros; não pode se chamar "panel": w-panel acharia antes --spacing-panel */
     --container-filters: 33.125rem;
@@ -133,14 +167,16 @@
     /* vidro e sombras */
     --blur-*: initial;
     --blur-glass: 24px;
-    --blur-veil: 12px; /* botão pequeno sobre a imagem */
+    --blur-veil: 12px; /* botão pequeno sobre a imagem e vidro da navbar */
     --backdrop-saturate-glass: 165%;
     --shadow-*: initial;
     --shadow-glass: inset 0 1px 0 rgb(255 255 255 / 0.2), 0 24px 60px -28px rgb(0 0 0 / 0.8);
     --shadow-focus: 0 0 0 3px var(--color-ink); /* fio escuro por dentro do anel de foco */
+    --shadow-nav: 0 24px 60px -28px rgb(0 0 0 / 0.8); /* navbar: a sombra do vidro, sem o fio claro em cima, para a borda ser igual em volta */
     --shadow-toast: 0 12px 30px -10px rgb(0 0 0 / 0.9);
     --inset-shadow-*: initial;
     --drop-shadow-*: initial;
+    --drop-shadow-limelight: 0 0 0.5rem rgb(255 223 37 / 1); /* halo do traço amarelo da aba ativa */
     --text-shadow-*: initial;
     --text-shadow-score: 0 1px 12px rgb(0 0 0 / 0.6);
     --opacity-disabled: 0.38;
@@ -149,6 +185,7 @@
     --aspect-*: initial;
     --aspect-scope: 2.39 / 1; /* computador */
     --aspect-video: 16 / 9; /* celular */
+    --aspect-kinne: 1000 / 250; /* "kinne" gigante do rodapé (viewBox do SVG) */
     --object-position-focus: 50% 25%; /* não corta cabeças */
     --background-image-shade-full: linear-gradient(
         to bottom,
@@ -163,12 +200,31 @@
     /* base da área que rola nos filtros, quando há mais campos abaixo */
     --background-image-scroll-hint: linear-gradient(rgb(2 2 2 / 0), var(--color-scrim-strong));
     --background-image-panel-foot: linear-gradient(rgb(14 14 14 / 0), rgb(14 14 14 / 0.94) 18px);
+    /* brilho da aba ativa: signal que sobe do traço na borda de baixo e fica fraco atrás do rótulo
+       (4,5:1, exceção da navbar) */
+    --background-image-limelight: radial-gradient(
+        50% 100% at 50% 100%,
+        rgb(255 223 37 / 0.5),
+        rgb(255 223 37 / 0.2) 35%,
+        rgb(255 223 37 / 0)
+    );
+    /* horizonte do rodapé: o amarelo nasce abaixo da base e se apaga no preto, para cima */
+    --background-image-horizon: radial-gradient(
+        70% 160% at 50% 110%,
+        var(--color-signal) 0%,
+        var(--color-signal) 18%,
+        var(--color-signal-deep) 42%,
+        rgb(2 2 2 / 0) 78%
+    );
+    --opacity-horizon: 0.8;
     --background-image-grain: url("/grain.svg");
     --opacity-grain: 0.42;
+    --opacity-grain-fine: 0.22; /* granulado fino */
 
     /* telas: "celular" é até 860px; desktop: vale de 861px para cima */
     --breakpoint-*: initial;
     --breakpoint-desktop: 861px;
+    --breakpoint-wide: 1140px; /* abaixo disso a data some da barra do topo, para não bater na navbar */
 
     /* movimento */
     --ease-*: initial;
@@ -178,6 +234,7 @@
     --transition-duration-fade: 300ms;
     --transition-duration-panel: 420ms;
     --transition-duration-dissolve: 900ms;
+    --transition-duration-limelight: 400ms; /* luz deslizando de uma aba para a outra */
     --animate-*: initial;
     --animate-breathe: breathe 2.4s ease-in-out infinite; /* pulsa em claridade, devagar */
     /* troca de capa: o título antigo sobe e sai, o novo sobe e entra */
@@ -185,6 +242,13 @@
     --animate-rise-in: rise-in 640ms var(--ease-settle);
     /* barra de progresso da capa; a duração vem de quem usa (US001 RNE002) */
     --animate-fill: fill linear forwards;
+    /* busca: o campo aparece depois de a lupa se alargar */
+    /* horizonte do rodapé: a luz respira devagar e os caracteres cintilam, trocando de camada */
+    --animate-horizon-flow: horizon-flow 14s ease-in-out infinite alternate;
+    --animate-ascii-a: ascii-a 3.2s steps(1) infinite;
+    --animate-ascii-b: ascii-b 3.2s steps(1) infinite;
+    --animate-goo-neck: goo-neck var(--transition-duration-panel) var(--ease-settle) forwards;
+    --animate-search-in: search-in var(--transition-duration-panel) ease both;
     /* painel de filtros entrando: da direita no computador, de baixo no celular */
     --animate-panel-in: panel-in var(--transition-duration-panel) var(--ease-settle);
     --animate-panel-up: panel-up var(--transition-duration-panel) var(--ease-settle);
@@ -229,6 +293,13 @@
         to {
             opacity: 0;
             transform: translateY(0.875rem);
+        }
+    }
+
+    @keyframes search-in {
+        0%,
+        55% {
+            opacity: 0;
         }
     }
 
@@ -289,6 +360,66 @@
     bottom: var(--toast-bottom, 1.5rem);
 }
 
+/* aviso e Dock ficam em z-10 e z-20, o painel de filtros em z-2: a navbar fica abaixo de todos */
+@utility z-nav {
+    z-index: 1;
+}
+
+/* base da navbar no celular, acima da área segura do aparelho */
+@utility nav-bottom {
+    bottom: calc(var(--nav-lift, 0rem) + var(--spacing-nav-edge) + env(safe-area-inset-bottom));
+}
+
+/* granulado fino: o mesmo grain.svg em um quarto do tamanho, grão menor (cone da navbar) */
+@utility bg-grain-fine {
+    background-image: var(--background-image-grain);
+    background-size: 3.4375rem;
+}
+
+/*
+ * Busca no computador: o vidro é um só, recortado por um caminho com duas partes, o campo e a gota
+ * do fechar (mesmos comandos nos dois estados, para o navegador interpolar). Fechado, as duas são o
+ * mesmo círculo: a lupa. Aberto, o campo se estica e a gota sai na frente dele, como líquido. O
+ * caminho é em px, sobre a busca de 20rem por 50px (--spacing-nav-search, --spacing-control).
+ */
+@utility clip-search {
+    clip-path: path(
+        "M25 0 H25 A25 25 0 0 1 25 50 H25 A25 25 0 0 1 25 0 Z M0 25 A25 25 0 1 1 50 25 A25 25 0 1 1 0 25 Z"
+    );
+}
+@utility clip-search-open {
+    clip-path: path(
+        "M25 0 H241 A25 25 0 0 1 241 50 H25 A25 25 0 0 1 25 0 Z M272 25 A24 24 0 1 1 320 25 A24 24 0 1 1 272 25 Z"
+    );
+}
+/* contorno fino do mesmo caminho (o recorte corta a borda do vidro) */
+@utility rim-search {
+    d: path(
+        "M25 0 H25 A25 25 0 0 1 25 50 H25 A25 25 0 0 1 25 0 Z M0 25 A25 25 0 1 1 50 25 A25 25 0 1 1 0 25 Z"
+    );
+}
+@utility rim-search-open {
+    d: path(
+        "M25 0 H241 A25 25 0 0 1 241 50 H25 A25 25 0 0 1 25 0 Z M272 25 A24 24 0 1 1 320 25 A24 24 0 1 1 272 25 Z"
+    );
+}
+
+/* granulado só onde há brilho */
+@utility mask-limelight {
+    mask-image: radial-gradient(50% 100% at 50% 0, black, transparent);
+}
+
+/* centro da luz na aba ativa: marca, abas e busca dividem o chip em quartos iguais, e --nav-index (0, 1…)
+   vem da prop current da Navbar; a marca ocupa a primeira parte. No celular as partes são terços
+   do chip (100%); no computador, largura fixa */
+@utility nav-light-x {
+    --nav-part: calc((100% - 2 * var(--spacing-nav-pad)) / 3);
+    @variant desktop {
+        --nav-part: var(--spacing-nav-part);
+    }
+    left: calc(var(--spacing-nav-pad) + (var(--nav-index) + 1.5) * var(--nav-part));
+}
+
 /* lista que rola na horizontal no celular sem mostrar a barra (faixa "Hoje") */
 @utility scrollbar-none {
     scrollbar-width: none;
@@ -319,6 +450,26 @@
             & body {
                 padding-bottom: calc(var(--dock) + env(safe-area-inset-bottom));
             }
+        }
+    }
+
+    /* navbar: no celular, espaço embaixo da página, scroll-padding e o aviso logo acima dela; no
+       computador ela fica no topo e o scroll-padding evita que cubra o elemento em foco */
+    html:has([data-nav]) {
+        @variant max-desktop {
+            /* com o Dock (tela do título), a navbar sobe para cima dele */
+            --nav-space: calc(var(--nav-lift, 0rem) + var(--spacing-nav));
+            --toast-bottom: calc(var(--nav-space) + env(safe-area-inset-bottom));
+            scroll-padding-bottom: calc(var(--nav-space) + env(safe-area-inset-bottom));
+            & body {
+                padding-bottom: calc(var(--nav-space) + env(safe-area-inset-bottom));
+            }
+            &:has([data-dock]) {
+                --nav-lift: var(--dock);
+            }
+        }
+        @variant desktop {
+            scroll-padding-top: var(--spacing-nav);
         }
     }
 
@@ -384,5 +535,76 @@
         border-radius: 50%;
         background: var(--color-paper);
         box-shadow: 0 0 0 7px var(--color-halo);
+    }
+}
+
+/* a luz da navbar desliza entre páginas (React ViewTransition, share="limelight"); sem suporte do
+   navegador ela só aparece na aba ativa, e com movimento reduzido nada desliza */
+::view-transition-group(.limelight) {
+    animation-duration: var(--transition-duration-limelight);
+    animation-timing-function: ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(.limelight),
+    ::view-transition-old(.limelight),
+    ::view-transition-new(.limelight) {
+        animation: none;
+    }
+}
+
+/* com a busca aberta, a navbar sobe acima do Dock e do aviso: no celular a busca ocupa a tela */
+[data-nav]:has([role="dialog"]) {
+    z-index: 30;
+}
+
+/* busca aberta no computador: o fio entre o campo e a gota do fechar afina e some, como gosma */
+@keyframes goo-neck {
+    0%,
+    30% {
+        transform: scaleY(1);
+    }
+    to {
+        transform: scaleY(0);
+    }
+}
+
+/* navegador sem a propriedade d (contorno): o contorno some com a busca aberta */
+@supports not (d: path("M0 0")) {
+    [data-search-rim] {
+        display: none;
+    }
+}
+
+@keyframes horizon-flow {
+    from {
+        transform: translateX(-2%) scaleY(0.96);
+    }
+    to {
+        transform: translateX(2%) scaleY(1.04);
+    }
+}
+
+@keyframes ascii-a {
+    0% {
+        opacity: 1;
+    }
+    40% {
+        opacity: 0.5;
+    }
+    70% {
+        opacity: 1;
+    }
+}
+
+@keyframes ascii-b {
+    0% {
+        opacity: 0;
+    }
+    40% {
+        opacity: 0.8;
+    }
+    70% {
+        opacity: 0.2;
     }
 }

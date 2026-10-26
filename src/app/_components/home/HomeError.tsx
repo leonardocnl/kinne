@@ -2,14 +2,17 @@
 
 import { catchError, type ErrorInfo } from "next/error";
 import { loadError, StateScreen } from "../StateScreen";
-import { TopBar } from "../TopBar";
+import type { ReactNode } from "react";
 import { Button } from "../ui/Button";
 
-/** Tela inicial sem dados (CM002). "Tentar de novo" busca as indicações outra vez. */
-function HomeErrorFallback(_props: object, { retry }: ErrorInfo) {
+/**
+ * Tela inicial sem dados (CM002). "Tentar de novo" busca as indicações outra vez. A barra do topo
+ * chega pronta do servidor (`topBar`): importada aqui, ela iria para o JS de cliente da home.
+ */
+function HomeErrorFallback({ topBar }: { topBar: ReactNode }, { retry }: ErrorInfo) {
     return (
         <>
-            <TopBar />
+            {topBar}
             <StateScreen
                 {...loadError}
                 action={

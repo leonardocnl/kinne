@@ -11,9 +11,9 @@ import { homePicks } from "./_data/home";
 
 export default function Home() {
     return (
-        <Shell>
+        <Shell nav="inicio">
             <AppOpened />
-            <HomeErrorBoundary>
+            <HomeErrorBoundary topBar={<TopBar />}>
                 <Suspense fallback={<HomeSkeleton />}>
                     <Today />
                 </Suspense>
