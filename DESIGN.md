@@ -2,7 +2,7 @@
 
 Leitura obrigatória antes de qualquer tarefa de interface. A fonte da verdade visual é a maquete aprovada, `docs/design/maquete-kinnemix.html`. Os tokens estão em `src/app/globals.css`, os componentes em `src/app/_components/ui/` e a referência viva em `/design`.
 
-Última atualização: 25 de outubro de 2026.
+Última atualização: 27 de outubro de 2026.
 
 ## Tokens
 
@@ -30,6 +30,7 @@ Leitura obrigatória antes de qualquer tarefa de interface. A fonte da verdade v
 ## Disposição
 
 - Tela do título no computador: o grupo de ações ("Vou assistir", "Já vi", dado) fica à direita, centrado na primeira linha do título (`--spacing-title-line`), e não se move com o tamanho da sinopse. O texto vai até o vão do grupo. No celular, as ações ficam presas à base (`Dock`).
+- Onde assistir é a informação principal: na tela do título e no destaque da home fica logo abaixo do título, antes da chamada e da sinopse (`Availability`). Rótulo em `text-caption` e `soft`; nomes em `text-body`, `font-medium` e `paper`, separados pelo fio do `Facts`. É texto: sem pílula, sem amarelo. Sem streaming, nada aparece. Nessas duas telas, dados (`Facts`) e créditos vão em `text-small`.
 - Texto corrido com `text-wrap: pretty` (sinopse); chamadas e frases curtas com `text-wrap: balance`.
 - Painel de busca no computador: o pé nunca passa do pé da imagem grande (`--spacing-search-panel`); a lista rola por dentro.
 

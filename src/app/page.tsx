@@ -5,6 +5,7 @@ import { AppOpened } from "./_components/AppOpened";
 import { DailyPicks } from "./_components/home/DailyPicks";
 import { HomeErrorBoundary } from "./_components/home/HomeError";
 import { HomeSkeleton } from "./_components/home/HomeSkeleton";
+import { Availability } from "./_components/ui/Availability";
 import { Shell } from "./_components/Shell";
 import { TopBar } from "./_components/TopBar";
 import { homePicks } from "./_data/home";
@@ -33,7 +34,13 @@ async function Today() {
     return (
         <>
             <TopBar date={date} />
-            <DailyPicks date={date} picks={picks} />
+            <DailyPicks
+                date={date}
+                picks={picks}
+                availability={picks.map((p) => (
+                    <Availability key={p.slug} streamings={p.streamings} />
+                ))}
+            />
         </>
     );
 }
