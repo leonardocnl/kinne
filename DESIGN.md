@@ -29,8 +29,8 @@ Leitura obrigatória antes de qualquer tarefa de interface. A fonte da verdade v
 
 ## Disposição
 
-- Tela do título no computador: o grupo de ações ("Vou assistir", "Já vi", dado) fica à direita, centrado na primeira linha do título (`--spacing-title-line`), e não se move com o tamanho da sinopse. O texto vai até o vão do grupo. No celular, as ações ficam presas à base (`Dock`).
-- Onde assistir é a informação principal: na tela do título e no destaque da home fica logo abaixo do título, antes da chamada e da sinopse (`Availability`). Rótulo em `text-caption` e `soft`; nomes em `text-body`, `font-medium` e `paper`, separados pelo fio do `Facts`. É texto: sem pílula, sem amarelo. Sem streaming, nada aparece. Nessas duas telas, dados (`Facts`) e créditos vão em `text-small`.
+- Tela do título no computador (`title-layout`, grid de três colunas): pôster à esquerda (`--spacing-title-poster`, 2:3, topo no topo do título; sem pôster, a coluna some), texto no meio e, à direita, o grupo de ações ("Vou assistir", "Já vi", dado) centrado na primeira linha do título (`--spacing-title-line`). As ações não se movem com a sinopse nem com os logos. O texto vai até o vão do grupo. No celular, sem pôster (nem baixado: `hidden` + `loading=lazy`) e com as ações presas à base (`Dock`).
+- Onde assistir é a informação principal. Na tela do título, em logos (`AvailabilityLogos`): logo do TMDB em `--spacing-logo`, `rounded-card`, com o nome em `text-caption` embaixo; no computador, abaixo das ações e alinhado à direita; no celular, entre a imagem e o título. No destaque da home, em texto, logo abaixo do título, antes da chamada (`Availability`). Rótulo em `text-caption` e `soft`; nomes em `text-body`, `font-medium` e `paper`, separados pelo fio do `Facts`. É texto: sem pílula, sem amarelo. Sem streaming, nada aparece. Nessas duas telas, dados (`Facts`) e créditos vão em `text-small`.
 - Texto corrido com `text-wrap: pretty` (sinopse); chamadas e frases curtas com `text-wrap: balance`.
 - Painel de busca no computador: o pé nunca passa do pé da imagem grande (`--spacing-search-panel`); a lista rola por dentro.
 

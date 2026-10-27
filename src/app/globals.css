@@ -107,6 +107,8 @@
     --spacing-poster-lg-width: calc(var(--spacing-poster-lg) * 2 / 3);
     --spacing-result-lg: calc(var(--spacing-poster-lg) + 1rem);
     --spacing-result: calc(var(--spacing-poster) + 1rem); /* linha da busca: pôster e respiro */
+    --spacing-title-poster: 14rem; /* pôster da tela do título no computador (2:3) */
+    --spacing-logo: 2.75rem; /* logo do streaming em "Onde assistir" (quadrado) */
     /* barra presa à base (Dock): a altura sai das mesmas peças que a montam, sem a área segura */
     --spacing-dock-top: 1.75rem; /* acima dos botões */
     --spacing-dock-base: 0.875rem; /* abaixo dos botões, antes da área segura */
@@ -343,6 +345,20 @@
     width: 100%;
     max-width: var(--container-page);
     padding-inline: var(--spacing-gutter);
+}
+
+/*
+ * tela do título no computador: pôster | texto | ações em cima e logos embaixo. A primeira linha
+ * tem a altura da primeira linha do título, e as ações nunca se movem. Sem pôster, a coluna dele
+ * some (auto).
+ */
+@utility title-layout {
+    @variant desktop {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-rows: var(--spacing-title-line) auto auto;
+        align-items: start;
+    }
 }
 
 /* recorta o título durante a troca, sem cortar acentos e descendentes */

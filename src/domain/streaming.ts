@@ -2,14 +2,36 @@
 export const STREAMING_SERVICES = [
     { id: "netflix", name: "Netflix", tmdbId: 8 },
     { id: "max", name: "Max", tmdbId: 1899 },
-    { id: "prime-video", name: "Prime Video", tmdbId: 119 },
-    { id: "disney-plus", name: "Disney+", tmdbId: 337 },
-    { id: "globoplay", name: "Globoplay", tmdbId: 307 },
+    {
+        id: "prime-video",
+        name: "Prime Video",
+        tmdbId: 119,
+    },
+    {
+        id: "disney-plus",
+        name: "Disney+",
+        tmdbId: 337,
+    },
+    {
+        id: "globoplay",
+        name: "Globoplay",
+        tmdbId: 307,
+    },
 ] as const;
 
 export type StreamingService = (typeof STREAMING_SERVICES)[number];
 
 export type Streaming = StreamingService["id"];
+
+// Logo de cada streaming no TMDB (logo_path de /watch/providers, buscado uma vez). Fora da lista
+// acima para não entrar no JS da home, que só usa os ids.
+export const STREAMING_LOGOS: Record<Streaming, string> = {
+    netflix: "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+    max: "/skypuy7SXuugIQeYg0IglmzoKaS.png",
+    "prime-video": "/gMZdpavHmxFNnLpMHwVxfqeux2g.png",
+    "disney-plus": "/5eZ872CghnHFLB1j8grszbrx0dx.png",
+    globoplay: "/9A6Oxd3F7iXm7mds7CxYOBicojs.png",
+};
 
 export function isStreaming(value: string): value is Streaming {
     return STREAMING_SERVICES.some((s) => s.id === value);

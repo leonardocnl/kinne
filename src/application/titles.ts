@@ -12,6 +12,7 @@ export type CatalogEntry = {
     tagline: string | null;
     synopsis: string | null;
     backdropImagePath: string | null;
+    posterImagePath: string | null;
     // largura do original no TMDB, para o srcset oferecer o original com o tamanho certo
     backdropWidth: number | null;
     trailerYoutubeKey: string | null;

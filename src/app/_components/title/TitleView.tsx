@@ -14,12 +14,14 @@ import { showToast } from "../toast";
 import { Button, ButtonLink } from "../ui/Button";
 import { cx } from "../ui/cx";
 import { Dock } from "../ui/Dock";
-import { Availability } from "../ui/Availability";
+import { AvailabilityLogos } from "../ui/AvailabilityLogos";
 import { Fact, Facts } from "../ui/Facts";
 import { Frame, FrameImage } from "../ui/Frame";
 import { BackIcon, CheckIcon, DiceIcon, PlayIcon } from "../ui/icons";
 import { Score } from "../ui/Score";
 import { TextLink } from "../ui/TextLink";
+import { TmdbImage } from "../ui/TmdbImage";
+import { largePosterSources, TITLE_POSTER_SIZES } from "../ui/tmdb-sources";
 import { goToTitle, RECOMMENDATION_SOURCE, useOrigin } from "./origin";
 import { useFilteredDraw } from "./useFilteredDraw";
 import { useSurprise } from "./useSurprise";
@@ -185,15 +187,27 @@ export function TitleView({ title, daily }: TitleViewProps) {
                 <Score value={title.score} />
             </Frame>
 
-            {/* no computador, os botões ficam à direita, na altura da primeira linha do título, e
-                o texto vai até eles: o tamanho da sinopse não os move (C10) */}
-            <div className="pt-2 desktop:flex desktop:items-start desktop:gap-12 desktop:pt-3.5">
-                <div className="flex min-w-0 flex-col desktop:flex-1 desktop:gap-3.5">
+            {/* no computador: pôster | texto | ações e, abaixo delas, onde assistir. As ações
+                ficam na altura da primeira linha do título e o texto vai até elas: nem a sinopse
+                nem os logos as movem (C10). No celular: logos, título e texto; ações no Dock */}
+            <div className="title-layout pt-2 max-desktop:flex max-desktop:flex-col desktop:pt-3.5">
+                {title.posterImagePath && (
+                    // só no computador; lazy e escondido, o celular nem baixa
+                    <TmdbImage
+                        sources={largePosterSources(title.posterImagePath)}
+                        sizes={TITLE_POSTER_SIZES}
+                        className="hidden aspect-2/3 w-title-poster desktop:col-start-1 desktop:row-span-3 desktop:row-start-1 desktop:mr-12 desktop:block"
+                    />
+                )}
+                {/* onde assistir é a informação principal: no celular, antes do título */}
+                <AvailabilityLogos
+                    streamings={title.streamings}
+                    className="max-desktop:mb-4 desktop:col-start-3 desktop:row-start-2 desktop:mt-6"
+                />
+                <div className="flex min-w-0 flex-col desktop:col-start-2 desktop:row-span-3 desktop:row-start-1 desktop:mr-12 desktop:gap-3.5">
                     <h1 className="pb-1 font-display text-title font-medium text-balance max-desktop:mb-3 desktop:text-wrap">
                         {title.title}
                     </h1>
-                    {/* onde assistir é a informação principal: logo abaixo do título */}
-                    <Availability streamings={title.streamings} className="max-desktop:mb-4" />
                     {title.tagline && (
                         <p className="max-w-measure text-tagline text-balance text-paper max-desktop:mb-5">
                             {title.tagline}
@@ -216,7 +230,7 @@ export function TitleView({ title, daily }: TitleViewProps) {
 
                 <Dock
                     tall={done}
-                    className="desktop:flex desktop:h-title-line desktop:shrink-0 desktop:items-center"
+                    className="desktop:col-start-3 desktop:row-start-1 desktop:flex desktop:h-title-line desktop:items-center desktop:justify-end"
                 >
                     {done ? (
                         // US005 C1: no lugar e na altura da fileira de botões
