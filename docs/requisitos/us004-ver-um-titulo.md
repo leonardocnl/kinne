@@ -21,19 +21,19 @@ Eu, como visitante, quero ver um título por vez com as informações que me aju
 **Dado** que cheguei à tela do título pela indicação do dia, pelos filtros, por "Me surpreenda" ou por um link  
 **Então** o sistema exibe os seguintes campos:
 
-| Campo         | Tipo   | Descrição                                                                                                       | Exemplo                                                   |
-| ------------- | ------ | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| Imagem        | Imagem | Imagem larga, cantos retos                                                                                      | Cena de "Corra!"                                          |
-| Nota TMDB     | Número | Sobre a imagem, no canto inferior direito, oposto ao trailer; grande, em branco, sem a cor de destaque (RNE006) | "7,6 TMDB"                                                |
-| Título        | Texto  | Nome em português                                                                                               | "Corra!"                                                  |
-| Chamada       | Texto  | Tagline em português, em branco; sem tagline, a linha não aparece (RNE004)                                      | "Um fim de semana que esconde algo errado."               |
-| Sinopse       | Texto  | Sinopse completa em português (RNE004, C9)                                                                      | "Chris, um fotógrafo, vai passar o fim de semana…"        |
-| Gênero        | Texto  | Gênero principal                                                                                                | "Suspense"                                                |
-| Ano           | Número | Lançamento ou estreia                                                                                           | "2017"                                                    |
-| Duração       | Texto  | Total; por episódio em séries                                                                                   | "1h 44min"                                                |
-| Disponível em | Texto  | Streamings do título, na ordem fixa; some sem streaming                                                         | "Netflix e Max"                                           |
-| Direção       | Texto  | "Direção de X", "X e Y" ou "X, Y e Z"; some sem dado                                                            | "Direção de Jordan Peele"                                 |
-| Elenco        | Texto  | "Com A, B e C": os três primeiros, na ordem dos créditos; some sem dado                                         | "Com Daniel Kaluuya, Allison Williams e Bradley Whitford" |
+| Campo         | Tipo   | Descrição                                                                                                                                                    | Exemplo                                                   |
+| ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| Imagem        | Imagem | Imagem larga, cantos retos                                                                                                                                   | Cena de "Corra!"                                          |
+| Nota TMDB     | Número | Sobre a imagem, no canto inferior direito, oposto ao trailer; grande, em branco, sem a cor de destaque (RNE006)                                              | "7,6 TMDB"                                                |
+| Título        | Texto  | Nome em português                                                                                                                                            | "Corra!"                                                  |
+| Onde assistir | Texto  | Logo abaixo do título, antes da chamada e da sinopse: rótulo "Onde assistir" e os streamings do título, na ordem fixa, separados por fio; some sem streaming | "Onde assistir · Netflix \| Max"                          |
+| Chamada       | Texto  | Tagline em português, em branco; sem tagline, a linha não aparece (RNE004)                                                                                   | "Um fim de semana que esconde algo errado."               |
+| Sinopse       | Texto  | Sinopse completa em português (RNE004, C9)                                                                                                                   | "Chris, um fotógrafo, vai passar o fim de semana…"        |
+| Gênero        | Texto  | Gênero principal                                                                                                                                             | "Suspense"                                                |
+| Ano           | Número | Lançamento ou estreia                                                                                                                                        | "2017"                                                    |
+| Duração       | Texto  | Total; por episódio em séries                                                                                                                                | "1h 44min"                                                |
+| Direção       | Texto  | "Direção de X", "X e Y" ou "X, Y e Z"; some sem dado                                                                                                         | "Direção de Jordan Peele"                                 |
+| Elenco        | Texto  | "Com A, B e C": os três primeiros, na ordem dos créditos; some sem dado                                                                                      | "Com Daniel Kaluuya, Allison Williams e Bradley Whitford" |
 
 **E** exibe, numa mesma linha e nesta ordem, três botões em forma de pílula: "Vou assistir" (principal, com a cor de destaque), "Já vi" (secundário, com ícone de visto) e "Outra opção" (só com ícone de dado, em círculo)  
 **E** o botão do dado tem o nome "Outra opção" para leitores de tela e na dica ao passar o mouse  

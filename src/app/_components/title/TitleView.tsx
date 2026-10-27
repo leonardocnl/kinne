@@ -14,6 +14,7 @@ import { showToast } from "../toast";
 import { Button, ButtonLink } from "../ui/Button";
 import { cx } from "../ui/cx";
 import { Dock } from "../ui/Dock";
+import { Availability } from "../ui/Availability";
 import { Fact, Facts } from "../ui/Facts";
 import { Frame, FrameImage } from "../ui/Frame";
 import { BackIcon, CheckIcon, DiceIcon, PlayIcon } from "../ui/icons";
@@ -191,6 +192,8 @@ export function TitleView({ title, daily }: TitleViewProps) {
                     <h1 className="pb-1 font-display text-title font-medium text-balance max-desktop:mb-3 desktop:text-wrap">
                         {title.title}
                     </h1>
+                    {/* onde assistir é a informação principal: logo abaixo do título */}
+                    <Availability streamings={title.streamings} className="max-desktop:mb-4" />
                     {title.tagline && (
                         <p className="max-w-measure text-tagline text-balance text-paper max-desktop:mb-5">
                             {title.tagline}
@@ -202,17 +205,9 @@ export function TitleView({ title, daily }: TitleViewProps) {
                             (text) => text && <Fact key={text}>{text}</Fact>,
                         )}
                     </Facts>
-                    {title.streamings.length > 0 && (
-                        <p className="text-data text-faint max-desktop:mt-2">
-                            Disponível em{" "}
-                            <b className="font-medium text-paper">
-                                {streamingList(title.streamings)}
-                            </b>
-                        </p>
-                    )}
                     {/* direção e elenco: só texto; sem crédito, a linha não aparece */}
                     {(title.direction || title.cast) && (
-                        <div className="flex max-w-measure flex-col text-data text-soft max-desktop:mt-2">
+                        <div className="flex max-w-measure flex-col text-small text-soft max-desktop:mt-2">
                             {title.direction && <p>{title.direction}</p>}
                             {title.cast && <p>{title.cast}</p>}
                         </div>
