@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { nextRoundLabel, roundEndHeading } from "@/domain/rounds";
+import { streamingList } from "@/domain/streaming";
 import { filteredRun, filtersOnArrival, shownTitles } from "@/infrastructure/browser-storage";
 import type { TitleScreen } from "../../_data/title";
 import { screenMain } from "../layout";
@@ -100,7 +101,7 @@ export function TitleView({ title, daily }: TitleViewProps) {
     }
 
     const anotherLabel = origin === "dia" ? "Próxima de hoje" : "Outra opção";
-    const where = title.streaming && `${title.streaming.preposition} ${title.streaming.name}`;
+    const where = title.streamings.length > 0 && streamingList(title.streamings);
 
     if (filtered.end) {
         // US004 C3: acabou a rodada de 10; há a seguinte ou acabaram todas
@@ -201,10 +202,12 @@ export function TitleView({ title, daily }: TitleViewProps) {
                             (text) => text && <Fact key={text}>{text}</Fact>,
                         )}
                     </Facts>
-                    {title.streaming && (
+                    {title.streamings.length > 0 && (
                         <p className="text-data text-faint max-desktop:mt-2">
-                            Disponível {title.streaming.preposition}{" "}
-                            <b className="font-medium text-paper">{title.streaming.name}</b>
+                            Disponível em{" "}
+                            <b className="font-medium text-paper">
+                                {streamingList(title.streamings)}
+                            </b>
                         </p>
                     )}
                     {/* direção e elenco: só texto; sem crédito, a linha não aparece */}
@@ -225,7 +228,7 @@ export function TitleView({ title, daily }: TitleViewProps) {
                         <div className="flex items-center gap-4.5 max-desktop:flex-col max-desktop:items-stretch max-desktop:gap-dock-gap">
                             <p className="flex items-center gap-2.5 font-display text-confirm font-medium whitespace-nowrap">
                                 <CheckIcon />
-                                Combinado.{where && ` Está ${where}.`}
+                                Combinado.{where && ` Está em ${where}.`}
                             </p>
                             <ButtonLink ref={homeRef} variant="primary" href="/">
                                 Voltar ao início

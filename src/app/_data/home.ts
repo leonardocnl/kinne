@@ -5,7 +5,7 @@ import { formatRuntime } from "@/domain/catalog";
 import { pickPhrase, rotationSeconds } from "@/domain/daily-picks";
 import type { Day } from "@/domain/day";
 import { GENRE_LABELS } from "@/domain/genre";
-import { primaryStreaming, type StreamingService } from "@/domain/streaming";
+import { availableStreamings, type StreamingService } from "@/domain/streaming";
 import { createDb } from "@/infrastructure/db/client";
 import { DrizzleDailyPicksRepository } from "@/infrastructure/db/daily-picks-repository";
 import { CATALOG_TAG, LISTS_TAG } from "@/infrastructure/revalidation";
@@ -19,7 +19,7 @@ export type HomePick = {
     seconds: number;
     // gênero, ano e duração, nesta ordem, sem os que faltam
     facts: string[];
-    streaming: StreamingService | null;
+    streamings: StreamingService[];
     backdropImagePath: string | null;
     backdropWidth: number | null;
 };
@@ -50,7 +50,7 @@ function toHomePick(p: DailyPickTitle): HomePick {
             p.releaseYear?.toString(),
             p.runtimeMinutes ? formatRuntime(p.runtimeMinutes, p.type) : undefined,
         ].filter((fact) => fact !== undefined),
-        streaming: primaryStreaming(p.streamingTmdbIds),
+        streamings: availableStreamings(p.streamingTmdbIds),
         backdropImagePath: p.backdropImagePath,
         backdropWidth: p.backdropWidth,
     };

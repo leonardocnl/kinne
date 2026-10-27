@@ -31,7 +31,7 @@ Eu, como visitante, quero ver um título por vez com as informações que me aju
 | Gênero        | Texto  | Gênero principal                                                                                                | "Suspense"                                                |
 | Ano           | Número | Lançamento ou estreia                                                                                           | "2017"                                                    |
 | Duração       | Texto  | Total; por episódio em séries                                                                                   | "1h 44min"                                                |
-| Disponível em | Texto  | Streaming do título                                                                                             | "Prime Video"                                             |
+| Disponível em | Texto  | Streamings do título, na ordem fixa; some sem streaming                                                         | "Netflix e Max"                                           |
 | Direção       | Texto  | "Direção de X", "X e Y" ou "X, Y e Z"; some sem dado                                                            | "Direção de Jordan Peele"                                 |
 | Elenco        | Texto  | "Com A, B e C": os três primeiros, na ordem dos créditos; some sem dado                                         | "Com Daniel Kaluuya, Allison Williams e Bradley Whitford" |
 

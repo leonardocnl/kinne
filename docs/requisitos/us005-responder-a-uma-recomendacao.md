@@ -19,7 +19,7 @@ Eu, como visitante, quero dizer se vou assistir ou se já vi, para que o Kinne c
 
 **Dado** que estou na tela de um título  
 **Quando** aciono "Vou assistir"  
-**Então** os botões dão lugar à mensagem "Combinado. Está na [streaming].", como "Combinado. Está na Netflix."  
+**Então** os botões dão lugar à mensagem "Combinado. Está em [streamings].", como "Combinado. Está em Netflix e Max."  
 **E** o sistema exibe a ação "Voltar ao início"  
 **E** não exibe botão para abrir o streaming
 
