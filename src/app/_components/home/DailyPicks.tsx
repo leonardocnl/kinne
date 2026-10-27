@@ -9,6 +9,7 @@ import {
     useState,
     useSyncExternalStore,
 } from "react";
+import { streamingList } from "@/domain/streaming";
 import type { HomePick } from "../../_data/home";
 import { Button } from "../ui/Button";
 import { cx } from "../ui/cx";
@@ -194,10 +195,12 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
                             {pick.facts.map((text) => (
                                 <Fact key={text}>{text}</Fact>
                             ))}
-                            {pick.streaming && (
+                            {pick.streamings.length > 0 && (
                                 <Fact className="max-desktop:basis-full max-desktop:border-l-0 max-desktop:pl-0">
-                                    Disponível {pick.streaming.preposition}{" "}
-                                    <b className="font-medium text-paper">{pick.streaming.name}</b>
+                                    Disponível em{" "}
+                                    <b className="font-medium text-paper">
+                                        {streamingList(pick.streamings)}
+                                    </b>
                                 </Fact>
                             )}
                         </Facts>

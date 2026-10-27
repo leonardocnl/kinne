@@ -23,14 +23,14 @@ Eu, como visitante, quero ver ao abrir o app cinco indicações do dia, uma por 
 **E** exibe o quadro com a capa da primeira indicação, o contador "1 de 5", o botão de pausar e a barra de progresso  
 **E** exibe, abaixo do quadro, os seguintes campos da indicação em destaque:
 
-| Campo         | Tipo   | Descrição                     | Exemplo                                     |
-| ------------- | ------ | ----------------------------- | ------------------------------------------- |
-| Título        | Texto  | Nome em português             | "Corra!"                                    |
-| Frase         | Texto  | Tagline (RNE003)              | "Um fim de semana que esconde algo errado." |
-| Gênero        | Texto  | Gênero da indicação           | "Suspense"                                  |
-| Ano           | Número | Lançamento ou estreia         | "2017"                                      |
-| Duração       | Texto  | Total; por episódio em séries | "1h 44min"                                  |
-| Disponível em | Texto  | Streaming do título           | "Disponível no Prime Video"                 |
+| Campo         | Tipo   | Descrição                           | Exemplo                                     |
+| ------------- | ------ | ----------------------------------- | ------------------------------------------- |
+| Título        | Texto  | Nome em português                   | "Corra!"                                    |
+| Frase         | Texto  | Tagline (RNE003)                    | "Um fim de semana que esconde algo errado." |
+| Gênero        | Texto  | Gênero da indicação                 | "Suspense"                                  |
+| Ano           | Número | Lançamento ou estreia               | "2017"                                      |
+| Duração       | Texto  | Total; por episódio em séries       | "1h 44min"                                  |
+| Disponível em | Texto  | Streamings do título, na ordem fixa | "Disponível em Netflix e Max"               |
 
 **E** exibe o link "Ver este título →"  
 **E** exibe as ações "Escolher agora" (principal) e "Me surpreenda", lado a lado  
