@@ -8,7 +8,7 @@ export default function TitleNotFound() {
         <StateScreen
             heading="Não encontramos este título"
             text="Ele pode ter saído do catálogo, ou o endereço está incompleto."
-            art={<AsciiArt text="404" className="absolute inset-0 size-full" />}
+            art={<AsciiArt text="404" tone="signal" drift className="absolute inset-0 size-full" />}
             action={
                 <ButtonLink variant="primary" href="/">
                     Voltar ao início

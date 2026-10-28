@@ -33,7 +33,7 @@ describe("telas 404", () => {
         // o 404 da raiz fica sem: o que ele importa entra no JS de toda página (orçamento)
         for (const file of ["titulo/[slug]/not-found.tsx"])
             expect(readFileSync(join(import.meta.dirname, "../..", file), "utf8")).toContain(
-                '<AsciiArt text="404"',
+                '<AsciiArt text="404" tone="signal"',
             );
     });
 });
