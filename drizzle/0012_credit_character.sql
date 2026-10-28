@@ -1,0 +1,1 @@
+ALTER TABLE "title_credits" ADD COLUMN "character_name" text;
