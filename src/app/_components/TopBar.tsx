@@ -25,7 +25,8 @@ export function TopBar({ back, floating }: TopBarProps) {
                     variant={floating ? "float" : "round"}
                     href="/"
                     aria-label="Voltar ao início"
-                    className="max-desktop:hidden"
+                    // flutuando, o mesmo recuo do "Trailer" (left-4) dentro da imagem
+                    className={cx("max-desktop:hidden", floating && "ml-4")}
                 >
                     <BackIcon />
                 </ButtonLink>
