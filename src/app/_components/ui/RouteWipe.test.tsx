@@ -20,7 +20,7 @@ describe("RouteWipe", () => {
         expect(html).toMatch(
             /<span aria-hidden="true" class="[^"]*hidden desktop:motion-safe:block"/,
         );
-        expect(html).not.toContain("bg-ink");
+        expect(html).not.toContain("backdrop-blur-glass");
     });
 
     it("cobre e descobre em cerca de 0,7 s cada", () => {
@@ -46,8 +46,9 @@ describe("ColorWipe", () => {
         expect(html).not.toMatch(/<(a|button|input)\b|tabindex/);
     });
 
-    it("10 faixas em ink, com fios do signal ao signal-deep (sem arco-íris)", () => {
-        expect(html.match(/bg-ink/g)).toHaveLength(10);
+    it("10 faixas de vidro, verticais, com fios do signal ao signal-deep (sem arco-íris)", () => {
+        expect(html.match(/backdrop-blur-glass/g)).toHaveLength(10);
+        expect(html).toContain("flex-row"); // vertical: colunas que descem do topo
         const strokes = [...html.matchAll(/background-color:([^;"]+)/g)].map((m) => m[1]);
         expect(strokes).toHaveLength(20);
         for (const s of strokes)

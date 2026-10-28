@@ -3,7 +3,7 @@
 import { domAnimation, LazyMotion, type Transition } from "motion/react";
 import * as m from "motion/react-m";
 
-// Adaptado do ColorWipePageTransition do Great UI (créditos no fim do arquivo): faixas em `ink`
+// Adaptado do ColorWipePageTransition do Great UI (créditos no fim do arquivo): faixas de vidro
 // com um fio na frente e outro atrás, do `signal` ao `signal-deep` (sem arco-íris), e a troca
 // guiada pelo fim das animações em vez de timers. Fica fora do JS inicial: o RouteWipe baixa este
 // arquivo (e o motion) depois de a página abrir, só no computador.
@@ -18,6 +18,10 @@ export type WipeOptions = {
     direction?: WipeDirection;
     exitOpposite?: boolean;
 };
+
+// faixa de vidro, o da navbar com o desfoque do painel: a tela por trás some borrada e escurecida
+const pane =
+    "bg-nav bg-linear-to-b from-sheen to-transparent backdrop-blur-glass backdrop-saturate-glass backdrop-brightness-45";
 
 /** Tempo de cobrir (e o de descobrir) a tela, em segundos. */
 export const wipeSeconds = (duration: number, columns: number, staggerDelay: number) =>
@@ -40,7 +44,7 @@ export function ColorWipe({
     duration = 0.45,
     staggerDelay = 0.03,
     ease = [0.85, 0, 0.15, 1],
-    direction = "left",
+    direction = "top",
     exitOpposite = false,
 }: WipeOptions & { covering: boolean; onCovered: () => void; onUncovered: () => void }) {
     const isVertical = direction === "top" || direction === "bottom";
@@ -76,7 +80,7 @@ export function ColorWipe({
                             onAnimationComplete={
                                 last ? () => (covering ? onCovered() : onUncovered()) : undefined
                             }
-                            className="pointer-events-auto relative flex flex-1 items-center bg-ink"
+                            className={`pointer-events-auto relative flex flex-1 items-center border-line ${pane} ${isVertical ? "border-x" : "border-y"}`}
                             style={
                                 isVertical
                                     ? { width: size, height: "100%", marginLeft: "-0.2vw" }
