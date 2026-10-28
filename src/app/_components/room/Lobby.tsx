@@ -121,8 +121,8 @@ export function Lobby({ view, refresh, onLeave }: LobbyProps) {
     return (
         // uma coluna, como a ficha da tela do título: o convite primeiro (o código grande e o
         // QR code), quem está na sala, o que você topa e, no fim, as ações. Sem caixas nem fios
-        <main className="grid gap-12 pt-2 desktop:min-h-dvh desktop:grid-cols-12 desktop:content-start desktop:gap-x-16 desktop:pt-nav desktop:pb-12">
-            <div className="flex min-w-0 flex-col gap-10 desktop:col-span-7">
+        <main className="grid gap-12 pt-2 desktop:min-h-dvh desktop:grid-cols-12 desktop:content-start desktop:items-start desktop:gap-x-16 desktop:pt-nav desktop:pb-12">
+            <div className="flex min-w-0 flex-col gap-10 desktop:col-span-8">
                 <div className="flex flex-col gap-3.5">
                     <h1 className="pb-1 font-display text-title font-medium text-balance">
                         Sala de grupo
@@ -263,50 +263,50 @@ export function Lobby({ view, refresh, onLeave }: LobbyProps) {
                         </p>
                     )}
                 </div>
-            </div>
-            {/* as ações, no fim da coluna da esquerda */}
-            <div className="flex flex-col gap-3 desktop:col-span-7 desktop:col-start-1 desktop:row-start-2">
-                <div className="flex flex-wrap items-center gap-2.5">
-                    {/* um amarelo por tela: quem criou tem "Ver as opções"; as outras, "Pronto" */}
-                    <Button
-                        variant={view.isCreator ? "quiet" : "primary"}
-                        aria-pressed={ready}
-                        onClick={() => change("ready", !ready)}
-                        className="max-desktop:min-w-0 max-desktop:flex-1 desktop:min-w-42"
-                    >
-                        {ready ? "Pronto ✓" : "Pronto"}
-                    </Button>
-                    {view.isCreator && (
+                {/* as ações, logo depois das escolhas */}
+                <div className="flex flex-col gap-3">
+                    <div className="flex flex-wrap items-center gap-2.5">
+                        {/* um amarelo por tela: quem criou tem "Ver as opções"; as outras, "Pronto" */}
                         <Button
-                            variant="primary"
-                            disabled={!view.canStart || starting}
-                            aria-busy={starting}
-                            onClick={start}
+                            variant={view.isCreator ? "quiet" : "primary"}
+                            aria-pressed={ready}
+                            onClick={() => change("ready", !ready)}
                             className="max-desktop:min-w-0 max-desktop:flex-1 desktop:min-w-42"
                         >
-                            Ver as opções
+                            {ready ? "Pronto ✓" : "Pronto"}
                         </Button>
+                        {view.isCreator && (
+                            <Button
+                                variant="primary"
+                                disabled={!view.canStart || starting}
+                                aria-busy={starting}
+                                onClick={start}
+                                className="max-desktop:min-w-0 max-desktop:flex-1 desktop:min-w-42"
+                            >
+                                Ver as opções
+                            </Button>
+                        )}
+                    </div>
+                    {view.isCreator && !view.canStart && (
+                        <p className="text-data text-soft">
+                            Precisa de pelo menos duas pessoas prontas.
+                        </p>
                     )}
+                    {message && (
+                        <p role="status" className="text-data text-soft">
+                            {message}
+                        </p>
+                    )}
+                    <TextLink onClick={onLeave}>Sair da sala</TextLink>
                 </div>
-                {view.isCreator && !view.canStart && (
-                    <p className="text-data text-soft">
-                        Precisa de pelo menos duas pessoas prontas.
-                    </p>
-                )}
-                {message && (
-                    <p role="status" className="text-data text-soft">
-                        {message}
-                    </p>
-                )}
-                <TextLink onClick={onLeave}>Sair da sala</TextLink>
             </div>
-            {/* à direita, o QR code grande e, embaixo dele, quem já entrou */}
-            <div className="flex flex-col gap-6 desktop:col-span-5 desktop:col-start-8 desktop:row-span-2 desktop:row-start-1">
+            {/* à direita, o QR code e, embaixo dele, quem já entrou */}
+            <div className="flex w-full flex-col gap-6 desktop:col-span-4 desktop:col-start-9 desktop:max-w-88 desktop:justify-self-end">
                 {code && origin && (
                     <QrCode
                         text={`${origin}/sala/${code}`}
                         label="QR code para entrar na sala"
-                        className="aspect-square w-full max-desktop:max-w-80"
+                        className="aspect-square w-full max-desktop:max-w-72"
                     />
                 )}
                 <People view={view} />
