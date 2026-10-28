@@ -95,8 +95,6 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
     const titleId = useId();
     const dialogRef = useRef<HTMLDialogElement>(null);
     const panelRef = useRef<HTMLDivElement>(null);
-    const scrollRef = useRef<HTMLDivElement>(null);
-    const [more, setMore] = useState(false);
     const [stored, setStored] = useState(savedFilters);
     const status = useAccountStatus();
     const account = status.state === "account" ? status.account : null;
@@ -195,22 +193,6 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
         return matchTitles(candidates, filters, watched, personTitleSet).length;
     }, [candidates, filters, watched, personId, personTitleSet]);
 
-    // sobra campo abaixo da área visível? A folga de 1 cobre o arredondamento do zoom
-    function measureScroll() {
-        const el = scrollRef.current;
-        if (el) setMore(el.scrollTop + el.clientHeight < el.scrollHeight - 1);
-    }
-
-    // a área muda de tamanho com a janela, e o conteúdo com os campos (a duração aparece e some)
-    useEffect(() => {
-        const el = scrollRef.current;
-        if (!el) return;
-        const observer = new ResizeObserver(measureScroll);
-        observer.observe(el);
-        for (const child of el.children) observer.observe(child);
-        return () => observer.disconnect();
-    }, [filters.type]);
-
     function update(next: Filters) {
         setStored(next);
         setDrawFailed(false);
@@ -299,11 +281,7 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
 
                 {/* as margens negativas levam a rolagem até a borda, sem cortar o contorno de foco */}
                 <div className="relative -mx-5 flex min-h-0 flex-1 flex-col max-desktop:-mx-4">
-                    <div
-                        ref={scrollRef}
-                        onScroll={measureScroll}
-                        className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto px-5 pb-1 max-desktop:px-4"
-                    >
+                    <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto px-5 pb-1 max-desktop:px-4">
                         {/* sentimento é só de quem tem conta; sem o login na interface, some para o visitante */}
                         {(account || SHOW_SIGN_IN) && (
                             <div className={section}>
@@ -500,17 +478,9 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
                             />
                         )}
                     </div>
-                    {/* há mais campos abaixo: degradê na base, que some no fim da rolagem */}
-                    <div
-                        aria-hidden="true"
-                        className={cx(
-                            "pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-scroll-hint transition-opacity duration-fade motion-reduce:transition-none",
-                            !more && "opacity-0",
-                        )}
-                    />
                 </div>
 
-                <div className="-mx-5 -mb-5 flex flex-col gap-3 bg-panel-foot px-5 pb-5 max-desktop:-mx-4 max-desktop:px-4 max-desktop:pb-safe">
+                <div className="-mx-5 -mb-5 flex flex-col gap-3 px-5 pb-5 max-desktop:-mx-4 max-desktop:px-4 max-desktop:pb-safe">
                     <div className="flex items-center gap-3.5 border-t border-line px-1 pt-4">
                         <p
                             aria-live="polite"

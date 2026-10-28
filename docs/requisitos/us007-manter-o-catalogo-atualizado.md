@@ -26,7 +26,7 @@ Eu, como equipe, quero que o catálogo seja atualizado todos os dias a partir do
 **Dado** que a atualização está em execução  
 **Quando** um título vindo do TMDB é avaliado  
 **Então** o sistema grava todos os títulos por assinatura nos streamings participantes (RNG002), validados  
-**E** grava os gêneros, as palavras-chave de tema, a disponibilidade por streaming, a classificação indicativa e os créditos (diretores e até 10 do elenco, na ordem; só id do TMDB e nome)  
+**E** grava os gêneros, as palavras-chave de tema, a disponibilidade por streaming, a classificação indicativa e os créditos (diretores e até 28 do elenco, na ordem, com o personagem; da pessoa, só id do TMDB e nome)  
 **E** recalcula `is_recommendable`, a camada que as recomendações usam (RNG001)
 
 ### C3: Registrar a atualização

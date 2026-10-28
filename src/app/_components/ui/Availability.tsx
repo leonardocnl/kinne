@@ -11,8 +11,8 @@ export function Availability({
 }) {
     if (streamings.length === 0) return null;
     return (
-        <div className={cx("flex flex-col gap-0.5", className)}>
-            <p className="text-caption text-soft">Onde assistir</p>
+        <div className={cx("flex flex-col gap-1", className)}>
+            <p className="text-small text-soft">Onde assistir</p>
             {/* mesmo fio do Facts entre os nomes. Todo nome tem o fio à esquerda e a lista recua
                 fio + respiro (o fio e o respiro somam 3.75) para escondê-lo: quando quebra no celular, a
                 linha nova começa sem fio */}

@@ -221,6 +221,8 @@ export const titleCredits = pgTable(
             .references(() => people.id),
         role: text("role").notNull(),
         creditOrder: smallint("credit_order").notNull(),
+        // personagem, só no elenco; null quando o TMDB não informa (US004 C12)
+        characterName: text("character_name"),
     },
     (t) => [
         check(

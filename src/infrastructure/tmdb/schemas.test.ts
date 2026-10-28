@@ -99,6 +99,28 @@ describe("movieDetailsSchema", () => {
         expect(r.data?.credits.cast.map((c) => c.id)).toEqual([12]);
     });
 
+    it("US004 C12: personagem sanitizado; vazio, ausente, longo ou de outro tipo vira null", () => {
+        const r = parse({
+            credits: {
+                cast: [
+                    { id: 1, name: "A", order: 0, character: "Andy <b>Dufresne</b>\u200b" },
+                    { id: 2, name: "B", order: 1, character: "" },
+                    { id: 3, name: "C", order: 2 },
+                    { id: 4, name: "D", order: 3, character: "a".repeat(201) },
+                    { id: 5, name: "E", order: 4, character: 42 },
+                ],
+                crew: [],
+            },
+        });
+        expect(r.data?.credits.cast.map((c) => c.character)).toEqual([
+            "Andy <b>Dufresne</b>",
+            null,
+            null,
+            null,
+            null,
+        ]);
+    });
+
     it("A5: título obrigatório acima de 300 ou vazio recusa o título", () => {
         expect(parse({ title: "a".repeat(301) }).success).toBe(false);
         expect(parse({ title: "​" }).success).toBe(false);

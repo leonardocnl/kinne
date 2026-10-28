@@ -35,6 +35,14 @@ export function posterSources(path: string): ImageSources {
     return { src: url("w92", path), srcSet: `${url("w92", path)} 1x, ${url("w185", path)} 2x` };
 }
 
+/** Pôster grande (tela do título no computador): w342 e w500 bastam até telas 2x. */
+export function largePosterSources(path: string): ImageSources {
+    return {
+        src: url("w342", path),
+        srcSet: `${url("w342", path)} 342w, ${url("w500", path)} 500w`,
+    };
+}
+
 // Medidas em rem (16 por rem), como o breakpoint do globals.css: 53.8125rem é o desktop (861).
 const DESKTOP = "(min-width: 53.8125rem)";
 
@@ -43,3 +51,6 @@ export const FRAME_SIZES = `${DESKTOP} calc(100vw - 5rem), 100vw`;
 
 // Miniatura da faixa "Hoje": um quinto da página no computador, basis-37.5 no celular.
 export const THUMBNAIL_SIZES = `${DESKTOP} 20vw, 9.375rem`;
+
+// Pôster da tela do título: --spacing-title-poster. No celular ele nem aparece.
+export const TITLE_POSTER_SIZES = "14rem";

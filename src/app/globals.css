@@ -89,6 +89,8 @@
     --spacing-digit: 0.58em; /* célula de um algarismo na Darker Grotesque */
     /* painel de filtros no computador: cabe na capa e na janela, com folga de 1rem */
     --spacing-panel-height: min(100%, 100dvh - 2rem);
+    /* painel do elenco no computador: até 80% da janela, a lista rola por dentro */
+    --spacing-cast-height: 80dvh;
     --spacing-skeleton-title: clamp(2.4rem, 4.2vw, 3.8rem);
     /* altura da primeira linha do título: os botões da tela do título se alinham a ela */
     --spacing-title-line: calc(var(--text-title) * var(--text-title--line-height));
@@ -107,6 +109,7 @@
     --spacing-poster-lg-width: calc(var(--spacing-poster-lg) * 2 / 3);
     --spacing-result-lg: calc(var(--spacing-poster-lg) + 1rem);
     --spacing-result: calc(var(--spacing-poster) + 1rem); /* linha da busca: pôster e respiro */
+    --spacing-title-poster: 14rem; /* pôster da tela do título no computador (2:3) */
     /* barra presa à base (Dock): a altura sai das mesmas peças que a montam, sem a área segura */
     --spacing-dock-top: 1.75rem; /* acima dos botões */
     --spacing-dock-base: 0.875rem; /* abaixo dos botões, antes da área segura */
@@ -147,8 +150,12 @@
     ); /* largura máxima da página: nunca mais larga que um quadro 16:9 da altura da janela */
     --container-navbar: 30rem; /* largura máxima da navbar; no celular ocupa a tela menos as margens */
     --container-measure: 80ch; /* texto corrido */
+    /* sinopse da tela do título: exceção do dono ao limite de 80 (AAA 1.4.8), em 27/10/2026 */
+    --container-synopsis: 100ch;
     /* painel de filtros; não pode se chamar "panel": w-panel acharia antes --spacing-panel */
     --container-filters: 33.125rem;
+    /* painel do elenco, centralizado no computador; a tela menos as margens limita (max-w-full) */
+    --container-cast: 36rem;
 
     /*
      * raios concêntricos: o raio de fora é o raio de dentro mais o respiro entre os dois.
@@ -198,8 +205,6 @@
     --background-image-dock: linear-gradient(rgb(2 2 2 / 0), var(--color-ink) 1.625rem);
     --background-image-skeleton: radial-gradient(120% 90% at 30% 20%, #1a1a1a, #0a0a0a 70%);
     /* base da área que rola nos filtros, quando há mais campos abaixo */
-    --background-image-scroll-hint: linear-gradient(rgb(2 2 2 / 0), var(--color-scrim-strong));
-    --background-image-panel-foot: linear-gradient(rgb(14 14 14 / 0), rgb(14 14 14 / 0.94) 18px);
     /* brilho da aba ativa: signal que sobe do traço na borda de baixo e fica fraco atrás do rótulo
        (4,5:1, exceção da navbar) */
     --background-image-limelight: radial-gradient(
@@ -345,6 +350,19 @@
     padding-inline: var(--spacing-gutter);
 }
 
+/*
+ * tela do título no computador: pôster | texto | ações. A primeira linha tem a altura da primeira
+ * linha do título, e as ações nunca se movem. Sem pôster, a coluna dele some (auto).
+ */
+@utility title-layout {
+    @variant desktop {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-rows: var(--spacing-title-line) auto auto;
+        align-items: start;
+    }
+}
+
 /* recorta o título durante a troca, sem cortar acentos e descendentes */
 @utility clip-title {
     clip-path: inset(-0.16em -0.08em -0.12em -0.08em);
@@ -435,6 +453,11 @@
 
     body {
         @apply bg-ink font-ui text-body text-paper tabular-nums antialiased;
+    }
+
+    /* painel do elenco aberto: a página atrás não rola */
+    html:has(dialog[data-cast]:modal) {
+        overflow: hidden;
     }
 
     /* Dock no celular: espaço embaixo da página, scroll-padding do tamanho da barra e o aviso
