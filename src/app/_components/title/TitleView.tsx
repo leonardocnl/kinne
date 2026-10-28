@@ -14,7 +14,7 @@ import { showToast } from "../toast";
 import { Button, ButtonLink } from "../ui/Button";
 import { cx } from "../ui/cx";
 import { Dock } from "../ui/Dock";
-import { AvailabilityLogos } from "../ui/AvailabilityLogos";
+import { Availability } from "../ui/Availability";
 import { Fact, Facts } from "../ui/Facts";
 import { Frame, FrameImage } from "../ui/Frame";
 import { BackIcon, CheckIcon, DiceIcon, PlayIcon } from "../ui/icons";
@@ -187,9 +187,9 @@ export function TitleView({ title, daily }: TitleViewProps) {
                 <Score value={title.score} />
             </Frame>
 
-            {/* no computador: pôster | texto | ações e, abaixo delas, onde assistir. As ações
-                ficam na altura da primeira linha do título e o texto vai até elas: nem a sinopse
-                nem os logos as movem (C10). No celular: logos, título e texto; ações no Dock */}
+            {/* no computador: pôster | texto | ações. As ações ficam na
+                altura da primeira linha do título e o texto vai até elas: a sinopse não as move
+                (C10). No celular, sem pôster; ações no Dock */}
             <div className="title-layout pt-2 max-desktop:flex max-desktop:flex-col desktop:pt-3.5">
                 {title.posterImagePath && (
                     // só no computador; lazy e escondido, o celular nem baixa
@@ -199,29 +199,30 @@ export function TitleView({ title, daily }: TitleViewProps) {
                         className="hidden aspect-2/3 w-title-poster desktop:col-start-1 desktop:row-span-3 desktop:row-start-1 desktop:mr-12 desktop:block"
                     />
                 )}
-                {/* onde assistir é a informação principal: no celular, antes do título */}
-                <AvailabilityLogos
-                    streamings={title.streamings}
-                    className="max-desktop:mb-4 desktop:col-start-3 desktop:row-start-2 desktop:mt-6"
-                />
+
                 <div className="flex min-w-0 flex-col desktop:col-start-2 desktop:row-span-3 desktop:row-start-1 desktop:mr-12 desktop:gap-3.5">
                     <h1 className="pb-1 font-display text-title font-medium text-balance max-desktop:mb-3 desktop:text-wrap">
                         {title.title}
                     </h1>
+                    {/* onde assistir é a informação principal: logo abaixo do título */}
+                    {/* gênero, ano e duração na mesma linha, ao lado */}
+                    <div className="flex flex-wrap items-end gap-x-10 gap-y-3 max-desktop:mb-5">
+                        <Availability streamings={title.streamings} />
+                        <Facts>
+                            {[genre, ...title.facts].map(
+                                (text) => text && <Fact key={text}>{text}</Fact>,
+                            )}
+                        </Facts>
+                    </div>
                     {title.tagline && (
                         <p className="max-w-measure text-tagline text-balance text-paper max-desktop:mb-5">
                             {title.tagline}
                         </p>
                     )}
                     {title.synopsis && <Synopsis text={title.synopsis} />}
-                    <Facts className="max-desktop:mt-4">
-                        {[genre, ...title.facts].map(
-                            (text) => text && <Fact key={text}>{text}</Fact>,
-                        )}
-                    </Facts>
                     {/* direção e elenco: só texto; sem crédito, a linha não aparece */}
                     {(title.direction || title.cast) && (
-                        <div className="flex max-w-measure flex-col text-small text-soft max-desktop:mt-2">
+                        <div className="flex max-w-measure flex-col text-small text-soft max-desktop:mt-4">
                             {title.direction && <p>{title.direction}</p>}
                             {title.cast && <p>{title.cast}</p>}
                         </div>
@@ -306,7 +307,7 @@ function Synopsis({ text }: { text: string }) {
                 id={id}
                 ref={ref}
                 className={cx(
-                    "max-w-measure text-synopsis text-pretty text-soft",
+                    "max-w-synopsis text-synopsis text-pretty text-soft",
                     !open && "max-desktop:line-clamp-4",
                 )}
             >

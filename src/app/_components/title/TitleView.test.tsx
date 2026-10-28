@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { availableStreamings, STREAMING_LOGOS } from "@/domain/streaming";
+import { availableStreamings } from "@/domain/streaming";
 import type { TitleScreen } from "../../_data/title";
 import { TitleView } from "./TitleView";
 
@@ -15,10 +15,7 @@ const title: TitleScreen = {
     genre: "Suspense",
     facts: ["2017", "1h 44min"],
     score: "7,6",
-    streamings: availableStreamings([119, 1899, 8]).map((s) => ({
-        ...s,
-        logoPath: STREAMING_LOGOS[s.id],
-    })),
+    streamings: availableStreamings([119, 1899, 8]),
     trailerUrl: null,
     backdropImagePath: null,
     posterImagePath: null,
@@ -31,12 +28,11 @@ const title: TitleScreen = {
 describe("TitleView", () => {
     const render = (t: TitleScreen) => renderToStaticMarkup(<TitleView title={t} daily={null} />);
 
-    it("US004 C1: onde assistir vem antes do título (celular), da chamada e da sinopse", () => {
+    it("US004 C1: onde assistir vem logo abaixo do título, antes da chamada e da sinopse", () => {
         const html = render(title);
         const at = (text: string) => html.indexOf(text);
-        expect(at("Onde assistir")).toBeGreaterThan(-1);
-        expect(at("Onde assistir")).toBeLessThan(at("<h1"));
-        expect(at("<h1")).toBeLessThan(at(title.tagline!));
+        expect(at("Onde assistir")).toBeGreaterThan(at("</h1>"));
+        expect(at("Onde assistir")).toBeLessThan(at(title.tagline!));
         expect(at(title.tagline!)).toBeLessThan(at(title.synopsis!));
         expect(at("Netflix")).toBeLessThan(at("Max"));
         expect(at("Max")).toBeLessThan(at("Prime Video"));

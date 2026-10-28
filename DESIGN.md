@@ -29,8 +29,8 @@ Leitura obrigatória antes de qualquer tarefa de interface. A fonte da verdade v
 
 ## Disposição
 
-- Tela do título no computador (`title-layout`, grid de três colunas): pôster à esquerda (`--spacing-title-poster`, 2:3, topo no topo do título; sem pôster, a coluna some), texto no meio e, à direita, o grupo de ações ("Vou assistir", "Já vi", dado) centrado na primeira linha do título (`--spacing-title-line`). As ações não se movem com a sinopse nem com os logos. O texto vai até o vão do grupo. No celular, sem pôster (nem baixado: `hidden` + `loading=lazy`) e com as ações presas à base (`Dock`).
-- Onde assistir é a informação principal. Na tela do título, em logos (`AvailabilityLogos`): logo do TMDB em `--spacing-logo`, `rounded-card`, com o nome em `text-caption` embaixo; no computador, abaixo das ações e alinhado à direita; no celular, entre a imagem e o título. No destaque da home, em texto, logo abaixo do título, antes da chamada (`Availability`). Rótulo em `text-caption` e `soft`; nomes em `text-body`, `font-medium` e `paper`, separados pelo fio do `Facts`. É texto: sem pílula, sem amarelo. Sem streaming, nada aparece. Nessas duas telas, dados (`Facts`) e créditos vão em `text-small`.
+- Tela do título no computador (`title-layout`, grid de três colunas): pôster à esquerda (`--spacing-title-poster`, 2:3), alinhado à margem da página e ao topo do título, com 3rem até o texto; sem pôster, a coluna some. Texto no meio e, à direita, o grupo de ações ("Vou assistir", "Já vi", dado) centrado na primeira linha do título (`--spacing-title-line`), que não se move com a sinopse. O texto vai até o vão do grupo. No celular, sem pôster (nem baixado: `hidden` + `loading=lazy`) e com as ações presas à base (`Dock`).
+- Onde assistir é a informação principal: na tela do título e no destaque da home fica logo abaixo do título, antes da chamada e da sinopse (`Availability`). Rótulo em `text-caption` e `soft`; nomes em `text-body`, `font-medium` e `paper`, separados pelo fio do `Facts`. É texto: sem pílula, sem amarelo, sem logos. Sem streaming, nada aparece. Na tela do título, gênero, ano e duração (`Facts`) ficam na mesma linha, ao lado de onde assistir (quebram para baixo se não couberem). Nessas duas telas, dados e créditos vão em `text-small`.
 - Texto corrido com `text-wrap: pretty` (sinopse); chamadas e frases curtas com `text-wrap: balance`.
 - Painel de busca no computador: o pé nunca passa do pé da imagem grande (`--spacing-search-panel`); a lista rola por dentro.
 
@@ -71,4 +71,4 @@ WCAG 2.2 AA, mais estes critérios AAA do projeto:
 - Alvo de toque de no mínimo 44px (`h-target`). Controles têm 50px (`h-control`).
 - Foco visível só no teclado, com um estilo único (anel claro com fio escuro, definido no `globals.css`). Depois de mouse ou toque não há anel: `InputModality` marca `data-input` no `<html>`.
 - Movimento reduzido: com `prefers-reduced-motion`, nada se move nem pulsa (`motion-reduce:`).
-- Texto corrido com até 80 caracteres por linha (`max-w-measure`).
+- Texto corrido com até 80 caracteres por linha (`max-w-measure`). Exceção do dono (27/10/2026): a sinopse da tela do título vai até 100 (`max-w-synopsis`).

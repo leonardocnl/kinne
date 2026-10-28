@@ -108,7 +108,6 @@
     --spacing-result-lg: calc(var(--spacing-poster-lg) + 1rem);
     --spacing-result: calc(var(--spacing-poster) + 1rem); /* linha da busca: pôster e respiro */
     --spacing-title-poster: 14rem; /* pôster da tela do título no computador (2:3) */
-    --spacing-logo: 2.75rem; /* logo do streaming em "Onde assistir" (quadrado) */
     /* barra presa à base (Dock): a altura sai das mesmas peças que a montam, sem a área segura */
     --spacing-dock-top: 1.75rem; /* acima dos botões */
     --spacing-dock-base: 0.875rem; /* abaixo dos botões, antes da área segura */
@@ -149,6 +148,8 @@
     ); /* largura máxima da página: nunca mais larga que um quadro 16:9 da altura da janela */
     --container-navbar: 30rem; /* largura máxima da navbar; no celular ocupa a tela menos as margens */
     --container-measure: 80ch; /* texto corrido */
+    /* sinopse da tela do título: exceção do dono ao limite de 80 (AAA 1.4.8), em 27/10/2026 */
+    --container-synopsis: 100ch;
     /* painel de filtros; não pode se chamar "panel": w-panel acharia antes --spacing-panel */
     --container-filters: 33.125rem;
 
@@ -348,9 +349,8 @@
 }
 
 /*
- * tela do título no computador: pôster | texto | ações em cima e logos embaixo. A primeira linha
- * tem a altura da primeira linha do título, e as ações nunca se movem. Sem pôster, a coluna dele
- * some (auto).
+ * tela do título no computador: pôster | texto | ações. A primeira linha tem a altura da primeira
+ * linha do título, e as ações nunca se movem. Sem pôster, a coluna dele some (auto).
  */
 @utility title-layout {
     @variant desktop {

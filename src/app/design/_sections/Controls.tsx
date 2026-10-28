@@ -1,14 +1,8 @@
 import { Button, ButtonLink } from "../../_components/ui/Button";
 import { Dock } from "../../_components/ui/Dock";
 import { Availability } from "../../_components/ui/Availability";
-import { AvailabilityLogos } from "../../_components/ui/AvailabilityLogos";
 import { Fact, Facts } from "../../_components/ui/Facts";
-import {
-    availableStreamings,
-    STREAMING_LOGOS,
-    STREAMING_SERVICES,
-    type StreamingService,
-} from "@/domain/streaming";
+import { availableStreamings, STREAMING_SERVICES } from "@/domain/streaming";
 import { Frame } from "../../_components/ui/Frame";
 import {
     BackIcon,
@@ -25,9 +19,6 @@ import { Slider } from "../../_components/ui/Slider";
 import { TextLink } from "../../_components/ui/TextLink";
 import { FiltersDemo, RemovableChipDemo, TokenValue } from "./live";
 import { DoDont, focusRing, Row, Spec, States } from "./Spec";
-
-const withLogos = (list: readonly StreamingService[]) =>
-    list.map((s) => ({ ...s, logoPath: STREAMING_LOGOS[s.id] }));
 
 export function Controls() {
     return (
@@ -200,26 +191,6 @@ export function Controls() {
                     <Availability streamings={STREAMING_SERVICES} />
                 </Row>
                 <p className="text-caption text-soft">Sem streaming, nada aparece.</p>
-            </Spec>
-
-            <Spec
-                name="AvailabilityLogos"
-                props={["streamings: StreamingService[]", "className?"]}
-                does="Onde assistir na tela do título: logo do TMDB e nome de cada streaming. No computador, abaixo das ações e alinhado à direita; no celular, entre a imagem e o título. Não é controle: sem pílula, sem hover."
-            >
-                <Row label="três">
-                    <AvailabilityLogos
-                        streamings={withLogos(availableStreamings([8, 1899, 119]))}
-                    />
-                </Row>
-                <Row label="cinco">
-                    <AvailabilityLogos streamings={withLogos(STREAMING_SERVICES)} />
-                </Row>
-                <Row label="sem logo">
-                    <AvailabilityLogos
-                        streamings={[{ id: "outro", name: "Outro", logoPath: null }]}
-                    />
-                </Row>
             </Spec>
 
             <Spec

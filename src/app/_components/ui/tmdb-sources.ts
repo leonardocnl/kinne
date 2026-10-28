@@ -30,7 +30,7 @@ export function thumbnailSources(path: string): ImageSources {
     };
 }
 
-/** Pôster pequeno (busca) e logo de streaming: w92 na tela comum e w185 nas telas 2x. */
+/** Pôster pequeno (busca): w92 na tela comum e w185 nas telas 2x. */
 export function posterSources(path: string): ImageSources {
     return { src: url("w92", path), srcSet: `${url("w92", path)} 1x, ${url("w185", path)} 2x` };
 }
