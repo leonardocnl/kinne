@@ -4,13 +4,8 @@ import { CONTACT_EMAIL } from "@/domain/contact";
 import { ToastHost } from "./ToastHost";
 import { AsciiHorizon } from "./ui/AsciiHorizon";
 import { Navbar, type NavTab } from "./ui/Navbar";
-import { ProfileCard } from "./ui/ProfileCard";
-import type { Profile } from "./ui/ProfileCardPopover";
 
-const COLUMNS: {
-    title: string;
-    links: { href: string; label: string; card?: Profile }[];
-}[] = [
+const COLUMNS = [
     {
         title: "Kinne",
         links: [
@@ -30,12 +25,8 @@ const COLUMNS: {
         title: "Contato",
         links: [
             { href: `mailto:${CONTACT_EMAIL}`, label: CONTACT_EMAIL },
-            {
-                href: "https://www.linkedin.com/in/leonardocnl",
-                label: "LinkedIn",
-                card: "linkedin",
-            },
-            { href: "https://github.com/leonardocnl", label: "GitHub", card: "github" },
+            { href: "https://www.linkedin.com/in/leonardocnl", label: "LinkedIn" },
+            { href: "https://github.com/leonardocnl", label: "GitHub" },
         ],
     },
 ];
@@ -88,36 +79,26 @@ export function Shell({ children, nav }: { children: ReactNode; nav?: NavTab }) 
                                         {column.title}
                                     </h2>
                                     <ul>
-                                        {column.links.map(({ href, label, card }) => {
-                                            const link = href.startsWith("/") ? (
-                                                <Link href={href} className={footerLink}>
-                                                    {label}
-                                                </Link>
-                                            ) : (
-                                                <a
-                                                    href={href}
-                                                    className={footerLink}
-                                                    {...(href.startsWith("http") && {
-                                                        target: "_blank",
-                                                        rel: "noopener noreferrer",
-                                                    })}
-                                                >
-                                                    {label}
-                                                </a>
-                                            );
-                                            return (
-                                                <li key={href}>
-                                                    {/* LinkedIn e GitHub: o cartão do perfil sobe no hover e no foco */}
-                                                    {card ? (
-                                                        <ProfileCard profile={card}>
-                                                            {link}
-                                                        </ProfileCard>
-                                                    ) : (
-                                                        link
-                                                    )}
-                                                </li>
-                                            );
-                                        })}
+                                        {column.links.map(({ href, label }) => (
+                                            <li key={href}>
+                                                {href.startsWith("/") ? (
+                                                    <Link href={href} className={footerLink}>
+                                                        {label}
+                                                    </Link>
+                                                ) : (
+                                                    <a
+                                                        href={href}
+                                                        className={footerLink}
+                                                        {...(href.startsWith("http") && {
+                                                            target: "_blank",
+                                                            rel: "noopener noreferrer",
+                                                        })}
+                                                    >
+                                                        {label}
+                                                    </a>
+                                                )}
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
                             ))}
