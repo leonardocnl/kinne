@@ -275,7 +275,7 @@ export function FiltersDemo() {
                 valueText={durations[duration]}
                 onChange={(event) => setDuration(Number(event.target.value))}
             />
-            <div className="-mx-5 -mb-5 flex flex-col gap-3 bg-panel-foot px-5 pb-5 max-desktop:-mx-4 max-desktop:px-4">
+            <div className="-mx-5 -mb-5 flex flex-col gap-3 px-5 pb-5 max-desktop:-mx-4 max-desktop:px-4">
                 <div className="flex items-center gap-3.5 border-t border-line px-1 pt-4">
                     <p className="flex min-w-23 flex-col items-center text-center text-caption text-faint">
                         <b className="pb-1.25 font-display text-count font-medium text-paper">

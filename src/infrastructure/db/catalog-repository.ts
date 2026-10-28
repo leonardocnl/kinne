@@ -417,6 +417,7 @@ export class DrizzleCatalogRepository implements CatalogRepository {
                         personId: personIds.get(c.tmdbPersonId)!,
                         role: c.role,
                         creditOrder: c.order,
+                        characterName: c.character ?? null,
                     })),
                 ),
                 (c) => tx.insert(titleCredits).values(c),

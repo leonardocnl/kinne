@@ -1,4 +1,5 @@
 import "server-only";
+import { CAST_STORED } from "@/domain/credits";
 import type {
     CatalogSource,
     Credit,
@@ -24,7 +25,6 @@ const RESULT_CAP = 10_000;
 // O /changes também só serve até a página 500.
 const MAX_CHANGES_PAGES = 500;
 const MIN_YEAR = 1870;
-const MAX_CAST = 10; // C2
 // Funções de roteiro no crédito do TMDB (grafo de gosto, docs/design/taste-graph.md §3).
 const WRITER_JOBS = new Set(["Screenplay", "Writer", "Teleplay"]);
 const MAX_WRITERS = 5;
@@ -152,12 +152,13 @@ export class TmdbCatalogSource implements CatalogSource {
             })),
             ...[...new Map(d.credits.cast.map((c) => [c.id, c])).values()]
                 .sort((a, b) => a.order - b.order)
-                .slice(0, MAX_CAST)
+                .slice(0, CAST_STORED)
                 .map((c, order) => ({
                     tmdbPersonId: c.id,
                     name: c.name,
                     role: "cast" as const,
                     order,
+                    character: c.character ?? null,
                 })),
             ...[...writers].map(([id, name], order) => ({
                 tmdbPersonId: id,

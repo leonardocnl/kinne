@@ -21,20 +21,20 @@ Eu, como visitante, quero ver um título por vez com as informações que me aju
 **Dado** que cheguei à tela do título pela indicação do dia, pelos filtros, por "Me surpreenda" ou por um link  
 **Então** o sistema exibe os seguintes campos:
 
-| Campo         | Tipo           | Descrição                                                                                                                                | Exemplo                                                   |
-| ------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| Imagem        | Imagem         | Imagem larga, cantos retos                                                                                                               | Cena de "Corra!"                                          |
-| Pôster        | Imagem         | Só no computador, à esquerda do texto, cantos retos; sem pôster, o texto ocupa o espaço (C10)                                            | Pôster de "Corra!"                                        |
-| Nota TMDB     | Número         | Sobre a imagem, no canto inferior direito, oposto ao trailer; grande, em branco, sem a cor de destaque (RNE006)                          | "7,6 TMDB"                                                |
-| Título        | Texto          | Nome em português                                                                                                                        | "Corra!"                                                  |
-| Onde assistir | Imagem e texto | Logo e nome de cada streaming do título, na ordem fixa, sob o rótulo "Onde assistir"; sem logo, só o nome; some sem streaming (C10, C11) | Logos de Netflix e Max                                    |
-| Chamada       | Texto          | Tagline em português, em branco; sem tagline, a linha não aparece (RNE004)                                                               | "Um fim de semana que esconde algo errado."               |
-| Sinopse       | Texto          | Sinopse completa em português (RNE004, C9)                                                                                               | "Chris, um fotógrafo, vai passar o fim de semana…"        |
-| Gênero        | Texto          | Gênero principal                                                                                                                         | "Suspense"                                                |
-| Ano           | Número         | Lançamento ou estreia                                                                                                                    | "2017"                                                    |
-| Duração       | Texto          | Total; por episódio em séries                                                                                                            | "1h 44min"                                                |
-| Direção       | Texto          | "Direção de X", "X e Y" ou "X, Y e Z"; some sem dado                                                                                     | "Direção de Jordan Peele"                                 |
-| Elenco        | Texto          | "Com A, B e C": os três primeiros, na ordem dos créditos; some sem dado                                                                  | "Com Daniel Kaluuya, Allison Williams e Bradley Whitford" |
+| Campo         | Tipo   | Descrição                                                                                                                                                        | Exemplo                                            |
+| ------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| Imagem        | Imagem | Imagem larga, cantos retos                                                                                                                                       | Cena de "Corra!"                                   |
+| Pôster        | Imagem | Só no computador, à esquerda do texto, com o topo alinhado ao do título, cantos retos; sem pôster, o texto ocupa o espaço (C10)                                  | Pôster de "Corra!"                                 |
+| Nota TMDB     | Número | Sobre a imagem, no canto inferior direito, oposto ao trailer; grande, em branco, sem a cor de destaque (RNE006)                                                  | "7,6 TMDB"                                         |
+| Título        | Texto  | Nome em português                                                                                                                                                | "Corra!"                                           |
+| Onde assistir | Texto  | Logo abaixo do título, primeiro dado da ficha (cada dado com rótulo em caixa alta e o valor embaixo): os streamings do título, na ordem fixa; some sem streaming | "Netflix e Max"                                    |
+| Gênero        | Texto  | Gênero principal; gênero, ano, duração, direção e elenco ficam na ficha, ao lado de "Onde assistir"                                                              | "Suspense"                                         |
+| Ano           | Número | Lançamento ou estreia                                                                                                                                            | "2017"                                             |
+| Duração       | Texto  | Total; por episódio em séries                                                                                                                                    | "1h 44min"                                         |
+| Chamada       | Texto  | Tagline em português, em branco; sem tagline, a linha não aparece (RNE004)                                                                                       | "Um fim de semana que esconde algo errado."        |
+| Sinopse       | Texto  | Sinopse completa em português (RNE004, C9)                                                                                                                       | "Chris, um fotógrafo, vai passar o fim de semana…" |
+| Direção       | Texto  | Na ficha, rótulo "Direção" e "X", "X e Y" ou "X, Y e Z"; some sem dado                                                                                           | "Jordan Peele"                                     |
+| Elenco        | Botão  | Na ficha, rótulo "Elenco" e o botão "Ver N nomes"; abre o elenco todo com os personagens (C12); some sem elenco                                                  | "Ver 10 nomes"                                     |
 
 **E** exibe, numa mesma linha e nesta ordem, três botões em forma de pílula: "Vou assistir" (principal, com a cor de destaque), "Já vi" (secundário, com ícone de visto) e "Outra opção" (só com ícone de dado, em círculo)  
 **E** o botão do dado tem o nome "Outra opção" para leitores de tela e na dica ao passar o mouse  
@@ -106,19 +106,28 @@ Eu, como visitante, quero ver um título por vez com as informações que me aju
 ### C10: Disposição no computador
 
 **Dado** que a tela tem mais de 860px de largura  
-**Então** título, chamada e sinopse usam a largura toda, sem quebra forçada; a sinopse tem no máximo 80 caracteres por linha (critério AAA 1.4.8)  
+**Então** título, chamada e sinopse usam a largura toda, sem quebra forçada; a sinopse tem no máximo 100 caracteres por linha (exceção do dono ao critério AAA 1.4.8, de 80)  
 **E** o pôster fica à esquerda, com o topo alinhado ao do título, e o texto (título, chamada, sinopse, dados e créditos) fica à direita dele  
-**E** os botões ficam à direita, alinhados à primeira linha do título, e não mudam de lugar com o tamanho da sinopse nem com os logos; o texto vai até eles  
-**E** "Onde assistir" fica abaixo dos botões, alinhado à direita  
+**E** os botões ficam à direita, alinhados à primeira linha do título, e não mudam de lugar com o tamanho da sinopse; o texto vai até eles  
 **E** a confirmação de "Vou assistir" ocupa o lugar e a altura da fileira de botões, sem deslocar o resto da página
 
 ### C11: Disposição no celular
 
 **Dado** que a tela tem até 860px de largura  
-**Então** "Onde assistir" fica entre a imagem e o título, e o pôster não aparece nem é baixado  
+**Então** o pôster não aparece nem é baixado  
 **E** os três botões ficam presos à base da tela e acompanham a rolagem, respeitando a área segura do aparelho  
 **E** o elemento em foco nunca fica escondido atrás deles (WCAG 2.4.11)  
 **E** a confirmação de "Já vi" aparece logo acima dos botões
+
+### C12: Ver o elenco todo
+
+**Dado** que o título tem elenco  
+**Quando** aciono "Ver N nomes"  
+**Então** o sistema abre um painel de vidro modal, centralizado sobre a tela escurecida no computador e em tela cheia no celular, com o nome do título, "Elenco", a quantidade de nomes e todo o elenco guardado (até 28), numerado na ordem dos créditos, rolando por dentro do painel  
+**E** cada nome ocupa uma linha, com o personagem na mesma linha, em outra coluna à direita e na cor de destaque, quando o TMDB informa (no celular, logo abaixo do nome); sem personagem, a linha mostra só o nome, sem coluna vazia  
+**E** a página atrás não rola enquanto o painel está aberto  
+**E** o foco fica dentro do painel, que fecha pelo botão "Fechar elenco", pela tecla Esc ou por um toque fora dele  
+**E** ao fechar, o foco volta ao botão
 
 ## Regras de negócio específicas
 

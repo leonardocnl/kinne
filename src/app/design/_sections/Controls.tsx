@@ -1,14 +1,9 @@
 import { Button, ButtonLink } from "../../_components/ui/Button";
 import { Dock } from "../../_components/ui/Dock";
 import { Availability } from "../../_components/ui/Availability";
-import { AvailabilityLogos } from "../../_components/ui/AvailabilityLogos";
+import { CastDialog } from "../../_components/ui/CastDialog";
 import { Fact, Facts } from "../../_components/ui/Facts";
-import {
-    availableStreamings,
-    STREAMING_LOGOS,
-    STREAMING_SERVICES,
-    type StreamingService,
-} from "@/domain/streaming";
+import { availableStreamings, STREAMING_SERVICES } from "@/domain/streaming";
 import { Frame } from "../../_components/ui/Frame";
 import {
     BackIcon,
@@ -25,9 +20,6 @@ import { Slider } from "../../_components/ui/Slider";
 import { TextLink } from "../../_components/ui/TextLink";
 import { FiltersDemo, RemovableChipDemo, TokenValue } from "./live";
 import { DoDont, focusRing, Row, Spec, States } from "./Spec";
-
-const withLogos = (list: readonly StreamingService[]) =>
-    list.map((s) => ({ ...s, logoPath: STREAMING_LOGOS[s.id] }));
 
 export function Controls() {
     return (
@@ -203,22 +195,12 @@ export function Controls() {
             </Spec>
 
             <Spec
-                name="AvailabilityLogos"
-                props={["streamings: StreamingService[]", "className?"]}
-                does="Onde assistir na tela do título: logo do TMDB e nome de cada streaming. No computador, abaixo das ações e alinhado à direita; no celular, entre a imagem e o título. Não é controle: sem pílula, sem hover."
+                name="CastDialog"
+                props={["title: string", "poster: string | null", "cast: { name, character }[]"]}
+                does="Botão Ver N nomes, na ficha do título: abre, num vidro centralizado sobre a tela escurecida (tela cheia no celular), todo o elenco guardado (até 28), numerado e na ordem dos créditos, com o personagem em amarelo na coluna da direita quando há."
             >
-                <Row label="três">
-                    <AvailabilityLogos
-                        streamings={withLogos(availableStreamings([8, 1899, 119]))}
-                    />
-                </Row>
-                <Row label="cinco">
-                    <AvailabilityLogos streamings={withLogos(STREAMING_SERVICES)} />
-                </Row>
-                <Row label="sem logo">
-                    <AvailabilityLogos
-                        streamings={[{ id: "outro", name: "Outro", logoPath: null }]}
-                    />
+                <Row label="normal">
+                    <CastDialog title="Título do filme" poster={null} cast={SAMPLE_CAST} />
                 </Row>
             </Spec>
 
@@ -411,3 +393,14 @@ export function Controls() {
         </>
     );
 }
+
+// 28 nomes, como o elenco guardado: com e sem personagem, um nome longo e outros alfabetos
+const SAMPLE_CAST = [
+    { name: "Maria Fernanda Cândido de Albuquerque Vasconcellos", character: "Helena" },
+    { name: "शाहरुख़ ख़ान", character: "राज मल्होत्रा" },
+    { name: "渡辺謙", character: "斎藤" },
+    ...Array.from({ length: 25 }, (_, i) => ({
+        name: `Pessoa ${i + 4}`,
+        character: i % 3 === 2 ? null : `Personagem ${i + 4}`,
+    })),
+];

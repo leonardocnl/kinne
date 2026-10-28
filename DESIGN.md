@@ -2,7 +2,7 @@
 
 Leitura obrigatória antes de qualquer tarefa de interface. A fonte da verdade visual é a maquete aprovada, `docs/design/maquete-kinnemix.html`. Os tokens estão em `src/app/globals.css`, os componentes em `src/app/_components/ui/` e a referência viva em `/design`.
 
-Última atualização: 27 de outubro de 2026.
+Última atualização: 28 de outubro de 2026.
 
 ## Tokens
 
@@ -15,6 +15,7 @@ Leitura obrigatória antes de qualquer tarefa de interface. A fonte da verdade v
 ## Cor
 
 - O amarelo (`signal`) aparece só no controle mais importante de cada tela e no ícone da marca. Um amarelo por tela.
+- Exceção do dono (28/10/2026): no painel do elenco (`CastDialog`), o nome do personagem é `signal`. O painel é uma camada modal que escurece a tela, e o controle principal dela ("Vou assistir") fica apagado atrás, então o amarelo do personagem não disputa com ele. Nenhum outro elemento do painel é amarelo. Contraste do `signal` sobre o vidro, no pior caso (página branca atrás): 9,3:1 no computador e 13:1 no celular.
 - No hover, todo controle segue o do quiet: fundo `hover` e borda `line-strong`. Nenhum controle ganha cor nova no hover. O primary não muda de cor; só encolhe ao ser pressionado. O chip marcado não muda.
 
 ## Forma
@@ -29,8 +30,10 @@ Leitura obrigatória antes de qualquer tarefa de interface. A fonte da verdade v
 
 ## Disposição
 
-- Tela do título no computador (`title-layout`, grid de três colunas): pôster à esquerda (`--spacing-title-poster`, 2:3, topo no topo do título; sem pôster, a coluna some), texto no meio e, à direita, o grupo de ações ("Vou assistir", "Já vi", dado) centrado na primeira linha do título (`--spacing-title-line`). As ações não se movem com a sinopse nem com os logos. O texto vai até o vão do grupo. No celular, sem pôster (nem baixado: `hidden` + `loading=lazy`) e com as ações presas à base (`Dock`).
-- Onde assistir é a informação principal. Na tela do título, em logos (`AvailabilityLogos`): logo do TMDB em `--spacing-logo`, `rounded-card`, com o nome em `text-caption` embaixo; no computador, abaixo das ações e alinhado à direita; no celular, entre a imagem e o título. No destaque da home, em texto, logo abaixo do título, antes da chamada (`Availability`). Rótulo em `text-caption` e `soft`; nomes em `text-body`, `font-medium` e `paper`, separados pelo fio do `Facts`. É texto: sem pílula, sem amarelo. Sem streaming, nada aparece. Nessas duas telas, dados (`Facts`) e créditos vão em `text-small`.
+- Tela do título no computador (`title-layout`, grid de três colunas): pôster à esquerda (`--spacing-title-poster`, 2:3), alinhado à margem da página e ao topo do título, com 3rem até o texto; sem pôster, a coluna some. Texto no meio e, à direita, o grupo de ações ("Vou assistir", "Já vi", dado) centrado na primeira linha do título (`--spacing-title-line`), que não se move com a sinopse. O texto vai até o vão do grupo. No celular, sem pôster (nem baixado: `hidden` + `loading=lazy`) e com as ações presas à base (`Dock`).
+- Onde assistir é a informação principal: no destaque da home fica logo abaixo do título, antes da chamada e da sinopse (`Availability`). Rótulo em `text-small` e `soft`; nomes em `text-body`, `font-medium` e `paper`, separados pelo fio do `Facts`. É texto: sem pílula, sem amarelo, sem logos. Sem streaming, nada aparece. Na tela do título, gênero, ano e duração (`Facts`) ficam na mesma linha, ao lado de onde assistir (quebram para baixo se não couberem). Nessas duas telas, dados e créditos vão em `text-small`.
+- Ficha da tela do título, logo abaixo dele: onde assistir, gênero, ano, duração, direção e elenco, cada um com rótulo em `text-caption` `font-semibold` `tracking-code` `uppercase` `soft` (como os rótulos do rodapé) e o valor em `text-body` `paper` embaixo; sem fios, quebra limpa. O elenco é o botão "Ver N nomes" (altura do texto; o alvo de toque vem de um `before`), que abre o `CastDialog`: um `<dialog>` modal (`aria-modal`, título em `aria-labelledby`), na camada do topo do navegador, acima da navbar e de tudo, sobre a página escurecida (`backdrop:bg-scrim-strong`). No computador é uma caixa do vidro dos filtros (`GlassPanel`) centralizada na horizontal e na vertical, com largura `--container-cast` (no máximo a tela menos as margens) e altura do conteúdo até `--spacing-cast-height` (80% da janela); no celular ocupa a tela toda, sem cantos. Entra com `panel-up` (sem animação com movimento reduzido), e a página atrás não rola enquanto está aberto. Cabeçalho com o pôster (quando há), "Elenco · N nomes" em `text-caption` `soft`, o nome do título em `font-display` e o fechar redondo, que recebe o foco ao abrir. Cada pessoa é uma linha, separada por fio e com rolagem interna: número em `text-caption` `soft`, o ator em `font-display` `text-confirm` `paper` à esquerda e o personagem em `text-small` `signal` na coluna da direita (exceção de cor, ver Cor); no celular o personagem desce para baixo do nome, alinhado a ele. Sem personagem, a linha só tem o ator, sem coluna vazia nem travessão. Nomes longos quebram dentro da coluna, sem rolagem horizontal. Fecha no botão redondo, na Esc e no toque fora; o foco volta ao botão "Ver N nomes".
+- Painéis de vidro (filtros, elenco): nada de faixa, degradê ou sombra no pé; a lista rola e termina limpa dentro do vidro.
 - Texto corrido com `text-wrap: pretty` (sinopse); chamadas e frases curtas com `text-wrap: balance`.
 - Painel de busca no computador: o pé nunca passa do pé da imagem grande (`--spacing-search-panel`); a lista rola por dentro.
 
@@ -71,4 +74,4 @@ WCAG 2.2 AA, mais estes critérios AAA do projeto:
 - Alvo de toque de no mínimo 44px (`h-target`). Controles têm 50px (`h-control`).
 - Foco visível só no teclado, com um estilo único (anel claro com fio escuro, definido no `globals.css`). Depois de mouse ou toque não há anel: `InputModality` marca `data-input` no `<html>`.
 - Movimento reduzido: com `prefers-reduced-motion`, nada se move nem pulsa (`motion-reduce:`).
-- Texto corrido com até 80 caracteres por linha (`max-w-measure`).
+- Texto corrido com até 80 caracteres por linha (`max-w-measure`). Exceção do dono (27/10/2026): a sinopse da tela do título vai até 100 (`max-w-synopsis`).
