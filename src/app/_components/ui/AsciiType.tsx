@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { Figure } from "./figures";
 
 // Inspirado no Asciify (canvasui), escrito aqui em canvas 2D, sem dependência: um texto grande
 // ("404") desenhado em caracteres. Sempre visível, apagado; perto do ponteiro (mouse ou dedo) os
@@ -28,14 +27,11 @@ const smooth = (edge0: number, edge1: number, x: number) => {
  */
 export function AsciiType({
     text,
-    figure,
     tone = "paper",
     drift = false,
     className,
 }: {
-    text?: string;
-    /** no lugar do texto, uma figura (caminhos SVG em 512 por 512, ui/figures.ts) */
-    figure?: Figure;
+    text: string;
     tone?: "paper" | "signal";
     drift?: boolean;
     className?: string;
@@ -84,34 +80,16 @@ export function AsciiType({
             probe.width = Math.max(1, Math.round(width));
             probe.height = Math.max(1, Math.round(height));
             const p = probe.getContext("2d", { willReadFrequently: true })!;
+            p.font = `500 ${PROBE_SIZE}px ${display}`;
+            const size = Math.min(
+                height * 0.9,
+                (PROBE_SIZE * width * 0.86) / p.measureText(text).width,
+            );
+            p.font = `500 ${size}px ${display}`;
+            p.textAlign = "center";
+            p.textBaseline = "middle";
             p.fillStyle = "white";
-            if (figure) {
-                // a figura cabe em 86% da largura e 85% da altura, centrada
-                const scale = Math.min((height * 0.85) / 512, (width * 0.86) / 512);
-                p.translate((width - 512 * scale) / 2, (height - 512 * scale) / 2);
-                p.scale(scale, scale);
-                p.lineWidth = 22;
-                for (const part of figure) {
-                    const path = new Path2D(part.d);
-                    // o vão em volta da parte, apagando o que já estava atrás
-                    p.globalCompositeOperation = "destination-out";
-                    p.globalAlpha = 1;
-                    p.stroke(path);
-                    p.globalCompositeOperation = "source-over";
-                    p.globalAlpha = part.alpha;
-                    p.fill(path);
-                }
-            } else if (text) {
-                p.font = `500 ${PROBE_SIZE}px ${display}`;
-                const size = Math.min(
-                    height * 0.9,
-                    (PROBE_SIZE * width * 0.86) / p.measureText(text).width,
-                );
-                p.font = `500 ${size}px ${display}`;
-                p.textAlign = "center";
-                p.textBaseline = "middle";
-                p.fillText(text, width / 2, height / 2);
-            }
+            p.fillText(text, width / 2, height / 2);
             const data = p.getImageData(0, 0, probe.width, probe.height).data;
             mask = new Float32Array(columns * rows);
             for (let row = 0; row < rows; row++) {
@@ -214,7 +192,7 @@ export function AsciiType({
             window.removeEventListener("pointermove", onMove);
             document.documentElement.removeEventListener("pointerleave", onLeave);
         };
-    }, [text, figure, tone, drift]);
+    }, [text, tone, drift]);
 
     return <canvas ref={ref} aria-hidden="true" className={className} />;
 }

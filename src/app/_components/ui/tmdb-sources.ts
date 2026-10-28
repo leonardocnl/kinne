@@ -35,6 +35,11 @@ export function posterSources(path: string): ImageSources {
     return { src: url("w92", path), srcSet: `${url("w92", path)} 1x, ${url("w185", path)} 2x` };
 }
 
+/** Pôster do mosaico da sala (7rem de largura): w185 na tela comum e w342 nas telas 2x. */
+export function mosaicPosterSources(path: string): ImageSources {
+    return { src: url("w185", path), srcSet: `${url("w185", path)} 1x, ${url("w342", path)} 2x` };
+}
+
 /** Pôster grande (tela do título no computador): w342 e w500 bastam até telas 2x. */
 export function largePosterSources(path: string): ImageSources {
     return {

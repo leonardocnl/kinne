@@ -1,16 +1,15 @@
 "use client";
 
-import { useId, useState } from "react";
+import { type ReactNode, useId, useState } from "react";
 import { screenMain } from "../layout";
-import { AsciiArt } from "../ui/AsciiArt";
 import { Button } from "../ui/Button";
-import { PEOPLE } from "../ui/figures";
 import { Frame } from "../ui/Frame";
 import { NOT_FOUND } from "./messages";
 
 type EntryProps = {
     onCreate: () => Promise<boolean>;
     onJoin: (code: string) => Promise<boolean>;
+    art?: ReactNode;
 };
 
 // como funciona, em três passos (US011: criar, marcar o que topa, votar)
@@ -27,7 +26,7 @@ const STEPS = [
 ];
 
 /** Porta de entrada da sala (US011 C1): "Criar uma sala" ou "Entrar com um código". */
-export function Entry({ onCreate, onJoin }: EntryProps) {
+export function Entry({ onCreate, onJoin, art }: EntryProps) {
     const [step, setStep] = useState<"choose" | "code">("choose");
     const [code, setCode] = useState("");
     const [error, setError] = useState<string | null>(null);
@@ -49,16 +48,8 @@ export function Entry({ onCreate, onJoin }: EntryProps) {
 
     return (
         <main className={screenMain}>
-            {/* o quadro das outras telas, encostado no topo, com um grupo de pessoas em caracteres
-                amarelos que reage ao ponteiro e passeia sozinho (exceção do dono, DESIGN.md, Cor) */}
-            <Frame className="bg-skeleton">
-                <AsciiArt
-                    figure={PEOPLE}
-                    tone="signal"
-                    drift
-                    className="absolute inset-0 size-full"
-                />
-            </Frame>
+            {/* o quadro das outras telas, encostado no topo, com a parede de pôsteres (PosterMosaic) */}
+            <Frame className="bg-skeleton">{art}</Frame>
             {/* como a tela do título: texto à esquerda e as ações à direita, na altura da primeira
                 linha do título; no celular, as ações embaixo */}
             <div className="title-layout pt-2 max-desktop:flex max-desktop:flex-col max-desktop:gap-8 desktop:pt-3.5">

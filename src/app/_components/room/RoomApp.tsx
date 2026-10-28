@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import type { RoomView } from "@/application/group-room";
 import { browserId } from "@/infrastructure/browser-storage";
 import { createRoom, joinRoom, leaveRoom } from "../../_actions/room";
@@ -29,13 +29,15 @@ function joinOnce(code: string) {
 type RoomAppProps = {
     /** só na rota do QR code (`/sala/XXXX-XXXX`): entra na sala e troca o endereço por `/sala` */
     joinCode?: string;
+    /** o que vai no quadro da entrada (o mosaico de pôsteres, feito no servidor) */
+    art?: ReactNode;
 };
 
 /**
  * Sala de grupo (US011): preferências, finalistas, votação e resultado. Quem chega pelo QR code
  * entra na sala e o endereço passa a ser `/sala`, sem o código (RNE002, group-room C1).
  */
-export function RoomApp({ joinCode }: RoomAppProps) {
+export function RoomApp({ joinCode, art }: RoomAppProps) {
     const { screen, refresh } = useRoom();
     const router = useRouter();
     const [joinFailed, setJoinFailed] = useState(false);
@@ -110,6 +112,7 @@ export function RoomApp({ joinCode }: RoomAppProps) {
     if (screen.kind === "none") {
         return (
             <Entry
+                art={art}
                 onCreate={async () => {
                     const answer = await createRoom({
                         browserId: browserId(),
