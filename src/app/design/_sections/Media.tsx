@@ -184,7 +184,7 @@ export function Media() {
                     "RouteWipe: children, columns?, duration?, staggerDelay?, ease?, direction?, exitOpposite?",
                     "ColorWipe: covering, onCovered, onUncovered (e as mesmas opções)",
                 ]}
-                does="Cortina na troca de um título para outro na tela do título (“Já vi”, o dado e as rodadas dos filtros), só no computador e sem movimento reduzido: 10 colunas de vidro descendo do topo, com um fio do signal ao signal-deep na frente e atrás de cada uma, cobrem a tela em 0,72 s, o roteador troca o endereço e elas descobrem em 0,72 s quando a URL muda (no máximo 2 s). Abas, links e o celular trocam na hora. Pedida com requestWipe (ui/wipe.ts). Decorativa (aria-hidden)."
+                does="Cortina na troca de um título para outro na tela do título (“Já vi”, o dado e as rodadas dos filtros), só no computador e sem movimento reduzido: 10 colunas de vidro descendo do topo, com um fio do signal ao signal-deep na frente e atrás de cada uma, cobrem a tela em 0,82 s, o roteador troca o endereço e elas descobrem em 0,82 s quando a URL muda e a imagem grande carregou (no máximo 2 s). Abas, links e o celular trocam na hora. Pedida com requestWipe (ui/wipe.ts). Decorativa (aria-hidden)."
             >
                 <Row label="no computador, na tela do título">
                     <span className="text-small text-soft">Clique em “Já vi” ou no dado.</span>

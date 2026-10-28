@@ -42,9 +42,10 @@ export function ColorWipe({
     onCovered,
     onUncovered,
     columns = 10,
-    duration = 0.45,
+    duration = 0.55,
     staggerDelay = 0.03,
-    ease = [0.85, 0, 0.15, 1],
+    // entra e sai suave (ease-in-out cúbica); o original, [0.85, 0, 0.15, 1], é brusco
+    ease = [0.65, 0, 0.35, 1],
     direction = "top",
     exitOpposite = false,
 }: WipeOptions & { covering: boolean; onCovered: () => void; onUncovered: () => void }) {

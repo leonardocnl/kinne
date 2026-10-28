@@ -22,7 +22,7 @@ function PathnameWatch({ onChange }: { onChange: (pathname: string) => void }) {
  * Cortina na troca de um título para outro ("Já vi", o dado, a rodada dos filtros), pedida com
  * `requestWipe` (ui/wipe.ts); só no computador e sem movimento reduzido. No celular, nas abas e nos
  * links a troca segue imediata. As faixas cobrem a tela, o roteador troca o endereço (replace) e
- * elas só saem quando a URL muda (no máximo em 2 s).
+ * elas só saem quando a URL muda e a imagem grande da tela nova carregou (no máximo em 2 s).
  */
 export function RouteWipe({ children, ...options }: WipeOptions & { children: ReactNode }) {
     const router = useRouter();
@@ -68,7 +68,24 @@ export function RouteWipe({ children, ...options }: WipeOptions & { children: Re
         return () => clearTimeout(timer);
     }, [run?.step]);
 
-    const covering = run?.step === "cover" || (run?.step === "wait" && pathname === run.from);
+    // a URL mudou: as faixas só saem quando a imagem grande da tela nova já carregou e foi
+    // decodificada (o teto de MAX_WAIT_MS continua valendo)
+    useEffect(() => {
+        if (run?.step !== "wait" || pathname === run.from) return;
+        let alive = true;
+        // o Next guarda a tela anterior escondida (Activity): vale a imagem que está visível
+        const hero = [
+            ...document.querySelectorAll<HTMLImageElement>('main img[fetchpriority="high"]'),
+        ].find((img) => img.checkVisibility());
+        (hero ? hero.decode().catch(() => {}) : Promise.resolve()).then(
+            () => alive && setRun((current) => current && { ...current, step: "uncover" }),
+        );
+        return () => {
+            alive = false;
+        };
+    }, [run?.step, run?.from, pathname]);
+
+    const covering = run?.step === "cover" || run?.step === "wait";
 
     return (
         <>

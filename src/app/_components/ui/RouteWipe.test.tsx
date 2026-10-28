@@ -23,8 +23,8 @@ describe("RouteWipe", () => {
         expect(html).not.toContain("will-change-transform");
     });
 
-    it("cobre e descobre em cerca de 0,7 s cada", () => {
-        expect(wipeSeconds(0.45, 10, 0.03)).toBeCloseTo(0.72);
+    it("cobre e descobre em cerca de 0,8 s cada", () => {
+        expect(wipeSeconds(0.55, 10, 0.03)).toBeCloseTo(0.82);
     });
 
     it("só os sorteios da tela do título pedem a cortina; abas e links não", () => {
