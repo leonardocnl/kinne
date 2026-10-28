@@ -29,7 +29,7 @@ function joinOnce(code: string) {
 type RoomAppProps = {
     /** só na rota do QR code (`/sala/XXXX-XXXX`): entra na sala e troca o endereço por `/sala` */
     joinCode?: string;
-    /** o que vai no quadro da entrada (o RoomShowcase, feito no servidor) */
+    /** o que vai no quadro da entrada (o RoomTitleArt, feito no servidor) */
     art?: ReactNode;
 };
 

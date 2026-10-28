@@ -47,8 +47,8 @@ export function Entry({ onCreate, onJoin, art }: EntryProps) {
 
     return (
         <main className={screenMain}>
-            {/* a caixa do Frame, sem o granulado: o preto fica preto. Dentro, a sala funcionando
-                (art, o RoomShowcase) */}
+            {/* a caixa do Frame, sem o granulado: o preto fica preto. Dentro, o título gigante
+                contra o horizonte (art, o RoomTitleArt) */}
             <div className="relative isolate aspect-video overflow-hidden bg-ink max-desktop:-mx-gutter desktop:aspect-scope">
                 {art}
             </div>
@@ -56,9 +56,8 @@ export function Entry({ onCreate, onJoin, art }: EntryProps) {
                 na altura da primeira linha do título. No celular, as ações depois da frase */}
             <div className="title-layout pt-2 max-desktop:flex max-desktop:flex-col max-desktop:gap-8 desktop:pt-3.5">
                 <div className="flex min-w-0 flex-col gap-3.5 desktop:col-start-2 desktop:row-span-3 desktop:row-start-1 desktop:mr-12">
-                    <h1 className="pb-1 font-display text-title font-medium text-balance">
-                        Assistir em grupo
-                    </h1>
+                    {/* o título aparece gigante no quadro (RoomTitleArt); aqui fica para leitores */}
+                    <h1 className="sr-only">Assistir em grupo</h1>
                     <p className="max-w-measure text-tagline text-balance text-paper">
                         Cada pessoa diz o que topa no próprio celular, e o Kinne propõe poucas
                         opções que agradam a todo mundo.
