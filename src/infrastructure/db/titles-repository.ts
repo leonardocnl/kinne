@@ -1,8 +1,8 @@
 import "server-only";
-import type { CatalogEntry, TitlesRepository } from "@/application/titles";
+import type { CastMember, CatalogEntry, TitlesRepository } from "@/application/titles";
 import type { TitleType } from "@/domain/catalog";
 import { ADULT_CERTIFICATION } from "@/domain/catalog-sync";
-import { CAST_SHOWN, MAX_DIRECTORS } from "@/domain/credits";
+import { CAST_STORED, MAX_DIRECTORS } from "@/domain/credits";
 import { feelingMask, type FeelingData } from "@/domain/feelings";
 import { isKinneGenre } from "@/domain/genre";
 import { and, asc, eq, lt, or, sql } from "drizzle-orm";
@@ -80,11 +80,13 @@ export class DrizzleTitlesRepository implements TitlesRepository {
     }
 
     /** Diretores (até MAX_DIRECTORS) e o começo do elenco, na ordem dos créditos (fase 2). */
-    private async credits(titleId: number): Promise<{ directors: string[]; cast: string[] }> {
+    private async credits(titleId: number): Promise<{ directors: string[]; cast: CastMember[] }> {
         const rows = await creditsQuery(this.db, titleId);
         return {
             directors: rows.filter((r) => r.role === "director").map((r) => r.name),
-            cast: rows.filter((r) => r.role === "cast").map((r) => r.name),
+            cast: rows
+                .filter((r) => r.role === "cast")
+                .map((r) => ({ name: r.name, character: r.character })),
         };
     }
 
@@ -242,22 +244,26 @@ export class DrizzleTitlesRepository implements TitlesRepository {
 
 /**
  * Créditos de um título para a tela do título: todos os diretores (até MAX_DIRECTORS) e os
- * CAST_SHOWN primeiros do elenco. Elenco ("cast") antes de direção ("director"), cada um na
+ * CAST_STORED primeiros do elenco (a linha mostra três; o vidro do elenco, todos). Elenco ("cast") antes de direção ("director"), cada um na
  * ordem; o teto limita a leitura mesmo com dados inesperados (title-credits D1).
  */
 export function creditsQuery(db: Db, titleId: number) {
     return db
-        .select({ role: titleCredits.role, name: people.name })
+        .select({
+            role: titleCredits.role,
+            name: people.name,
+            character: titleCredits.characterName,
+        })
         .from(titleCredits)
         .innerJoin(people, eq(people.id, titleCredits.personId))
         .where(
             and(
                 eq(titleCredits.catalogTitleId, titleId),
-                or(eq(titleCredits.role, "director"), lt(titleCredits.creditOrder, CAST_SHOWN)),
+                or(eq(titleCredits.role, "director"), lt(titleCredits.creditOrder, CAST_STORED)),
             ),
         )
         .orderBy(asc(titleCredits.role), asc(titleCredits.creditOrder))
-        .limit(CAST_SHOWN + MAX_DIRECTORS);
+        .limit(CAST_STORED + MAX_DIRECTORS);
 }
 
 /**

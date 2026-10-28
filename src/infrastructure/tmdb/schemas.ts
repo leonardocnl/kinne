@@ -5,7 +5,14 @@ import { sanitizeText } from "@/domain/catalog";
 // descartadas (o TMDB manda dezenas); o que usamos passa por limites de tamanho e de faixa.
 // Campo opcional inválido vira null (recusa o campo); campo obrigatório inválido recusa o título.
 
-export const LIMITS = { title: 300, synopsis: 2000, tagline: 300, personName: 200, tag: 200 };
+export const LIMITS = {
+    title: 300,
+    synopsis: 2000,
+    tagline: 300,
+    personName: 200,
+    characterName: 200,
+    tag: 200,
+};
 
 const id = z.number().int().positive().max(2_147_483_647);
 
@@ -86,7 +93,14 @@ const recommendations = z
     .transform((r) => r.results.slice(0, MAX_RECOMMENDATIONS));
 const credits = z
     .object({
-        cast: listOf(z.object({ ...person, order: z.number().int().min(0).max(10_000) })),
+        cast: listOf(
+            z.object({
+                ...person,
+                order: z.number().int().min(0).max(10_000),
+                // personagem: sanitizado como os outros textos (A4); vazio ou longo demais, null
+                character: optionalText(LIMITS.characterName),
+            }),
+        ),
         crew: listOf(z.object({ ...person, job: z.string().max(100) })),
     })
     .catch({ cast: [], crew: [] });

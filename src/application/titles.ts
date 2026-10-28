@@ -3,6 +3,9 @@ import type { KinneGenre } from "@/domain/genre";
 import type { FilterCandidate } from "@/domain/filters";
 import type { SurpriseCandidate } from "@/domain/surprise";
 
+// Uma pessoa do elenco e o personagem, quando o TMDB informa (US004 C12).
+export type CastMember = { name: string; character: string | null };
+
 // Um título com o que a tela do título mostra (US004 C1).
 export type CatalogEntry = {
     id: number;
@@ -27,7 +30,7 @@ export type CatalogEntry = {
     recommendable: boolean;
     // todos os diretores e o começo do elenco, cada um na ordem dos créditos
     directors: string[];
-    cast: string[];
+    cast: CastMember[];
 };
 
 // Um título que a surpresa (US003) e os filtros (US002) podem sortear.
