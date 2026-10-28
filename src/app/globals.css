@@ -229,7 +229,6 @@
     /* telas: "celular" é até 860px; desktop: vale de 861px para cima */
     --breakpoint-*: initial;
     --breakpoint-desktop: 861px;
-    --breakpoint-wide: 1140px; /* abaixo disso a data some da barra do topo, para não bater na navbar */
 
     /* movimento */
     --ease-*: initial;

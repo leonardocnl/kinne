@@ -4,9 +4,8 @@ import { TopBar } from "./TopBar";
 
 describe("TopBar", () => {
     it("não mostra o Entrar enquanto o login está fora da interface (SHOW_SIGN_IN)", () => {
-        const html = renderToStaticMarkup(<TopBar date="Domingo, 11 de outubro" />);
+        const html = renderToStaticMarkup(<TopBar />);
         expect(html).not.toContain('href="/entrar"');
-        expect(html).toContain("Domingo, 11 de outubro");
     });
 
     it("mantém o Voltar fora da tela inicial", () => {

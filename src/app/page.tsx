@@ -33,7 +33,7 @@ async function Today() {
     if (picks.length === 0) throw new Error(`${day}: nenhuma indicação do dia`);
     return (
         <>
-            <TopBar date={date} />
+            <TopBar />
             <DailyPicks
                 date={date}
                 picks={picks}
