@@ -48,7 +48,7 @@ export function Entry({ onCreate, onJoin, art }: EntryProps) {
     return (
         <main className={screenMain}>
             {/* a caixa do Frame, sem o granulado: o preto fica preto. Dentro, o título gigante
-                contra o horizonte (art, o RoomTitleArt) */}
+                (art, o RoomTitleArt) */}
             <div className="relative isolate aspect-video overflow-hidden bg-ink max-desktop:-mx-gutter desktop:aspect-scope">
                 {art}
             </div>
