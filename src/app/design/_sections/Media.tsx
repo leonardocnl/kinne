@@ -5,9 +5,6 @@ import { QrCode } from "../../_components/ui/QrCode";
 import { Skeleton } from "../../_components/ui/Skeleton";
 import { Toast } from "../../_components/ui/Toast";
 import { AsciiHorizon } from "../../_components/ui/AsciiHorizon";
-import { ProfileCard } from "../../_components/ui/ProfileCard";
-import ProfileCardPopover from "../../_components/ui/ProfileCardPopover";
-import { TextLink } from "../../_components/ui/TextLink";
 import { BackIcon, PlayIcon } from "../../_components/ui/icons";
 import { TokenValue } from "./live";
 import { DoDont, Row, Spec } from "./Spec";
@@ -182,49 +179,15 @@ export function Media() {
                 </Row>
             </Spec>
             <Spec
-                name="ProfileCard · ProfileCardPopover"
-                props={[
-                    "ProfileCard: profile, children",
-                    "ProfileCardPopover: profile, open, anchor",
-                ]}
-                does="Cartão do LinkedIn e do GitHub sobre o link do rodapé: sobe com blur e escala no hover do mouse e no foco do teclado, inclina em 3D seguindo o mouse e fecha ao sair, ao perder o foco e na Esc. Vidro do GlassPanel, sem amarelo, sem foto e sem nada da rede. No toque não aparece; com movimento reduzido só aparece e some. O cartão e o motion baixam quando o rodapé chega perto."
-            >
-                <Row label="aberto (estático)">
-                    {(["linkedin", "github"] as const).map((profile) => (
-                        <div key={profile} className="relative h-48 w-80">
-                            <div className="absolute right-0 bottom-0">
-                                <ProfileCardPopover
-                                    profile={profile}
-                                    open
-                                    anchor={{ current: null }}
-                                />
-                            </div>
-                        </div>
-                    ))}
-                </Row>
-                <Row label="no link (passe o mouse ou use Tab)">
-                    <ProfileCard profile="github">
-                        <a
-                            href="https://github.com/leonardocnl"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex h-target items-center font-display text-reel font-medium text-paper"
-                        >
-                            GitHub
-                        </a>
-                    </ProfileCard>
-                </Row>
-            </Spec>
-            <Spec
                 name="RouteWipe · ColorWipe"
                 props={[
                     "RouteWipe: children, columns?, duration?, staggerDelay?, ease?, direction?, exitOpposite?",
                     "ColorWipe: covering, onCovered, onUncovered (e as mesmas opções)",
                 ]}
-                does="Cortina em toda troca de tela por link interno, só no computador e sem movimento reduzido: 10 faixas em ink, com um fio do signal ao signal-deep na frente e atrás de cada uma, cobrem a tela em 0,72 s, o roteador navega e elas descobrem em 0,72 s quando a URL muda (no máximo 2 s). Fica no layout raiz; voltar e avançar do navegador não animam. Decorativa (aria-hidden)."
+                does="Cortina na troca de um título para outro na tela do título (“Já vi”, o dado e as rodadas dos filtros), só no computador e sem movimento reduzido: 10 faixas em ink, com um fio do signal ao signal-deep na frente e atrás de cada uma, cobrem a tela em 0,72 s, o roteador troca o endereço e elas descobrem em 0,72 s quando a URL muda (no máximo 2 s). Abas, links e o celular trocam na hora. Pedida com requestWipe (ui/wipe.ts). Decorativa (aria-hidden)."
             >
-                <Row label="no computador, clique">
-                    <TextLink href="/sobre">Ir para Sobre</TextLink>
+                <Row label="no computador, na tela do título">
+                    <span className="text-small text-soft">Clique em “Já vi” ou no dado.</span>
                 </Row>
             </Spec>
         </>

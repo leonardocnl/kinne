@@ -5,7 +5,7 @@ import { appendFileSync, readFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { scanDirectory } from "./bundle-secrets.mjs";
 
-const BUDGET_KB = 153; // era 151; o dono subiu para os cartões do rodapé e a cortina entre telas (28/10/2026)
+const BUDGET_KB = 152; // era 151; o dono subiu para a cortina entre títulos (28/10/2026)
 const PAGE = ".next/server/app/index.html";
 
 const html = readFileSync(PAGE, "utf8");
