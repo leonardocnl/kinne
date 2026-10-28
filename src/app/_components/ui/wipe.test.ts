@@ -36,3 +36,25 @@ describe("wipeRouter", () => {
         expect(r.push).toHaveBeenCalledWith("/titulo/c");
     });
 });
+
+describe("beginWipe e cancelWipe", () => {
+    it("o destino que chega depois do começo não navega pelo roteador", async () => {
+        const { beginWipe, cancelWipe, requestWipe, WIPE_CANCEL_EVENT } = await import("./wipe");
+        const seen: (string | null)[] = [];
+        let cancelled = 0;
+        const onWipe = (e: Event) => {
+            e.preventDefault();
+            seen.push((e as CustomEvent<string | null>).detail);
+        };
+        const onCancel = () => cancelled++;
+        target.addEventListener(WIPE_EVENT, onWipe);
+        target.addEventListener(WIPE_CANCEL_EVENT, onCancel);
+        expect(beginWipe()).toBe(true);
+        expect(requestWipe("/titulo/d")).toBe(true);
+        cancelWipe();
+        target.removeEventListener(WIPE_EVENT, onWipe);
+        target.removeEventListener(WIPE_CANCEL_EVENT, onCancel);
+        expect(seen).toEqual([null, "/titulo/d"]);
+        expect(cancelled).toBe(1);
+    });
+});
