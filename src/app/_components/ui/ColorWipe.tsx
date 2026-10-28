@@ -19,11 +19,10 @@ export type WipeOptions = {
     exitOpposite?: boolean;
 };
 
-// faixa de vidro sem backdrop-filter: um desfoque que se move é refeito a cada quadro e trava a
-// animação. Tinta do painel, reflexo e o fio claro de cima do vidro; cada faixa vira uma camada
-// própria (will-change) e só o transform anima, no compositor.
+// faixa no vidro do site (o da navbar, com o desfoque do painel). O desfoque fica, mas só o
+// transform anima: cada faixa é uma camada própria (will-change) e o deslize roda no compositor
 const pane =
-    "bg-scrim-strong bg-linear-to-b from-sheen to-transparent shadow-glass will-change-transform";
+    "bg-nav bg-linear-to-b from-sheen to-transparent backdrop-blur-glass backdrop-saturate-glass backdrop-brightness-45 will-change-transform";
 
 /** Tempo de cobrir (e o de descobrir) a tela, em segundos. */
 export const wipeSeconds = (duration: number, columns: number, staggerDelay: number) =>
@@ -66,7 +65,6 @@ export function ColorWipe({
         bottom: ["top-0 right-0 left-0", "right-0 bottom-0 left-0"],
     }[direction];
     const thickness = isVertical ? "h-2.5" : "w-2.5";
-    const size = `calc(${100 / columns}% + 0.4%)`;
 
     return (
         <LazyMotion features={domAnimation} strict>
@@ -86,12 +84,7 @@ export function ColorWipe({
                             onAnimationComplete={
                                 last ? () => (covering ? onCovered() : onUncovered()) : undefined
                             }
-                            className={`pointer-events-auto relative flex flex-1 items-center border-line ${pane} ${isVertical ? "border-x" : "border-y"}`}
-                            style={
-                                isVertical
-                                    ? { width: size, height: "100%", marginLeft: "-0.2vw" }
-                                    : { width: "100%", height: size, marginTop: "-0.2dvh" }
-                            }
+                            className={`pointer-events-auto relative flex flex-1 items-center ${pane}`}
                         >
                             <div
                                 className={`shadow-md absolute ${edges[0]} ${thickness}`}

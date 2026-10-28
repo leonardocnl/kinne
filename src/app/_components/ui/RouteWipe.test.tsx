@@ -48,8 +48,8 @@ describe("ColorWipe", () => {
 
     it("10 faixas de vidro, verticais, com fios do signal ao signal-deep (sem arco-íris)", () => {
         expect(html.match(/will-change-transform/g)).toHaveLength(10);
-        // só transform anima: nada de backdrop-filter nas faixas que se movem
-        expect(html).not.toContain("backdrop-");
+        // o vidro do site (com desfoque), e só o transform anima
+        expect(html.match(/backdrop-blur-glass/g)).toHaveLength(10);
         expect(html).toContain("transform:translate3d(0, -100%, 0)");
         expect(html).toContain("flex-row"); // vertical: colunas que descem do topo
         const strokes = [...html.matchAll(/background-color:([^;"]+)/g)].map((m) => m[1]);
