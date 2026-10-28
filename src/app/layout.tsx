@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Darker_Grotesque, Manrope } from "next/font/google";
 import { InputModality } from "./_components/InputModality";
+import { RouteWipe } from "./_components/ui/RouteWipe";
 import { TMDB_IMAGE_ORIGIN } from "./_components/ui/tmdb-sources";
 import "./globals.css";
 
@@ -35,7 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </head>
             <body className="flex min-h-full flex-col overflow-x-clip">
                 <InputModality />
-                {children}
+                <RouteWipe>{children}</RouteWipe>
             </body>
         </html>
     );

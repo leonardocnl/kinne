@@ -9,6 +9,10 @@ const TABS = [
     { id: "sobre", href: "/sobre", label: "Sobre" },
 ] as const;
 
+// a luz desliza entre as abas, menos quando a troca passa pela cortina (RouteWipe, tipo "wipe"):
+// aí ela já aparece na aba nova quando as faixas descobrem a tela
+const SHARE = { wipe: "none", default: "limelight" };
+
 export type NavTab = (typeof TABS)[number]["id"];
 
 /**
@@ -65,21 +69,13 @@ export function Navbar({ current }: { current?: NavTab }) {
                                     aria-hidden="true"
                                     className="pointer-events-none absolute inset-0 overflow-hidden rounded-pill"
                                 >
-                                    <ViewTransition
-                                        name="limelight"
-                                        share="limelight"
-                                        default="none"
-                                    >
+                                    <ViewTransition name="limelight" share={SHARE} default="none">
                                         <div className="absolute inset-y-0 nav-light-x w-nav-cone -translate-x-1/2 bg-limelight">
                                             <span className="absolute inset-0 bg-grain-fine mask-limelight opacity-grain-fine mix-blend-overlay" />
                                         </div>
                                     </ViewTransition>
                                 </li>
-                                <ViewTransition
-                                    name="limelight-bar"
-                                    share="limelight"
-                                    default="none"
-                                >
+                                <ViewTransition name="limelight-bar" share={SHARE} default="none">
                                     <li
                                         aria-hidden="true"
                                         className="pointer-events-none absolute -bottom-px nav-light-x h-px w-nav-light -translate-x-1/2 bg-signal drop-shadow-limelight"
