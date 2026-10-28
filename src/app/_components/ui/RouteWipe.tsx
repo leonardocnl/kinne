@@ -64,6 +64,8 @@ export function RouteWipe({ children, ...options }: WipeOptions & { children: Re
             // cancelar o evento avisa quem pediu que a cortina cuida da navegação
             e.preventDefault();
             const href = (e as CustomEvent<string | null>).detail;
+            // só caminhos do próprio site (defesa a mais: quem pede é sempre o código do Kinne)
+            if (href !== null && !href.startsWith("/")) return;
             const current = runRef.current;
             if (!current) return update({ href, from: location.pathname, step: "cover" });
             if (!href || current.href) return;
