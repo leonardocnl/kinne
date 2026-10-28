@@ -21,6 +21,7 @@ import { Score } from "../ui/Score";
 import { TextLink } from "../ui/TextLink";
 import { TmdbImage } from "../ui/TmdbImage";
 import { largePosterSources, TITLE_POSTER_SIZES } from "../ui/tmdb-sources";
+import { wipeRouter } from "../ui/wipe";
 import { goToTitle, RECOMMENDATION_SOURCE, useOrigin } from "./origin";
 import { useFilteredDraw } from "./useFilteredDraw";
 import { useSurprise } from "./useSurprise";
@@ -79,7 +80,8 @@ export function TitleView({ title, daily }: TitleViewProps) {
         const stay = () => {
             focusOnArrival = null;
         };
-        if (origin === "dia" && nextDailySlug) goToTitle(router, "replace", nextDailySlug, "dia");
+        if (origin === "dia" && nextDailySlug)
+            goToTitle(wipeRouter(router), "replace", nextDailySlug, "dia");
         else if (origin === "filtros") filtered.draw(stay);
         else surprise.draw(stay);
     }

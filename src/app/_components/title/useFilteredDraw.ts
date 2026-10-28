@@ -7,6 +7,7 @@ import { filteredRun, tasteSignals, watchedTitles } from "@/infrastructure/brows
 import { drawFiltered } from "../../_actions/filters";
 import { loadError } from "../StateScreen";
 import { showToast } from "../toast";
+import { wipeRouter } from "../ui/wipe";
 import { goToTitle } from "./origin";
 
 /**
@@ -42,7 +43,7 @@ export function useFilteredDraw(currentSlug: string) {
                 if (slug)
                     return startTransition(() => {
                         setEnd(null);
-                        goToTitle(router, "replace", slug, "filtros");
+                        goToTitle(wipeRouter(router), "replace", slug, "filtros");
                     });
                 setEnd(answer.end);
             } catch {

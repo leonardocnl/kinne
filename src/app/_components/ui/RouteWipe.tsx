@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode, Suspense, useEffect, useRef, useState } from "react";
 import type { ColorWipe as ColorWipeComponent, WipeOptions } from "./ColorWipe";
-import { wipeHref } from "./wipeLink";
+import { WIPE_EVENT } from "./wipe";
 
 // teto da espera pela tela nova: depois disso as faixas saem de qualquer jeito
 const MAX_WAIT_MS = 2000;
@@ -19,10 +19,10 @@ function PathnameWatch({ onChange }: { onChange: (pathname: string) => void }) {
 }
 
 /**
- * Cortina na troca de tela por link interno (ColorWipe), só no computador e sem movimento
- * reduzido; no celular a troca segue imediata. As faixas cobrem a tela, o roteador navega e elas
- * só saem quando a URL muda (no máximo em 2 s). Voltar e avançar do navegador não passam por aqui.
- * A navegação leva o tipo "wipe", e a luz da navbar não desliza com ele (veja a Navbar).
+ * Cortina na troca de um título para outro ("Já vi", o dado, a rodada dos filtros), pedida com
+ * `requestWipe` (ui/wipe.ts); só no computador e sem movimento reduzido. No celular, nas abas e nos
+ * links a troca segue imediata. As faixas cobrem a tela, o roteador troca o endereço (replace) e
+ * elas só saem quando a URL muda (no máximo em 2 s).
  */
 export function RouteWipe({ children, ...options }: WipeOptions & { children: ReactNode }) {
     const router = useRouter();
@@ -45,17 +45,18 @@ export function RouteWipe({ children, ...options }: WipeOptions & { children: Re
 
     useEffect(() => {
         if (!Wipe || run) return;
-        const onClick = (e: MouseEvent) => {
-            const anchor = e.target instanceof Element ? e.target.closest("a") : null;
-            if (!anchor || !enabled()) return;
-            const href = wipeHref(e, anchor, location);
-            if (!href) return;
-            // sem stopPropagation: o onClick do link ainda roda; o Link vê defaultPrevented e não navega
+        const onWipe = (e: Event) => {
+            if (!enabled()) return;
+            // cancelar o evento avisa quem pediu que a cortina cuida da navegação
             e.preventDefault();
-            setRun({ href, from: location.pathname, step: "cover" });
+            setRun({
+                href: (e as CustomEvent<string>).detail,
+                from: location.pathname,
+                step: "cover",
+            });
         };
-        document.addEventListener("click", onClick, { capture: true });
-        return () => document.removeEventListener("click", onClick, { capture: true });
+        window.addEventListener(WIPE_EVENT, onWipe);
+        return () => window.removeEventListener(WIPE_EVENT, onWipe);
     }, [Wipe, run]);
 
     useEffect(() => {
@@ -85,7 +86,7 @@ export function RouteWipe({ children, ...options }: WipeOptions & { children: Re
                     {...options}
                     covering={covering}
                     onCovered={() => {
-                        router.push(run.href, { transitionTypes: ["wipe"] });
+                        router.replace(run.href);
                         setRun({ ...run, step: "wait" });
                     }}
                     onUncovered={() => setRun(null)}

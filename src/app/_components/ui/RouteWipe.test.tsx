@@ -27,12 +27,12 @@ describe("RouteWipe", () => {
         expect(wipeSeconds(0.45, 10, 0.03)).toBeCloseTo(0.72);
     });
 
-    it("a navbar não desliza a luz quando a troca é pela cortina", () => {
-        const navbar = readFileSync(join(dir, "Navbar.tsx"), "utf8");
-        expect(navbar).toContain('{ wipe: "none", default: "limelight" }');
+    it("só os sorteios da tela do título pedem a cortina; abas e links não", () => {
         const wipe = readFileSync(join(dir, "RouteWipe.tsx"), "utf8");
-        expect(wipe).toContain('transitionTypes: ["wipe"]');
-        expect(wipe).not.toContain("stopPropagation()");
+        expect(wipe).not.toMatch(/addEventListener\("click"/);
+        const title = join(dir, "..", "title");
+        for (const file of ["TitleView.tsx", "useFilteredDraw.ts", "useSurprise.ts"])
+            expect(readFileSync(join(title, file), "utf8")).toContain("wipeRouter(router)");
     });
 });
 
