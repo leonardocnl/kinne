@@ -34,6 +34,7 @@ export class DrizzleDailyPicksRepository implements DailyPicksRepository {
                 runtimeMinutes: catalogTitles.runtimeMinutes,
                 backdropImagePath: catalogTitles.backdropImagePath,
                 backdropWidth: catalogTitles.backdropWidth,
+                posterImagePath: catalogTitles.posterImagePath,
                 streamingTmdbIds: sql<number[]>`coalesce(array_agg(${streamingServices.tmdbId})
                     filter (where ${streamingServices.tmdbId} is not null), '{}')`,
             })

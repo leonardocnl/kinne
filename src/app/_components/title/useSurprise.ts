@@ -10,6 +10,7 @@ import {
 import { surprise } from "../../_actions/surprise";
 import { loadError } from "../StateScreen";
 import { showToast } from "../toast";
+import { wipeRouter } from "../ui/wipe";
 import { goToTitle } from "./origin";
 
 /**
@@ -32,7 +33,14 @@ export function useSurprise(mode: "push" | "replace") {
                     shown: shownTitles.read().slice(-SURPRISE_MAX_EXCLUDED),
                     taste: tasteSignals.read(),
                 });
-                if (slug) return goToTitle(router, mode, slug, "surpresa");
+                if (slug)
+                    return goToTitle(
+                        // da tela do título, de um título para outro: pela cortina
+                        mode === "replace" ? wipeRouter(router) : router,
+                        mode,
+                        slug,
+                        "surpresa",
+                    );
                 showToast("Você já marcou todos os títulos que a surpresa sorteia.");
             } catch {
                 showToast(`${loadError.heading}. Tente de novo.`);

@@ -94,6 +94,7 @@
     --spacing-skeleton-title: clamp(2.4rem, 4.2vw, 3.8rem);
     /* altura da primeira linha do título: os botões da tela do título se alinham a ela */
     --spacing-title-line: calc(var(--text-title) * var(--text-title--line-height));
+    --spacing-room-code: 24rem; /* campo do código da sala, no computador */
     /* altura do quadro no computador (2.39:1 da largura útil da página) */
     --spacing-hero-height: calc(
         (min(100vw, var(--container-page)) - 2 * var(--spacing-gutter)) / 2.39
@@ -229,7 +230,6 @@
     /* telas: "celular" é até 860px; desktop: vale de 861px para cima */
     --breakpoint-*: initial;
     --breakpoint-desktop: 861px;
-    --breakpoint-wide: 1140px; /* abaixo disso a data some da barra do topo, para não bater na navbar */
 
     /* movimento */
     --ease-*: initial;
@@ -250,6 +250,8 @@
     /* busca: o campo aparece depois de a lupa se alargar */
     /* horizonte do rodapé: a luz respira devagar e os caracteres cintilam, trocando de camada */
     --animate-horizon-flow: horizon-flow 14s ease-in-out infinite alternate;
+    /* entrada da sala: a luz amarela passa pelos três passos, um de cada vez (opacity) */
+    --animate-step-light: step-light 6s ease-in-out infinite;
     --animate-ascii-a: ascii-a 3.2s steps(1) infinite;
     --animate-ascii-b: ascii-b 3.2s steps(1) infinite;
     --animate-goo-neck: goo-neck var(--transition-duration-panel) var(--ease-settle) forwards;
@@ -597,6 +599,29 @@
     [data-search-rim] {
         display: none;
     }
+}
+
+@keyframes step-light {
+    0%,
+    100% {
+        opacity: 0;
+    }
+    8%,
+    26% {
+        opacity: 1;
+    }
+    36% {
+        opacity: 0;
+    }
+}
+
+/* o segundo e o terceiro passo acendem depois do primeiro, em sequência */
+@utility step-light-2 {
+    animation-delay: 2s;
+}
+
+@utility step-light-3 {
+    animation-delay: 4s;
 }
 
 @keyframes horizon-flow {

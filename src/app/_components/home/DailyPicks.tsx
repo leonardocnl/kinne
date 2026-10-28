@@ -11,13 +11,14 @@ import {
     type ReactNode,
 } from "react";
 import type { HomePick } from "../../_data/home";
-import { Button } from "../ui/Button";
+import { Button, ButtonLink } from "../ui/Button";
 import { cx } from "../ui/cx";
 import { Frame, FrameImage } from "../ui/Frame";
-import { Fact, Facts } from "../ui/Facts";
-import { PauseIcon, PlayIcon } from "../ui/icons";
+import { GroupIcon, PauseIcon, PlayIcon } from "../ui/icons";
 import { TextLink } from "../ui/TextLink";
-import { billingRow, screenMain } from "../layout";
+import { TmdbImage } from "../ui/TmdbImage";
+import { largePosterSources, TITLE_POSTER_SIZES } from "../ui/tmdb-sources";
+import { screenMain } from "../layout";
 import { titleOrigin } from "@/infrastructure/browser-storage";
 import { titleHref } from "../title/origin";
 import { useSurprise } from "../title/useSurprise";
@@ -55,12 +56,12 @@ function useReducedMotion() {
 export function DailyPicks({
     date,
     picks,
-    availability,
+    specs,
 }: {
     date: string;
     picks: HomePick[];
-    // o Availability de cada indicação, feito no servidor: fica fora do JS da home
-    availability: ReactNode[];
+    // a ficha de cada indicação (PickSpecs), feita no servidor: fica fora do JS da home
+    specs: ReactNode[];
 }) {
     const reducedMotion = useReducedMotion();
     const [rotation, dispatch] = useReducer(rotate, initialRotation);
@@ -85,6 +86,11 @@ export function DailyPicks({
     // com movimento reduzido não há troca animada, nem uma que tenha ficado pela metade
     const { shown, swap } = reducedMotion ? { shown: current, swap: "idle" } : rotation;
     const pick = picks[shown];
+    // imagens grandes: só as que já apareceram e a próxima da fila; as outras baixam quando chega
+    // a vez delas, e não as cinco de uma vez ao abrir
+    const [seen, setSeen] = useState(() => new Set([current]));
+    if (!seen.has(current)) setSeen(new Set(seen).add(current));
+    const wanted = (i: number) => seen.has(i) || i === (current + 1) % picks.length;
 
     useEffect(() => {
         const events = ["pointerdown", "keydown"] as const;
@@ -113,7 +119,8 @@ export function DailyPicks({
                 <Frame>
                     {picks.map(
                         (p, i) =>
-                            p.backdropImagePath && (
+                            p.backdropImagePath &&
+                            wanted(i) && (
                                 <FrameImage
                                     key={p.slug}
                                     path={p.backdropImagePath}
@@ -162,10 +169,25 @@ export function DailyPicks({
                     </div>
                 </Frame>
 
-                <div className={billingRow}>
+                {/* como a tela do título (US001 C1): no computador, pôster | texto | ações, com as
+                    ações na altura da primeira linha do título; sem sinopse nem elenco, que ficam
+                    na tela do título. No celular, sem pôster e as ações embaixo */}
+                <div className="title-layout pt-2 max-desktop:flex max-desktop:flex-col desktop:pt-3.5">
+                    {pick.posterImagePath && (
+                        // só no computador; lazy e escondido, o celular nem baixa
+                        <TmdbImage
+                            key={pick.slug}
+                            sources={largePosterSources(pick.posterImagePath)}
+                            sizes={TITLE_POSTER_SIZES}
+                            className={cx(
+                                "hidden aspect-2/3 w-title-poster transition-opacity duration-fade motion-reduce:transition-none desktop:col-start-1 desktop:row-span-3 desktop:row-start-1 desktop:mr-12 desktop:block",
+                                swap === "out" && "opacity-0",
+                            )}
+                        />
+                    )}
                     <div
                         className={cx(
-                            "flex min-w-0 flex-col gap-3.5 transition-opacity duration-fade motion-reduce:transition-none max-desktop:gap-3 desktop:flex-1",
+                            "flex min-w-0 flex-col gap-3 transition-opacity duration-fade motion-reduce:transition-none desktop:col-start-2 desktop:row-span-3 desktop:row-start-1 desktop:mr-12 desktop:gap-3.5",
                             filters.open && "opacity-35",
                         )}
                     >
@@ -189,30 +211,20 @@ export function DailyPicks({
                         </h1>
                         <div
                             className={cx(
-                                "transition-opacity duration-fade empty:hidden motion-reduce:transition-none",
+                                "transition-opacity duration-fade motion-reduce:transition-none desktop:my-2",
                                 swap === "out" && "opacity-0",
                             )}
                         >
-                            {availability[shown]}
+                            {specs[shown]}
                         </div>
                         <p
                             className={cx(
-                                "max-w-measure text-tagline text-balance text-soft transition-opacity duration-fade motion-reduce:transition-none",
+                                "max-w-measure text-tagline text-balance text-paper transition-opacity duration-fade motion-reduce:transition-none",
                                 swap === "out" && "opacity-0",
                             )}
                         >
                             {pick.phrase}
                         </p>
-                        <Facts
-                            className={cx(
-                                "transition-opacity duration-fade motion-reduce:transition-none",
-                                swap === "out" && "opacity-0",
-                            )}
-                        >
-                            {pick.facts.map((text) => (
-                                <Fact key={text}>{text}</Fact>
-                            ))}
-                        </Facts>
                         <TextLink
                             href={titleHref(pick.slug)}
                             onClick={() => titleOrigin.set(pick.slug, "dia")}
@@ -222,21 +234,23 @@ export function DailyPicks({
                             <span aria-hidden="true">→</span>
                         </TextLink>
                     </div>
-                    {/* um amarelo por tela (CM003): com os filtros abertos, o de trás some */}
+                    {/* um amarelo por tela (CM003): com os filtros abertos, o de trás some. No
+                        computador, os três lado a lado e da mesma largura, a do maior (grid de colunas
+                        iguais); no celular, o par e o grupo embaixo */}
                     <div
                         className={cx(
-                            "flex flex-col gap-2 transition-opacity duration-fade motion-reduce:transition-none desktop:pb-11.5",
+                            "flex flex-col gap-2 transition-opacity duration-fade motion-reduce:transition-none max-desktop:mt-5 desktop:col-start-3 desktop:row-start-1 desktop:grid desktop:h-title-line desktop:auto-cols-fr desktop:grid-flow-col desktop:content-center desktop:gap-2.5",
                             filters.open && "invisible opacity-0",
                         )}
                     >
-                        <div className="flex gap-2.5">
+                        <div className="flex gap-2.5 desktop:contents">
                             <Button
                                 ref={chooseRef}
                                 variant="primary"
                                 onClick={filters.show}
                                 onPointerEnter={preloadFiltersPanel}
                                 onFocus={preloadFiltersPanel}
-                                className="max-desktop:min-w-0 max-desktop:flex-1 max-desktop:px-2.5 desktop:min-w-42"
+                                className="max-desktop:min-w-0 max-desktop:flex-1 max-desktop:px-2.5"
                             >
                                 Escolher agora
                             </Button>
@@ -244,15 +258,16 @@ export function DailyPicks({
                                 variant="quiet"
                                 onClick={() => surprise.draw()}
                                 aria-busy={surprise.pending}
-                                className="max-desktop:min-w-0 max-desktop:flex-1 max-desktop:px-2.5 desktop:min-w-42"
+                                className="max-desktop:min-w-0 max-desktop:flex-1 max-desktop:px-2.5"
                             >
                                 Me surpreenda
                             </Button>
                         </div>
-                        {/* discreto, sem a cor de destaque (US011 C1, CM003) */}
-                        <TextLink href="/sala" className="self-center desktop:self-end">
+                        {/* discreto, sem a cor de destaque (US011 C1, CM003): o botão ghost, o mais
+                            apagado, com o ícone de grupo */}
+                        <ButtonLink variant="ghost" href="/sala" icon={<GroupIcon />}>
                             Assistir em grupo
-                        </TextLink>
+                        </ButtonLink>
                     </div>
                 </div>
                 {panelMounted && (

@@ -1,4 +1,5 @@
 import type { RoomView } from "@/application/group-room";
+import { CheckIcon } from "../ui/icons";
 
 type Room = Extract<RoomView, { kind: "room" }>;
 
@@ -15,20 +16,24 @@ export function People({ view }: { view: Room }) {
                     ? `Aguardando pessoas: ${view.people.length} na sala`
                     : `${view.voted} de ${view.people.length} já votaram`}
             </p>
-            <ul className="flex flex-col gap-1.5">
-                {view.people.map((p) => (
-                    <li key={p.position} className="flex items-center gap-2 text-small">
-                        <span className={p.isMe ? "font-semibold" : "text-soft"}>
-                            Pessoa {p.position}
-                            {p.isMe && " (você)"}
-                        </span>
-                        {(lobby ? p.ready : p.voted) && (
-                            <span className="text-caption text-faint">
-                                {lobby ? "pronto" : "votou"}
+            <ul className="flex flex-col gap-2">
+                {view.people.map((p) => {
+                    const done = lobby ? p.ready : p.voted;
+                    return (
+                        <li key={p.position} className="flex items-center gap-2 text-body">
+                            <span className={p.isMe ? "font-semibold text-paper" : "text-paper"}>
+                                Pessoa {p.position}
+                                {p.isMe && " (você)"}
                             </span>
-                        )}
-                    </li>
-                ))}
+                            {done && (
+                                <span className="flex items-center gap-1 text-small text-soft">
+                                    <CheckIcon />
+                                    {lobby ? "pronto" : "votou"}
+                                </span>
+                            )}
+                        </li>
+                    );
+                })}
             </ul>
         </div>
     );

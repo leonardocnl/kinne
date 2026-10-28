@@ -35,7 +35,7 @@ export function Result({ view, refresh, onLeave }: ResultProps) {
     }
 
     return (
-        <main className="flex flex-col gap-6 pt-2 desktop:pt-3.5">
+        <main className="flex flex-col gap-6 pt-2 desktop:pt-nav">
             {winner ? (
                 <>
                     <p className="text-data text-soft">O grupo topou</p>

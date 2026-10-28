@@ -114,3 +114,21 @@ export function UserIcon() {
         </svg>
     );
 }
+
+export function GroupIcon() {
+    return (
+        <svg
+            viewBox="0 0 24 24"
+            className="size-4.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            aria-hidden="true"
+        >
+            <circle cx="9" cy="8.5" r="3.2" />
+            <path d="M2.8 19.5c.8-3.2 3.2-4.9 6.2-4.9s5.4 1.7 6.2 4.9" />
+            <circle cx="16.6" cy="7.6" r="2.6" />
+            <path d="M16.4 13.2c2.4 0 4.2 1.4 4.8 4.1" />
+        </svg>
+    );
+}

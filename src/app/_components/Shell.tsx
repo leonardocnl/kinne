@@ -39,11 +39,22 @@ const footerLink =
 /**
  * Página do Kinne: coluna central, o aviso, a navbar (em toda tela) e o rodapé: a frase, os
  * créditos, as colunas de links e "kinne" gigante com o horizonte dentro das letras.
- * `nav` é a aba ativa da navbar, quando a tela é uma delas.
+ * `nav` é a aba ativa da navbar, quando a tela é uma delas. `flush`: no computador, sem respiro
+ * no topo, para a imagem da tela encostar nele (a barra do topo flutua por cima).
  */
-export function Shell({ children, nav }: { children: ReactNode; nav?: NavTab }) {
+export function Shell({
+    children,
+    nav,
+    flush,
+}: {
+    children: ReactNode;
+    nav?: NavTab;
+    flush?: boolean;
+}) {
     return (
-        <div className="page-container flex min-h-dvh flex-col gap-3.5 pt-5.5 pb-7 max-desktop:gap-3">
+        <div
+            className={`page-container flex min-h-dvh flex-col gap-3.5 pt-5.5 pb-7 max-desktop:gap-3 ${flush ? "desktop:pt-0" : ""}`}
+        >
             {children}
             <ToastHost />
             <Navbar current={nav} />

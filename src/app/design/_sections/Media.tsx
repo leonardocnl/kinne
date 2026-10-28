@@ -5,6 +5,7 @@ import { QrCode } from "../../_components/ui/QrCode";
 import { Skeleton } from "../../_components/ui/Skeleton";
 import { Toast } from "../../_components/ui/Toast";
 import { AsciiHorizon } from "../../_components/ui/AsciiHorizon";
+import { AsciiType } from "../../_components/ui/AsciiType";
 import { BackIcon, PlayIcon } from "../../_components/ui/icons";
 import { TokenValue } from "./live";
 import { DoDont, Row, Spec } from "./Spec";
@@ -176,6 +177,39 @@ export function Media() {
                     <div className="relative aspect-kinne w-full">
                         <AsciiHorizon className="absolute inset-0" />
                     </div>
+                </Row>
+            </Spec>
+            <Spec
+                name="AsciiType"
+                props={["text", "tone?", "drift?", "className?"]}
+                does="Texto grande desenhado em caracteres, no quadro das telas 404 (página e título). Sempre visível, apagado; perto do ponteiro (mouse ou dedo) os caracteres acendem, embaralham e ganham brilho e um leve desdobramento, e a área segue o ponteiro com atraso. Canvas 2D, sem dependência; parado quando o ponteiro está longe; com movimento reduzido, o desenho fica parado. Decorativo (aria-hidden)."
+            >
+                <Row label="fim de rodada: signal, passeando sozinho">
+                    <div className="relative aspect-video w-full bg-skeleton">
+                        <AsciiType
+                            text="rodada 2"
+                            tone="signal"
+                            drift
+                            className="absolute inset-0 size-full"
+                        />
+                    </div>
+                </Row>
+                <Row label="passe o mouse">
+                    <div className="relative aspect-video w-full bg-skeleton">
+                        <AsciiType text="404" className="absolute inset-0 size-full" />
+                    </div>
+                </Row>
+            </Spec>
+            <Spec
+                name="RouteWipe · ColorWipe"
+                props={[
+                    "RouteWipe: children, columns?, duration?, staggerDelay?, ease?, direction?, exitOpposite?",
+                    "ColorWipe: covering, onCovered, onUncovered (e as mesmas opções)",
+                ]}
+                does="Cortina na troca de um título para outro na tela do título (“Já vi”, o dado e as rodadas dos filtros), só no computador e sem movimento reduzido: 10 colunas de vidro descendo do topo, com um fio do signal ao signal-deep na frente e atrás de cada uma, cobrem a tela em 0,82 s, o roteador troca o endereço e elas descobrem em 0,82 s quando a URL muda e a imagem grande carregou (no máximo 2 s). Abas, links e o celular trocam na hora. Pedida com requestWipe (ui/wipe.ts). Decorativa (aria-hidden)."
+            >
+                <Row label="no computador, na tela do título">
+                    <span className="text-small text-soft">Clique em “Já vi” ou no dado.</span>
                 </Row>
             </Spec>
         </>

@@ -1,9 +1,9 @@
 import { Button, ButtonLink } from "../../_components/ui/Button";
 import { Dock } from "../../_components/ui/Dock";
-import { Availability } from "../../_components/ui/Availability";
+import { TitleSpec } from "../../_components/ui/TitleSpec";
 import { CastDialog } from "../../_components/ui/CastDialog";
 import { Fact, Facts } from "../../_components/ui/Facts";
-import { availableStreamings, STREAMING_SERVICES } from "@/domain/streaming";
+import { availableStreamings, streamingList } from "@/domain/streaming";
 import { Frame } from "../../_components/ui/Frame";
 import {
     BackIcon,
@@ -181,17 +181,22 @@ export function Controls() {
             </Spec>
 
             <Spec
-                name="Availability"
-                props={["streamings: StreamingService[]", "className?"]}
-                does="Onde assistir: a informação principal do título, logo abaixo dele e antes da chamada. É texto, não controle: nada de pílula nem amarelo."
+                name="TitleSpec"
+                props={["label: string", "children"]}
+                does="Um dado da ficha, na tela do título e no destaque da home: rótulo em caixa alta, pequeno e soft, e o valor no tamanho do texto, embaixo. Vai dentro de um <dl>. Onde assistir vem primeiro; sem streaming, ele some."
             >
-                <Row label="três">
-                    <Availability streamings={availableStreamings([8, 1899, 119])} />
+                <Row label="ficha da home">
+                    <dl className="flex flex-wrap gap-x-8 gap-y-4">
+                        <TitleSpec label="Onde assistir">
+                            <span className="font-medium">
+                                {streamingList(availableStreamings([8, 1899, 119]))}
+                            </span>
+                        </TitleSpec>
+                        <TitleSpec label="Gênero">Suspense</TitleSpec>
+                        <TitleSpec label="Ano">2017</TitleSpec>
+                        <TitleSpec label="Duração">1h 44min</TitleSpec>
+                    </dl>
                 </Row>
-                <Row label="cinco">
-                    <Availability streamings={STREAMING_SERVICES} />
-                </Row>
-                <p className="text-caption text-soft">Sem streaming, nada aparece.</p>
             </Spec>
 
             <Spec

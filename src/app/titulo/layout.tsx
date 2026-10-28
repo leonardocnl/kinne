@@ -8,9 +8,9 @@ export const viewport: Viewport = { viewportFit: "cover" };
 
 export default function TitleLayout({ children }: LayoutProps<"/titulo">) {
     return (
-        <Shell>
+        <Shell flush>
             <AppOpened />
-            <TopBar back />
+            <TopBar back floating />
             {children}
         </Shell>
     );
