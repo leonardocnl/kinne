@@ -19,9 +19,11 @@ export type WipeOptions = {
     exitOpposite?: boolean;
 };
 
-// faixa de vidro, o da navbar com o desfoque do painel: a tela por trás some borrada e escurecida
+// faixa de vidro sem backdrop-filter: um desfoque que se move é refeito a cada quadro e trava a
+// animação. Tinta do painel, reflexo e o fio claro de cima do vidro; cada faixa vira uma camada
+// própria (will-change) e só o transform anima, no compositor.
 const pane =
-    "bg-nav bg-linear-to-b from-sheen to-transparent backdrop-blur-glass backdrop-saturate-glass backdrop-brightness-45";
+    "bg-scrim-strong bg-linear-to-b from-sheen to-transparent shadow-glass will-change-transform";
 
 /** Tempo de cobrir (e o de descobrir) a tela, em segundos. */
 export const wipeSeconds = (duration: number, columns: number, staggerDelay: number) =>
@@ -50,7 +52,11 @@ export function ColorWipe({
     const isVertical = direction === "top" || direction === "bottom";
     const from = direction === "bottom" || direction === "right" ? "100%" : "-100%";
     const to = exitOpposite ? (from === "100%" ? "-100%" : "100%") : from;
-    const offset = (value: string) => (isVertical ? { y: value, x: "0%" } : { x: value, y: "0%" });
+    // transform inteiro (e não x/y do motion): assim a animação vai para o WAAPI, fora da thread
+    // principal, e não trava enquanto a tela nova renderiza por baixo
+    const offset = (value: string) => ({
+        transform: isVertical ? `translate3d(0, ${value}, 0)` : `translate3d(${value}, 0, 0)`,
+    });
 
     // posição dos fios: na frente (leading) e atrás (trailing) de cada faixa, no sentido do movimento
     const edges = {
