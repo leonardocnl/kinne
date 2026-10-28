@@ -1,4 +1,5 @@
 import { useRouter } from "next/navigation";
+import { isLimited, LIMITED_MESSAGE } from "@/domain/rate-limit";
 import { useState, useTransition } from "react";
 import { wireFilters } from "@/domain/filters";
 import type { RoundEnd } from "@/domain/rounds";
@@ -36,6 +37,11 @@ export function useFilteredDraw(currentSlug: string) {
                     taste: tasteSignals.read(),
                     round: run.round,
                 });
+                // passou do limite de pedidos (security.md §7): o aviso próprio, e a tela fica
+                if (isLimited(answer)) {
+                    showToast(LIMITED_MESSAGE);
+                    return onStay?.();
+                }
                 const slug = answer.slug;
                 // "Recomeçar" pode sortear o título que já está no endereço: só sai do fim
                 if (slug === currentSlug) return setEnd(null);

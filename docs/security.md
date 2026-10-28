@@ -69,6 +69,7 @@ Security by design: every feature is specified, built and reviewed against these
 ## 7. Abuse and rate limiting
 
 - Rate limits per client on every write and every expensive read: events, draws, filter list, surprise.
+- Draws and events (`src/app/_data/draw-limit.ts`): an in-memory per-instance limit per visitor (salted, rotating client key; IP bucket without the secret), like the catalog search. Surprise and filtered draws: burst of 30, one token every 2 s; refused before any query with `{ kind: "limited" }`, and the UI shows "Muitos pedidos seguidos. Espere alguns segundos e tente de novo." and stays where it is. Usage events: burst of 120, two per second; over the limit the event is dropped silently.
 - Implementation stays portable (RNF11): a token bucket in Postgres (`kinne_take_tokens`, migration 0006) on expensive paths (TMDB search fallback, global TMDB budget, `/api/revalidate`), an in-memory per-instance limit plus caching on cheap paths (catalog search). No vendor-only store.
 - The client IP comes only from `getClientIp()` (`src/infrastructure/client-ip.ts`), the one place that knows the host: on Vercel the platform-set `x-real-ip`, never the raw `X-Forwarded-For`. IPv6 is bucketed by /64.
 - If the Postgres limiter cannot answer, the protected action is refused (fail closed).

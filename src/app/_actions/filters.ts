@@ -3,10 +3,12 @@
 import "server-only";
 import { planFilteredRounds } from "@/application/filtered-draw";
 import { drawUnseen, type FilterCandidate } from "@/domain/filters";
+import { LIMITED, type Limited } from "@/domain/rate-limit";
 import { roundEnd, type RoundEnd } from "@/domain/rounds";
 import { hasPositiveSignal } from "@/domain/taste-signals";
 import { drawAccount } from "../_data/account";
 import { candidates } from "../_data/candidates";
+import { admitDraw } from "../_data/draw-limit";
 import { loadFeelingKit } from "../_data/feelings";
 import { neighborGraphOrNull } from "../_data/taste-graph";
 import { parseFilterRequest } from "../_data/filters";
@@ -36,8 +38,10 @@ export type FilteredDraw = { slug: string | null; end: RoundEnd };
  * gênero (rounds.ts). Devolve o slug, ou null quando a rodada acabou, e o que o estado de fim mostra
  * (US004 C3): a rodada seguinte ou que não sobrou nenhuma.
  */
-export async function drawFiltered(input: unknown): Promise<FilteredDraw> {
+export async function drawFiltered(input: unknown): Promise<FilteredDraw | Limited> {
     const request = parseFilterRequest(input);
+    // security.md §7: passado o limite do visitante, recusa antes de qualquer consulta
+    if (!(await admitDraw())) return LIMITED;
     const { seen, round } = request;
     // Com a conta aberta, o servidor lê o gosto, o "Já vi" e os streamings da conta; as listas do
     // pedido são ignoradas (US015 RNE003, ameaças A4, B2). Sentimento é só de quem tem conta
