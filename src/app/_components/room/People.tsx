@@ -16,33 +16,21 @@ export function People({ view }: { view: Room }) {
                     ? `Aguardando pessoas: ${view.people.length} na sala`
                     : `${view.voted} de ${view.people.length} já votaram`}
             </p>
-            <ul className="flex flex-col">
+            <ul className="flex flex-col gap-2">
                 {view.people.map((p) => {
                     const done = lobby ? p.ready : p.voted;
                     return (
-                        <li
-                            key={p.position}
-                            className="flex h-target items-center gap-3 border-b border-line text-small last:border-b-0"
-                        >
-                            <span className="flex size-8 shrink-0 items-center justify-center rounded-pill bg-quiet text-caption font-semibold text-paper">
-                                {p.position}
-                            </span>
-                            <span className={p.isMe ? "font-semibold text-paper" : "text-soft"}>
+                        <li key={p.position} className="flex items-center gap-2 text-body">
+                            <span className={p.isMe ? "font-semibold text-paper" : "text-paper"}>
                                 Pessoa {p.position}
                                 {p.isMe && " (você)"}
                             </span>
-                            <span
-                                className={`ml-auto flex items-center gap-1.5 text-caption ${done ? "text-paper" : "text-faint"}`}
-                            >
-                                {done && <CheckIcon />}
-                                {done
-                                    ? lobby
-                                        ? "pronto"
-                                        : "votou"
-                                    : lobby
-                                      ? "escolhendo"
-                                      : "votando"}
-                            </span>
+                            {done && (
+                                <span className="flex items-center gap-1 text-small text-soft">
+                                    <CheckIcon />
+                                    {lobby ? "pronto" : "votou"}
+                                </span>
+                            )}
                         </li>
                     );
                 })}
