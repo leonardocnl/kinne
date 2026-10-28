@@ -197,13 +197,16 @@ export function Controls() {
             <Spec
                 name="CastDialog"
                 props={["title: string", "names: string[]"]}
-                does="Botão Elenco na linha dos dados do título: abre, no vidro dos filtros (à direita no computador, tela cheia no celular), todo o elenco guardado (até 28), numerado e na ordem dos créditos."
+                does="Botão Ver N nomes, na ficha do título: abre, no vidro dos filtros (à direita no computador, tela cheia no celular), todo o elenco guardado (até 28), numerado e na ordem dos créditos."
             >
                 <Row label="normal">
                     <CastDialog
                         title="Título do filme"
                         poster={null}
-                        names={Array.from({ length: 12 }, (_, i) => `Pessoa ${i + 1}`)}
+                        cast={Array.from({ length: 12 }, (_, i) => ({
+                            name: `Pessoa ${i + 1}`,
+                            character: i % 3 === 2 ? null : `Personagem ${i + 1}`,
+                        }))}
                     />
                 </Row>
             </Spec>

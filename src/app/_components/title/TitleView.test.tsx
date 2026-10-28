@@ -13,7 +13,8 @@ const title: TitleScreen = {
     tagline: "Um fim de semana que esconde algo errado.",
     synopsis: "Chris, um fotógrafo, vai passar o fim de semana com a família da namorada.",
     genre: "Suspense",
-    facts: ["2017", "1h 44min"],
+    year: "2017",
+    runtime: "1h 44min",
     score: "7,6",
     streamings: availableStreamings([119, 1899, 8]),
     trailerUrl: null,
@@ -21,8 +22,8 @@ const title: TitleScreen = {
     posterImagePath: null,
     backdropWidth: null,
     recommendable: true,
-    direction: "Direção de Jordan Peele",
-    fullCast: [],
+    directors: "Jordan Peele",
+    cast: [],
 };
 
 describe("TitleView", () => {
@@ -53,20 +54,27 @@ describe("TitleView", () => {
         );
     });
 
-    it("US004 C12: com elenco, o botão Elenco abre o vidro com todos, na ordem", () => {
-        const fullCast = ["Ana", "Bia", "Caio", "Davi"];
-        const html = render({ ...title, fullCast });
-        expect(html).toMatch(/<button[^>]*aria-haspopup="dialog"[^>]*>Elenco<\/button>/);
-        expect(html).toContain("4 nomes");
-        const at = (name: string) => html.indexOf(name);
-        expect(at("Ana")).toBeLessThan(at("Bia"));
-        expect(at("Caio")).toBeLessThan(at("Davi"));
+    it("US004 C12: com elenco, o botão abre o vidro com nome e personagem, na ordem", () => {
+        const cast = [
+            { name: "Ana", character: "Rosa" },
+            { name: "Bia", character: null },
+        ];
+        const html = render({ ...title, cast });
+        expect(html).toMatch(/<button[^>]*aria-haspopup="dialog"[^>]*>Ver 2 nomes<\/button>/);
+        expect(html.indexOf("Ana")).toBeLessThan(html.indexOf("Rosa"));
+        expect(html.indexOf("Rosa")).toBeLessThan(html.indexOf("Bia"));
     });
 
-    it("direção na linha dos dados; sem elenco, sem botão", () => {
+    it("ficha: rótulo e valor de ano, duração e direção; sem elenco, sem botão", () => {
         const html = render(title);
-        expect(html).toContain("Direção de Jordan Peele");
-        expect(html.indexOf("2017")).toBeLessThan(html.indexOf("Direção de Jordan Peele"));
+        for (const [label, value] of [
+            ["Ano", "2017"],
+            ["Duração", "1h 44min"],
+            ["Direção", "Jordan Peele"],
+        ])
+            expect(html).toContain(
+                `<dt class="${"text-caption font-semibold tracking-code text-soft uppercase"}">${label}</dt><dd class="text-body text-paper">${value}</dd>`,
+            );
         expect(html).not.toContain("<dialog");
     });
 });

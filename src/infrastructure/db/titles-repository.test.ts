@@ -23,8 +23,10 @@ describe("créditos da tela do título (title-credits)", () => {
         expect(query.params.at(-1)).toBe(CAST_STORED + MAX_DIRECTORS);
     });
 
-    it("lê só papel e nome; nada além do nome sai da tabela people (C1)", () => {
-        expect(query.sql).toMatch(/^select "title_credits"\."role", "people"\."name" from/);
+    it("lê papel, nome e personagem; nada além do nome sai da tabela people (C1)", () => {
+        expect(query.sql).toMatch(
+            /^select "title_credits"\."role", "people"\."name", "title_credits"\."character_name" from/,
+        );
     });
 
     it("põe o elenco antes da direção, cada um na ordem dos créditos", () => {

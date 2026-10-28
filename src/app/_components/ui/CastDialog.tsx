@@ -12,23 +12,23 @@ type CastDialogProps = {
     title: string;
     /** o pôster do título, ao lado do nome; sem ele, só o texto */
     poster: string | null;
-    /** o elenco guardado, na ordem dos créditos */
-    names: readonly string[];
+    /** o elenco guardado, na ordem dos créditos, com o personagem quando há */
+    cast: readonly { name: string; character: string | null }[];
 };
 
 /**
- * Botão "Elenco" e o painel de vidro com o elenco todo, no vidro dos filtros: à direita no
+ * Botão "Ver N nomes" e o painel de vidro com o elenco todo, no vidro dos filtros: à direita no
  * computador, tela cheia no celular. É um <dialog> modal: o navegador prende o foco e fecha com
  * Esc; ao fechar, o foco volta ao botão, mesmo no Safari, que não foca o botão no clique.
  */
-export function CastDialog({ title, poster, names }: CastDialogProps) {
+export function CastDialog({ title, poster, cast }: CastDialogProps) {
     const ref = useRef<HTMLDialogElement>(null);
     const openerRef = useRef<HTMLButtonElement>(null);
     const titleId = useId();
     const close = () => ref.current?.close();
     return (
         <>
-            {/* na altura do texto, para não esticar os fios da linha; o alvo de toque (h-target) vem do before */}
+            {/* na altura do texto da ficha; o alvo de toque (h-target) vem do before */}
             <button
                 ref={openerRef}
                 type="button"
@@ -36,7 +36,7 @@ export function CastDialog({ title, poster, names }: CastDialogProps) {
                 onClick={() => ref.current?.showModal()}
                 className="relative cursor-pointer font-medium text-paper underline decoration-line underline-offset-5 transition-colors duration-hover before:absolute before:inset-x-0 before:-inset-y-3.5 hover:decoration-paper motion-reduce:transition-none"
             >
-                Elenco
+                {count(cast.length)}
             </button>
             <dialog
                 ref={ref}
@@ -58,8 +58,7 @@ export function CastDialog({ title, poster, names }: CastDialogProps) {
                             )}
                             <div className="flex min-w-0 flex-col gap-1.5">
                                 <h2 id={titleId} className="text-small text-soft">
-                                    Elenco ·{" "}
-                                    {names.length === 1 ? "1 nome" : `${names.length} nomes`}
+                                    Elenco · {count(cast.length).slice(4)}
                                 </h2>
                                 <p className="font-display text-heading font-medium text-balance">
                                     {title}
@@ -71,8 +70,8 @@ export function CastDialog({ title, poster, names }: CastDialogProps) {
                         </Button>
                     </div>
                     <div className="relative -mx-1 flex min-h-0 flex-1 flex-col">
-                        <ol className="min-h-0 flex-1 overflow-y-auto px-1 pb-8">
-                            {names.map((name, i) => (
+                        <ol className="min-h-0 flex-1 overflow-y-auto px-1">
+                            {cast.map(({ name, character }, i) => (
                                 <li
                                     key={name}
                                     className="flex items-baseline gap-4 border-t border-line py-3.5"
@@ -80,20 +79,24 @@ export function CastDialog({ title, poster, names }: CastDialogProps) {
                                     <span className="w-6 shrink-0 text-caption text-soft">
                                         {String(i + 1).padStart(2, "0")}
                                     </span>
-                                    <span className="font-display text-confirm font-medium">
-                                        {name}
+                                    <span className="flex min-w-0 flex-col gap-1">
+                                        <span className="font-display text-confirm font-medium">
+                                            {name}
+                                        </span>
+                                        {character && (
+                                            <span className="text-small text-soft">
+                                                {character}
+                                            </span>
+                                        )}
                                     </span>
                                 </li>
                             ))}
                         </ol>
-                        {/* a lista continua: o pé esmaece */}
-                        <div
-                            aria-hidden="true"
-                            className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-scroll-hint"
-                        />
                     </div>
                 </GlassPanel>
             </dialog>
         </>
     );
 }
+
+const count = (n: number) => (n === 1 ? "Ver 1 nome" : `Ver ${n} nomes`);

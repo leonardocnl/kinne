@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useRef, useState } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { nextRoundLabel, roundEndHeading } from "@/domain/rounds";
 import { streamingList } from "@/domain/streaming";
 import { filteredRun, filtersOnArrival, shownTitles } from "@/infrastructure/browser-storage";
@@ -14,9 +14,7 @@ import { showToast } from "../toast";
 import { Button, ButtonLink } from "../ui/Button";
 import { cx } from "../ui/cx";
 import { Dock } from "../ui/Dock";
-import { Availability } from "../ui/Availability";
 import { CastDialog } from "../ui/CastDialog";
-import { Fact, Facts } from "../ui/Facts";
 import { Frame, FrameImage } from "../ui/Frame";
 import { BackIcon, CheckIcon, DiceIcon, PlayIcon } from "../ui/icons";
 import { Score } from "../ui/Score";
@@ -207,23 +205,29 @@ export function TitleView({ title, daily }: TitleViewProps) {
                     </h1>
                     {/* onde assistir é a informação principal: logo abaixo do título */}
                     {/* gênero, ano e duração na mesma linha, ao lado */}
-                    <div className="flex flex-wrap items-end gap-x-10 gap-y-3 max-desktop:mb-5 desktop:my-2">
-                        <Availability streamings={title.streamings} />
-                        <Facts>
-                            {[genre, ...title.facts, title.direction].map(
-                                (text) => text && <Fact key={text}>{text}</Fact>,
-                            )}
-                            {title.fullCast.length > 0 && (
-                                <Fact>
-                                    <CastDialog
-                                        title={title.title}
-                                        poster={title.posterImagePath}
-                                        names={title.fullCast}
-                                    />
-                                </Fact>
-                            )}
-                        </Facts>
-                    </div>
+                    {/* ficha do título: rótulo pequeno em caixa alta e valor no tamanho do texto */}
+                    <dl className="flex flex-wrap gap-x-8 gap-y-4 max-desktop:mb-5 desktop:my-2">
+                        {title.streamings.length > 0 && (
+                            <Spec label="Onde assistir">
+                                <span className="font-medium">
+                                    {streamingList(title.streamings)}
+                                </span>
+                            </Spec>
+                        )}
+                        {genre && <Spec label="Gênero">{genre}</Spec>}
+                        {title.year && <Spec label="Ano">{title.year}</Spec>}
+                        {title.runtime && <Spec label="Duração">{title.runtime}</Spec>}
+                        {title.directors && <Spec label="Direção">{title.directors}</Spec>}
+                        {title.cast.length > 0 && (
+                            <Spec label="Elenco">
+                                <CastDialog
+                                    title={title.title}
+                                    poster={title.posterImagePath}
+                                    cast={title.cast}
+                                />
+                            </Spec>
+                        )}
+                    </dl>
                     {title.tagline && (
                         <p className="max-w-measure text-tagline text-balance text-paper max-desktop:mb-5">
                             {title.tagline}
@@ -285,6 +289,18 @@ export function TitleView({ title, daily }: TitleViewProps) {
                 </Dock>
             </div>
         </main>
+    );
+}
+
+/** Um dado da ficha do título: rótulo em caixa alta e o valor embaixo. */
+function Spec({ label, children }: { label: string; children: ReactNode }) {
+    return (
+        <div className="flex flex-col gap-1">
+            <dt className="text-caption font-semibold tracking-code text-soft uppercase">
+                {label}
+            </dt>
+            <dd className="text-body text-paper">{children}</dd>
+        </div>
     );
 }
 

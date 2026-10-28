@@ -1,5 +1,5 @@
 import "server-only";
-import type { CatalogEntry, TitlesRepository } from "@/application/titles";
+import type { CastMember, CatalogEntry, TitlesRepository } from "@/application/titles";
 import type { TitleType } from "@/domain/catalog";
 import { ADULT_CERTIFICATION } from "@/domain/catalog-sync";
 import { CAST_STORED, MAX_DIRECTORS } from "@/domain/credits";
@@ -80,11 +80,13 @@ export class DrizzleTitlesRepository implements TitlesRepository {
     }
 
     /** Diretores (até MAX_DIRECTORS) e o começo do elenco, na ordem dos créditos (fase 2). */
-    private async credits(titleId: number): Promise<{ directors: string[]; cast: string[] }> {
+    private async credits(titleId: number): Promise<{ directors: string[]; cast: CastMember[] }> {
         const rows = await creditsQuery(this.db, titleId);
         return {
             directors: rows.filter((r) => r.role === "director").map((r) => r.name),
-            cast: rows.filter((r) => r.role === "cast").map((r) => r.name),
+            cast: rows
+                .filter((r) => r.role === "cast")
+                .map((r) => ({ name: r.name, character: r.character })),
         };
     }
 
@@ -247,7 +249,11 @@ export class DrizzleTitlesRepository implements TitlesRepository {
  */
 export function creditsQuery(db: Db, titleId: number) {
     return db
-        .select({ role: titleCredits.role, name: people.name })
+        .select({
+            role: titleCredits.role,
+            name: people.name,
+            character: titleCredits.characterName,
+        })
         .from(titleCredits)
         .innerJoin(people, eq(people.id, titleCredits.personId))
         .where(

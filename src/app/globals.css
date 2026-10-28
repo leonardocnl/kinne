@@ -201,8 +201,6 @@
     --background-image-dock: linear-gradient(rgb(2 2 2 / 0), var(--color-ink) 1.625rem);
     --background-image-skeleton: radial-gradient(120% 90% at 30% 20%, #1a1a1a, #0a0a0a 70%);
     /* base da área que rola nos filtros, quando há mais campos abaixo */
-    --background-image-scroll-hint: linear-gradient(rgb(2 2 2 / 0), var(--color-scrim-strong));
-    --background-image-panel-foot: linear-gradient(rgb(14 14 14 / 0), rgb(14 14 14 / 0.94) 18px);
     /* brilho da aba ativa: signal que sobe do traço na borda de baixo e fica fraco atrás do rótulo
        (4,5:1, exceção da navbar) */
     --background-image-limelight: radial-gradient(

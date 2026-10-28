@@ -13,9 +13,3 @@ export function joinNames(names: readonly string[]): string | null {
     if (list.length === 1) return list[0];
     return `${list.slice(0, -1).join(", ")} e ${list.at(-1)}`;
 }
-
-/** "Direção de X" com todos os diretores; sem nenhum, a linha não aparece. */
-export function directionLine(directors: readonly string[]): string | null {
-    const names = joinNames(directors);
-    return names && `Direção de ${names}`;
-}
