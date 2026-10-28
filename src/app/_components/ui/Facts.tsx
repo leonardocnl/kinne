@@ -5,7 +5,7 @@ import { cx } from "./cx";
 export function Facts({ className, ...rest }: ComponentProps<"ul">) {
     return (
         <ul
-            className={cx("flex flex-wrap items-center gap-y-1 text-data text-soft", className)}
+            className={cx("flex flex-wrap items-center gap-y-1 text-small text-soft", className)}
             {...rest}
         />
     );

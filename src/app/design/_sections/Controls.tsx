@@ -1,6 +1,8 @@
 import { Button, ButtonLink } from "../../_components/ui/Button";
 import { Dock } from "../../_components/ui/Dock";
+import { Availability } from "../../_components/ui/Availability";
 import { Fact, Facts } from "../../_components/ui/Facts";
+import { availableStreamings, STREAMING_SERVICES } from "@/domain/streaming";
 import { Frame } from "../../_components/ui/Frame";
 import {
     BackIcon,
@@ -175,6 +177,20 @@ export function Controls() {
                     Espaço que ela toma: <TokenValue name="--spacing-nav" />; vidro{" "}
                     <TokenValue name="--color-nav" />.
                 </p>
+            </Spec>
+
+            <Spec
+                name="Availability"
+                props={["streamings: StreamingService[]", "className?"]}
+                does="Onde assistir: a informação principal do título, logo abaixo dele e antes da chamada. É texto, não controle: nada de pílula nem amarelo."
+            >
+                <Row label="três">
+                    <Availability streamings={availableStreamings([8, 1899, 119])} />
+                </Row>
+                <Row label="cinco">
+                    <Availability streamings={STREAMING_SERVICES} />
+                </Row>
+                <p className="text-caption text-soft">Sem streaming, nada aparece.</p>
             </Spec>
 
             <Spec

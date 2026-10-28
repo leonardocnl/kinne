@@ -1,11 +1,10 @@
-// Streamings por assinatura suportados no Brasil (RNG002), com o código no TMDB (região BR), na
-// ordem de preferência para exibir um só. O id é o que o navegador guarda (RNG005).
+// Streamings por assinatura suportados no Brasil (RNG002), com o código no TMDB (região BR). O id é o que o navegador guarda (RNG005).
 export const STREAMING_SERVICES = [
-    { id: "netflix", name: "Netflix", tmdbId: 8, preposition: "na" },
-    { id: "max", name: "Max", tmdbId: 1899, preposition: "no" },
-    { id: "prime-video", name: "Prime Video", tmdbId: 119, preposition: "no" },
-    { id: "disney-plus", name: "Disney+", tmdbId: 337, preposition: "no" },
-    { id: "globoplay", name: "Globoplay", tmdbId: 307, preposition: "no" },
+    { id: "netflix", name: "Netflix", tmdbId: 8 },
+    { id: "max", name: "Max", tmdbId: 1899 },
+    { id: "prime-video", name: "Prime Video", tmdbId: 119 },
+    { id: "disney-plus", name: "Disney+", tmdbId: 337 },
+    { id: "globoplay", name: "Globoplay", tmdbId: 307 },
 ] as const;
 
 export type StreamingService = (typeof STREAMING_SERVICES)[number];
@@ -23,7 +22,14 @@ export function streamingTmdbIds(streamings: readonly Streaming[]): number[] {
     ).map((s) => s.tmdbId);
 }
 
-// O primeiro, na ordem acima, entre os streamings em que o título está.
-export function primaryStreaming(tmdbIds: readonly number[]): StreamingService | null {
-    return STREAMING_SERVICES.find((s) => tmdbIds.includes(s.tmdbId)) ?? null;
+// Os streamings em que o título está, na ordem acima.
+export function availableStreamings(tmdbIds: readonly number[]): StreamingService[] {
+    return STREAMING_SERVICES.filter((s) => tmdbIds.includes(s.tmdbId));
+}
+
+const LIST = new Intl.ListFormat("pt-BR", { style: "long", type: "conjunction" });
+
+// "Netflix", "Netflix e Max", "Netflix, Max e Prime Video".
+export function streamingList(services: readonly Pick<StreamingService, "name">[]): string {
+    return LIST.format(services.map((s) => s.name));
 }

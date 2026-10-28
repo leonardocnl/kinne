@@ -8,6 +8,7 @@ import {
     useRef,
     useState,
     useSyncExternalStore,
+    type ReactNode,
 } from "react";
 import type { HomePick } from "../../_data/home";
 import { Button } from "../ui/Button";
@@ -51,7 +52,16 @@ function useReducedMotion() {
  * faixa "Hoje". A rotação para no primeiro toque ou tecla (fora do botão de pausa) e não existe
  * com movimento reduzido (CM004).
  */
-export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] }) {
+export function DailyPicks({
+    date,
+    picks,
+    availability,
+}: {
+    date: string;
+    picks: HomePick[];
+    // o Availability de cada indicação, feito no servidor: fica fora do JS da home
+    availability: ReactNode[];
+}) {
     const reducedMotion = useReducedMotion();
     const [rotation, dispatch] = useReducer(rotate, initialRotation);
     const pauseRef = useRef<HTMLButtonElement>(null);
@@ -177,6 +187,14 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
                                 {pick.title}
                             </span>
                         </h1>
+                        <div
+                            className={cx(
+                                "transition-opacity duration-fade empty:hidden motion-reduce:transition-none",
+                                swap === "out" && "opacity-0",
+                            )}
+                        >
+                            {availability[shown]}
+                        </div>
                         <p
                             className={cx(
                                 "max-w-measure text-tagline text-balance text-soft transition-opacity duration-fade motion-reduce:transition-none",
@@ -194,12 +212,6 @@ export function DailyPicks({ date, picks }: { date: string; picks: HomePick[] })
                             {pick.facts.map((text) => (
                                 <Fact key={text}>{text}</Fact>
                             ))}
-                            {pick.streaming && (
-                                <Fact className="max-desktop:basis-full max-desktop:border-l-0 max-desktop:pl-0">
-                                    Disponível {pick.streaming.preposition}{" "}
-                                    <b className="font-medium text-paper">{pick.streaming.name}</b>
-                                </Fact>
-                            )}
                         </Facts>
                         <TextLink
                             href={titleHref(pick.slug)}

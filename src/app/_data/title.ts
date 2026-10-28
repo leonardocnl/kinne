@@ -4,7 +4,7 @@ import type { CatalogEntry } from "@/application/titles";
 import { formatRuntime, isSlug } from "@/domain/catalog";
 import { castLine, directionLine } from "@/domain/credits";
 import { GENRE_LABELS, mainGenre } from "@/domain/genre";
-import { primaryStreaming, type StreamingService } from "@/domain/streaming";
+import { availableStreamings, type StreamingService } from "@/domain/streaming";
 import { createDb } from "@/infrastructure/db/client";
 import { DrizzleTitlesRepository } from "@/infrastructure/db/titles-repository";
 import { CATALOG_TAG, titleTag } from "@/infrastructure/revalidation";
@@ -21,7 +21,7 @@ export type TitleScreen = {
     // ano e duração, sem os que faltam
     facts: string[];
     score: string;
-    streaming: StreamingService | null;
+    streamings: StreamingService[];
     trailerUrl: string | null;
     backdropImagePath: string | null;
     backdropWidth: number | null;
@@ -64,7 +64,7 @@ function toTitleScreen(t: CatalogEntry): TitleScreen {
             minimumFractionDigits: 1,
             maximumFractionDigits: 1,
         }),
-        streaming: primaryStreaming(t.streamingTmdbIds),
+        streamings: availableStreamings(t.streamingTmdbIds),
         trailerUrl: t.trailerYoutubeKey
             ? `https://www.youtube.com/watch?v=${encodeURIComponent(t.trailerYoutubeKey)}`
             : null,

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { RoomView } from "@/application/group-room";
-import { STREAMING_SERVICES } from "@/domain/streaming";
+import { STREAMING_SERVICES, streamingList } from "@/domain/streaming";
 import { closeVoting, vote } from "../../_actions/room";
 import { showToast } from "../toast";
 import { Button } from "../ui/Button";
@@ -16,8 +16,6 @@ import { People } from "./People";
 type Room = Extract<RoomView, { kind: "room" }>;
 
 type VotingProps = { view: Room; refresh: () => Promise<void>; onLeave: () => void };
-
-const nameOf = (id: string) => STREAMING_SERVICES.find((s) => s.id === id);
 
 /** Votação (US011 C7): os finalistas e o "Eu toparia" de cada um. Ninguém vê em quem as outras votaram. */
 export function Voting({ view, refresh, onLeave }: VotingProps) {
@@ -77,13 +75,12 @@ export function Voting({ view, refresh, onLeave }: VotingProps) {
                                 </h2>
                                 {f.where.length > 0 && (
                                     <p className="text-data text-faint">
-                                        Disponível{" "}
-                                        {f.where
-                                            .map(
-                                                (id) =>
-                                                    `${nameOf(id)?.preposition} ${nameOf(id)?.name}`,
-                                            )
-                                            .join(" e ")}
+                                        Disponível em{" "}
+                                        {streamingList(
+                                            STREAMING_SERVICES.filter((s) =>
+                                                f.where.includes(s.id),
+                                            ),
+                                        )}
                                     </p>
                                 )}
                             </div>

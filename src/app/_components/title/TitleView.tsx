@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { nextRoundLabel, roundEndHeading } from "@/domain/rounds";
+import { streamingList } from "@/domain/streaming";
 import { filteredRun, filtersOnArrival, shownTitles } from "@/infrastructure/browser-storage";
 import type { TitleScreen } from "../../_data/title";
 import { screenMain } from "../layout";
@@ -13,6 +14,7 @@ import { showToast } from "../toast";
 import { Button, ButtonLink } from "../ui/Button";
 import { cx } from "../ui/cx";
 import { Dock } from "../ui/Dock";
+import { Availability } from "../ui/Availability";
 import { Fact, Facts } from "../ui/Facts";
 import { Frame, FrameImage } from "../ui/Frame";
 import { BackIcon, CheckIcon, DiceIcon, PlayIcon } from "../ui/icons";
@@ -100,7 +102,7 @@ export function TitleView({ title, daily }: TitleViewProps) {
     }
 
     const anotherLabel = origin === "dia" ? "Próxima de hoje" : "Outra opção";
-    const where = title.streaming && `${title.streaming.preposition} ${title.streaming.name}`;
+    const where = title.streamings.length > 0 && streamingList(title.streamings);
 
     if (filtered.end) {
         // US004 C3: acabou a rodada de 10; há a seguinte ou acabaram todas
@@ -190,6 +192,8 @@ export function TitleView({ title, daily }: TitleViewProps) {
                     <h1 className="pb-1 font-display text-title font-medium text-balance max-desktop:mb-3 desktop:text-wrap">
                         {title.title}
                     </h1>
+                    {/* onde assistir é a informação principal: logo abaixo do título */}
+                    <Availability streamings={title.streamings} className="max-desktop:mb-4" />
                     {title.tagline && (
                         <p className="max-w-measure text-tagline text-balance text-paper max-desktop:mb-5">
                             {title.tagline}
@@ -201,15 +205,9 @@ export function TitleView({ title, daily }: TitleViewProps) {
                             (text) => text && <Fact key={text}>{text}</Fact>,
                         )}
                     </Facts>
-                    {title.streaming && (
-                        <p className="text-data text-faint max-desktop:mt-2">
-                            Disponível {title.streaming.preposition}{" "}
-                            <b className="font-medium text-paper">{title.streaming.name}</b>
-                        </p>
-                    )}
                     {/* direção e elenco: só texto; sem crédito, a linha não aparece */}
                     {(title.direction || title.cast) && (
-                        <div className="flex max-w-measure flex-col text-data text-soft max-desktop:mt-2">
+                        <div className="flex max-w-measure flex-col text-small text-soft max-desktop:mt-2">
                             {title.direction && <p>{title.direction}</p>}
                             {title.cast && <p>{title.cast}</p>}
                         </div>
@@ -225,7 +223,7 @@ export function TitleView({ title, daily }: TitleViewProps) {
                         <div className="flex items-center gap-4.5 max-desktop:flex-col max-desktop:items-stretch max-desktop:gap-dock-gap">
                             <p className="flex items-center gap-2.5 font-display text-confirm font-medium whitespace-nowrap">
                                 <CheckIcon />
-                                Combinado.{where && ` Está ${where}.`}
+                                Combinado.{where && ` Está em ${where}.`}
                             </p>
                             <ButtonLink ref={homeRef} variant="primary" href="/">
                                 Voltar ao início
