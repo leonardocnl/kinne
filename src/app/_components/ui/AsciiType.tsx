@@ -171,3 +171,4 @@ export function AsciiType({ text, className }: { text: string; className?: strin
 
     return <canvas ref={ref} aria-hidden="true" className={className} />;
 }
+export default AsciiType;

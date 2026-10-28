@@ -50,7 +50,7 @@ Leitura obrigatória antes de qualquer tarefa de interface. A fonte da verdade v
 - Camadas: navbar `z-nav` (1) abaixo do painel de filtros (2), do Dock (10) e do aviso (20); com a busca aberta ela sobe acima de todos. A cortina (`z-100`) fica acima de tudo, inclusive da busca aberta.
 - Respiro: `[data-nav]` dá à página `--spacing-nav` embaixo no celular (mais o Dock, quando há) e `scroll-padding-top` no computador.
 
-- Telas sem título (404 da página, 404 do título e fim de rodada dos filtros, `StateScreen`): o quadro vazio leva um texto grande em caracteres (`AsciiType`): "404" nas duas primeiras e, no fim da rodada, quantos títulos a pessoa já viu. Fica sempre visível e apagado; perto do ponteiro (mouse ou dedo) os caracteres acendem, embaralham e ganham brilho, em `paper` e `faint` (sem amarelo). Com movimento reduzido, fica parado.
+- Telas sem título (404 da página, 404 do título e fim de rodada dos filtros, `StateScreen`): o quadro vazio leva um texto grande em caracteres (`AsciiType`): "404" no 404 do título e, no fim da rodada, quantos títulos a pessoa já viu. O 404 da raiz fica sem ele: o que o `not-found.tsx` da raiz importa entra no JS de toda página (cerca de 2,2 KB a mais na home). O `AsciiType` baixa sob demanda (`AsciiArt`). Fica sempre visível e apagado; perto do ponteiro (mouse ou dedo) os caracteres acendem, embaralham e ganham brilho, em `paper` e `faint` (sem amarelo). Com movimento reduzido, fica parado.
 
 ## Imagens
 

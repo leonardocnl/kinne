@@ -27,6 +27,11 @@ describe("telas 404", () => {
         const title = renderToStaticMarkup(<TitleNotFound />);
         expect(page).toContain("Não encontramos esta página");
         expect(title).toContain("Não encontramos este título");
-        for (const html of [page, title]) expect(html).toContain("<canvas");
+        // o efeito baixa sob demanda (AsciiArt): fora do JS de toda página
+        // o 404 da raiz fica sem: o que ele importa entra no JS de toda página (orçamento)
+        for (const file of ["titulo/[slug]/not-found.tsx"])
+            expect(readFileSync(join(import.meta.dirname, "../..", file), "utf8")).toContain(
+                '<AsciiArt text="404"',
+            );
     });
 });

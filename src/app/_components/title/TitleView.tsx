@@ -20,7 +20,7 @@ import { BackIcon, CheckIcon, DiceIcon, PlayIcon } from "../ui/icons";
 import { Score } from "../ui/Score";
 import { TextLink } from "../ui/TextLink";
 import { TmdbImage } from "../ui/TmdbImage";
-import { AsciiType } from "../ui/AsciiType";
+import { AsciiArt } from "../ui/AsciiArt";
 import { largePosterSources, TITLE_POSTER_SIZES } from "../ui/tmdb-sources";
 import { beginWipe, cancelWipe, wipeRouter } from "../ui/wipe";
 import { goToTitle, RECOMMENDATION_SOURCE, useOrigin } from "./origin";
@@ -129,7 +129,7 @@ export function TitleView({ title, daily }: TitleViewProps) {
             <StateScreen
                 heading={roundEndHeading(end)}
                 art={
-                    <AsciiType
+                    <AsciiArt
                         text={String(roundSeenCount(end))}
                         className="absolute inset-0 size-full"
                     />
