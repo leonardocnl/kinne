@@ -11,11 +11,11 @@ import {
     type ReactNode,
 } from "react";
 import type { HomePick } from "../../_data/home";
-import { Button } from "../ui/Button";
+import { Button, ButtonLink } from "../ui/Button";
 import { cx } from "../ui/cx";
 import { Frame, FrameImage } from "../ui/Frame";
 import { Fact, Facts } from "../ui/Facts";
-import { PauseIcon, PlayIcon } from "../ui/icons";
+import { GroupIcon, PauseIcon, PlayIcon } from "../ui/icons";
 import { TextLink } from "../ui/TextLink";
 import { billingRow, screenMain } from "../layout";
 import { titleOrigin } from "@/infrastructure/browser-storage";
@@ -255,10 +255,16 @@ export function DailyPicks({
                                 Me surpreenda
                             </Button>
                         </div>
-                        {/* discreto, sem a cor de destaque (US011 C1, CM003) */}
-                        <TextLink href="/sala" className="self-center desktop:self-end">
+                        {/* discreto, sem a cor de destaque (US011 C1, CM003): o botão ghost, o mais
+                            apagado, com o ícone de grupo, na largura do par acima */}
+                        <ButtonLink
+                            variant="ghost"
+                            href="/sala"
+                            icon={<GroupIcon />}
+                            className="w-full"
+                        >
                             Assistir em grupo
-                        </TextLink>
+                        </ButtonLink>
                     </div>
                 </div>
                 {panelMounted && (
