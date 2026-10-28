@@ -6,7 +6,7 @@ import { TopBar } from "../TopBar";
 export function HomeSkeleton() {
     return (
         <>
-            <TopBar />
+            <TopBar floating />
             <main aria-busy="true" className={screenMain}>
                 <p role="status" className="sr-only">
                     Carregando as indicações de hoje

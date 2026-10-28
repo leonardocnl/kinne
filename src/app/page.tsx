@@ -12,9 +12,9 @@ import { homePicks } from "./_data/home";
 
 export default function Home() {
     return (
-        <Shell nav="inicio">
+        <Shell nav="inicio" flush>
             <AppOpened />
-            <HomeErrorBoundary topBar={<TopBar />}>
+            <HomeErrorBoundary topBar={<TopBar floating />}>
                 <Suspense fallback={<HomeSkeleton />}>
                     <Today />
                 </Suspense>
@@ -33,7 +33,7 @@ async function Today() {
     if (picks.length === 0) throw new Error(`${day}: nenhuma indicação do dia`);
     return (
         <>
-            <TopBar />
+            <TopBar floating />
             <DailyPicks
                 date={date}
                 picks={picks}

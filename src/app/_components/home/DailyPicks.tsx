@@ -235,21 +235,22 @@ export function DailyPicks({
                         </TextLink>
                     </div>
                     {/* um amarelo por tela (CM003): com os filtros abertos, o de trás some. No
-                        computador, os três lado a lado; no celular, o par e o grupo embaixo */}
+                        computador, os três lado a lado e da mesma largura, a do maior (grid de colunas
+                        iguais); no celular, o par e o grupo embaixo */}
                     <div
                         className={cx(
-                            "flex flex-col gap-2 transition-opacity duration-fade motion-reduce:transition-none max-desktop:mt-5 desktop:col-start-3 desktop:row-start-1 desktop:h-title-line desktop:flex-row desktop:items-center desktop:justify-end desktop:gap-2.5",
+                            "flex flex-col gap-2 transition-opacity duration-fade motion-reduce:transition-none max-desktop:mt-5 desktop:col-start-3 desktop:row-start-1 desktop:grid desktop:h-title-line desktop:auto-cols-fr desktop:grid-flow-col desktop:content-center desktop:gap-2.5",
                             filters.open && "invisible opacity-0",
                         )}
                     >
-                        <div className="flex gap-2.5">
+                        <div className="flex gap-2.5 desktop:contents">
                             <Button
                                 ref={chooseRef}
                                 variant="primary"
                                 onClick={filters.show}
                                 onPointerEnter={preloadFiltersPanel}
                                 onFocus={preloadFiltersPanel}
-                                className="max-desktop:min-w-0 max-desktop:flex-1 max-desktop:px-2.5 desktop:min-w-42"
+                                className="max-desktop:min-w-0 max-desktop:flex-1 max-desktop:px-2.5"
                             >
                                 Escolher agora
                             </Button>
@@ -257,7 +258,7 @@ export function DailyPicks({
                                 variant="quiet"
                                 onClick={() => surprise.draw()}
                                 aria-busy={surprise.pending}
-                                className="max-desktop:min-w-0 max-desktop:flex-1 max-desktop:px-2.5 desktop:min-w-42"
+                                className="max-desktop:min-w-0 max-desktop:flex-1 max-desktop:px-2.5"
                             >
                                 Me surpreenda
                             </Button>
