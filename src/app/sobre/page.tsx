@@ -124,9 +124,8 @@ export default function AboutPage() {
 
                 <Chapter number="04" title="Apoie" id="apoie">
                     <p className={body}>
-                        Se o Kinne já te salvou de uma noite inteira rolando catálogo, que tal me
-                        pagar um café? Ajuda a manter tudo no ar e a deixar as indicações cada vez
-                        melhores. Só se você quiser: qualquer valor, pelo Pix, sem conta e sem taxa.
+                        Se quiser apoiar o Kinne, fica aqui uma forma: um Pix de qualquer valor, sem
+                        conta e sem taxa.
                     </p>
                     <div className="flex flex-col gap-5 desktop:flex-row desktop:items-start">
                         {/* SVG fixo gerado do BR Code (scripts/generate-pix-qr.py); sem next/image */}

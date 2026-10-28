@@ -15,7 +15,15 @@ type StateScreenProps = {
 export function StateScreen({ heading, text, action, art }: StateScreenProps) {
     return (
         <main className={screenMain}>
-            <Frame className="bg-skeleton">{art}</Frame>
+            {art ? (
+                // com o texto em caracteres (404, fim de rodada): a caixa do Frame em preto puro,
+                // sem o cinza do skeleton nem o granulado
+                <div className="relative isolate aspect-video overflow-hidden bg-ink max-desktop:-mx-gutter desktop:aspect-scope">
+                    {art}
+                </div>
+            ) : (
+                <Frame className="bg-skeleton" />
+            )}
             <div className={billingRow}>
                 <div role="alert" className="flex flex-col gap-3.5">
                     <h1 className="pb-1 font-display text-title font-medium text-balance">
