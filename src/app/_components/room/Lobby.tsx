@@ -121,7 +121,7 @@ export function Lobby({ view, refresh, onLeave }: LobbyProps) {
     return (
         // uma coluna, como a ficha da tela do título: o convite primeiro (o código grande e o
         // QR code), quem está na sala, o que você topa e, no fim, as ações. Sem caixas nem fios
-        <main className="grid gap-12 pt-2 desktop:min-h-dvh desktop:grid-cols-12 desktop:content-start desktop:items-start desktop:gap-x-16 desktop:pt-nav desktop:pb-12">
+        <main className="grid gap-12 pt-2 desktop:grid-cols-12 desktop:content-start desktop:items-start desktop:gap-x-16 desktop:pt-nav desktop:pb-12">
             <div className="flex min-w-0 flex-col gap-10 desktop:col-span-8">
                 <div className="flex flex-col gap-3.5">
                     <h1 className="pb-1 font-display text-title font-medium text-balance">
