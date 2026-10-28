@@ -6,6 +6,7 @@ import { Skeleton } from "../../_components/ui/Skeleton";
 import { Toast } from "../../_components/ui/Toast";
 import { AsciiHorizon } from "../../_components/ui/AsciiHorizon";
 import { AsciiType } from "../../_components/ui/AsciiType";
+import { PEOPLE } from "../../_components/ui/figures";
 import { BackIcon, PlayIcon } from "../../_components/ui/icons";
 import { TokenValue } from "./live";
 import { DoDont, Row, Spec } from "./Spec";
@@ -181,13 +182,23 @@ export function Media() {
             </Spec>
             <Spec
                 name="AsciiType"
-                props={["text", "tone?", "drift?", "className?"]}
+                props={["text?", "figure?", "tone?", "drift?", "className?"]}
                 does="Texto grande desenhado em caracteres, no quadro das telas 404 (página e título). Sempre visível, apagado; perto do ponteiro (mouse ou dedo) os caracteres acendem, embaralham e ganham brilho e um leve desdobramento, e a área segue o ponteiro com atraso. Canvas 2D, sem dependência; parado quando o ponteiro está longe; com movimento reduzido, o desenho fica parado. Decorativo (aria-hidden)."
             >
                 <Row label="fim de rodada: signal, passeando sozinho">
                     <div className="relative aspect-video w-full bg-skeleton">
                         <AsciiType
                             text="rodada 2"
+                            tone="signal"
+                            drift
+                            className="absolute inset-0 size-full"
+                        />
+                    </div>
+                </Row>
+                <Row label="figura: entrada da sala">
+                    <div className="relative aspect-video w-full bg-skeleton">
+                        <AsciiType
+                            figure={PEOPLE}
                             tone="signal"
                             drift
                             className="absolute inset-0 size-full"

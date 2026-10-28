@@ -117,7 +117,7 @@ export function Lobby({ view, refresh, onLeave }: LobbyProps) {
     const code = view.code;
 
     return (
-        <main className="flex flex-col gap-6 pt-2 desktop:grid desktop:grid-cols-2 desktop:gap-x-12 desktop:pt-3.5">
+        <main className="flex flex-col gap-6 pt-2 desktop:grid desktop:grid-cols-2 desktop:gap-x-12 desktop:pt-nav">
             <div className="flex flex-col gap-4">
                 <h1 className="pb-1 font-display text-title font-medium text-balance">
                     Sala de grupo

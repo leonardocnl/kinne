@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import { screenMain } from "../layout";
 import { AsciiArt } from "../ui/AsciiArt";
 import { Button } from "../ui/Button";
+import { PEOPLE } from "../ui/figures";
 import { Frame } from "../ui/Frame";
 import { NOT_FOUND } from "./messages";
 
@@ -48,10 +49,15 @@ export function Entry({ onCreate, onJoin }: EntryProps) {
 
     return (
         <main className={screenMain}>
-            {/* o quadro das outras telas, com o texto em caracteres que reage ao ponteiro e passeia
-                sozinho; sem amarelo: o amarelo da tela é "Criar uma sala" */}
+            {/* o quadro das outras telas, encostado no topo, com um grupo de pessoas em caracteres
+                amarelos que reage ao ponteiro e passeia sozinho (exceção do dono, DESIGN.md, Cor) */}
             <Frame className="bg-skeleton">
-                <AsciiArt text="juntos" drift className="absolute inset-0 size-full" />
+                <AsciiArt
+                    figure={PEOPLE}
+                    tone="signal"
+                    drift
+                    className="absolute inset-0 size-full"
+                />
             </Frame>
             {/* como a tela do título: texto à esquerda e as ações à direita, na altura da primeira
                 linha do título; no celular, as ações embaixo */}

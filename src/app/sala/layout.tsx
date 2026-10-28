@@ -15,9 +15,9 @@ export const viewport: Viewport = { viewportFit: "cover" };
 
 export default function RoomLayout({ children }: LayoutProps<"/sala">) {
     return (
-        <Shell>
+        <Shell flush>
             <AppOpened />
-            <TopBar back />
+            <TopBar back floating />
             {children}
         </Shell>
     );
