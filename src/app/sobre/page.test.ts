@@ -12,7 +12,10 @@ describe("/sobre", () => {
         for (const source of [page, copy]) {
             expect(source).not.toMatch(/\b(assinatura|plano|compre)\b/i);
         }
-        expect(page).toContain("Gostou? Pague um café. Apoio voluntário, sem conta e sem taxa.");
+        // voluntário e sem atrito: "só se você quiser", qualquer valor, sem conta e sem taxa
+        expect(page).toContain(
+            "Só se você quiser: qualquer valor, pelo Pix, sem conta e sem taxa.",
+        );
     });
 
     it("a chave, o nome e a cidade vêm só da constante", () => {
