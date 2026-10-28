@@ -123,7 +123,9 @@ Eu, como visitante, quero ver um título por vez com as informações que me aju
 
 **Dado** que o título tem elenco  
 **Quando** aciono "Ver N nomes"  
-**Então** o sistema abre, sobre a tela (à direita no computador, em tela cheia no celular), um painel de vidro com o nome do título, "Elenco", a quantidade de nomes e todo o elenco guardado (até 28), numerado na ordem dos créditos, cada nome com o personagem embaixo quando o TMDB informa  
+**Então** o sistema abre um painel de vidro modal, centralizado sobre a tela escurecida no computador e em tela cheia no celular, com o nome do título, "Elenco", a quantidade de nomes e todo o elenco guardado (até 28), numerado na ordem dos créditos, rolando por dentro do painel  
+**E** cada nome ocupa uma linha, com o personagem na mesma linha, em outra coluna à direita e na cor de destaque, quando o TMDB informa (no celular, logo abaixo do nome); sem personagem, a linha mostra só o nome, sem coluna vazia  
+**E** a página atrás não rola enquanto o painel está aberto  
 **E** o foco fica dentro do painel, que fecha pelo botão "Fechar elenco", pela tecla Esc ou por um toque fora dele  
 **E** ao fechar, o foco volta ao botão
 

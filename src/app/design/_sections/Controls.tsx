@@ -196,18 +196,11 @@ export function Controls() {
 
             <Spec
                 name="CastDialog"
-                props={["title: string", "names: string[]"]}
-                does="Botão Ver N nomes, na ficha do título: abre, no vidro dos filtros (à direita no computador, tela cheia no celular), todo o elenco guardado (até 28), numerado e na ordem dos créditos."
+                props={["title: string", "poster: string | null", "cast: { name, character }[]"]}
+                does="Botão Ver N nomes, na ficha do título: abre, num vidro centralizado sobre a tela escurecida (tela cheia no celular), todo o elenco guardado (até 28), numerado e na ordem dos créditos, com o personagem em amarelo na coluna da direita quando há."
             >
                 <Row label="normal">
-                    <CastDialog
-                        title="Título do filme"
-                        poster={null}
-                        cast={Array.from({ length: 12 }, (_, i) => ({
-                            name: `Pessoa ${i + 1}`,
-                            character: i % 3 === 2 ? null : `Personagem ${i + 1}`,
-                        }))}
-                    />
+                    <CastDialog title="Título do filme" poster={null} cast={SAMPLE_CAST} />
                 </Row>
             </Spec>
 
@@ -400,3 +393,14 @@ export function Controls() {
         </>
     );
 }
+
+// 28 nomes, como o elenco guardado: com e sem personagem, um nome longo e outros alfabetos
+const SAMPLE_CAST = [
+    { name: "Maria Fernanda Cândido de Albuquerque Vasconcellos", character: "Helena" },
+    { name: "शाहरुख़ ख़ान", character: "राज मल्होत्रा" },
+    { name: "渡辺謙", character: "斎藤" },
+    ...Array.from({ length: 25 }, (_, i) => ({
+        name: `Pessoa ${i + 4}`,
+        character: i % 3 === 2 ? null : `Personagem ${i + 4}`,
+    })),
+];
