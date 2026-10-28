@@ -5,6 +5,7 @@ import { QrCode } from "../../_components/ui/QrCode";
 import { Skeleton } from "../../_components/ui/Skeleton";
 import { Toast } from "../../_components/ui/Toast";
 import { AsciiHorizon } from "../../_components/ui/AsciiHorizon";
+import { AsciiType } from "../../_components/ui/AsciiType";
 import { BackIcon, PlayIcon } from "../../_components/ui/icons";
 import { TokenValue } from "./live";
 import { DoDont, Row, Spec } from "./Spec";
@@ -175,6 +176,17 @@ export function Media() {
                 <Row label="fundo do rodapé de toda tela">
                     <div className="relative aspect-kinne w-full">
                         <AsciiHorizon className="absolute inset-0" />
+                    </div>
+                </Row>
+            </Spec>
+            <Spec
+                name="AsciiType"
+                props={["text", "className?"]}
+                does="Texto grande desenhado em caracteres, no quadro das telas 404 (página e título). Sempre visível, apagado; perto do ponteiro (mouse ou dedo) os caracteres acendem, embaralham e ganham brilho e um leve desdobramento, e a área segue o ponteiro com atraso. Canvas 2D, sem dependência; parado quando o ponteiro está longe; com movimento reduzido, o desenho fica parado. Decorativo (aria-hidden)."
+            >
+                <Row label="passe o mouse">
+                    <div className="relative aspect-video w-full bg-skeleton">
+                        <AsciiType text="404" className="absolute inset-0 size-full" />
                     </div>
                 </Row>
             </Spec>

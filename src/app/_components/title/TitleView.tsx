@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
-import { nextRoundLabel, roundEndHeading } from "@/domain/rounds";
+import { nextRoundLabel, roundEndHeading, roundSeenCount } from "@/domain/rounds";
 import { streamingList } from "@/domain/streaming";
 import { filteredRun, filtersOnArrival, shownTitles } from "@/infrastructure/browser-storage";
 import type { TitleScreen } from "../../_data/title";
@@ -20,8 +20,9 @@ import { BackIcon, CheckIcon, DiceIcon, PlayIcon } from "../ui/icons";
 import { Score } from "../ui/Score";
 import { TextLink } from "../ui/TextLink";
 import { TmdbImage } from "../ui/TmdbImage";
+import { AsciiType } from "../ui/AsciiType";
 import { largePosterSources, TITLE_POSTER_SIZES } from "../ui/tmdb-sources";
-import { wipeRouter } from "../ui/wipe";
+import { beginWipe, cancelWipe, wipeRouter } from "../ui/wipe";
 import { goToTitle, RECOMMENDATION_SOURCE, useOrigin } from "./origin";
 import { useFilteredDraw } from "./useFilteredDraw";
 import { useSurprise } from "./useSurprise";
@@ -77,8 +78,11 @@ export function TitleView({ title, daily }: TitleViewProps) {
     // quinta) ou um novo sorteio
     function next(from: "seen" | "another") {
         focusOnArrival = from;
+        // a cortina começa já no clique e cobre também o tempo do sorteio
+        beginWipe();
         const stay = () => {
             focusOnArrival = null;
+            cancelWipe();
         };
         if (origin === "dia" && nextDailySlug)
             goToTitle(wipeRouter(router), "replace", nextDailySlug, "dia");
@@ -124,6 +128,12 @@ export function TitleView({ title, daily }: TitleViewProps) {
         return (
             <StateScreen
                 heading={roundEndHeading(end)}
+                art={
+                    <AsciiType
+                        text={String(roundSeenCount(end))}
+                        className="absolute inset-0 size-full"
+                    />
+                }
                 action={
                     <div className="flex flex-wrap gap-2.5" aria-busy={pending}>
                         {end.kind === "next" ? (

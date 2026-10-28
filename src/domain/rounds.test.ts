@@ -8,6 +8,7 @@ import {
     rankTitles,
     roundEnd,
     roundEndHeading,
+    roundSeenCount,
     weightedRating,
 } from "./rounds";
 
@@ -169,5 +170,14 @@ describe("fim da rodada (C3)", () => {
         expect(nextRoundLabel(10)).toBe("Sortear entre os próximos 10");
         expect(nextRoundLabel(7)).toBe("Sortear entre os últimos 7");
         expect(nextRoundLabel(1)).toBe("Sortear o último");
+    });
+});
+
+describe("roundSeenCount (US004 C3)", () => {
+    it("conta as rodadas vistas e, no fim, o total", () => {
+        expect(roundSeenCount({ kind: "next", round: 0, size: 10 })).toBe(10);
+        expect(roundSeenCount({ kind: "next", round: 2, size: 4 })).toBe(30);
+        expect(roundSeenCount({ kind: "done", total: 23 })).toBe(23);
+        expect(roundSeenCount({ kind: "done", total: 0 })).toBe(0);
     });
 });

@@ -7,13 +7,15 @@ type StateScreenProps = {
     text?: string;
     /** a ação principal */
     action: ReactNode;
+    /** o que vai dentro do quadro (o "404" em caracteres); sem isso, o quadro fica vazio */
+    art?: ReactNode;
 };
 
 /** Tela sem título para mostrar: erro (CM002) e endereço inexistente. O quadro fica vazio. */
-export function StateScreen({ heading, text, action }: StateScreenProps) {
+export function StateScreen({ heading, text, action, art }: StateScreenProps) {
     return (
         <main className={screenMain}>
-            <Frame className="bg-skeleton" />
+            <Frame className="bg-skeleton">{art}</Frame>
             <div className={billingRow}>
                 <div role="alert" className="flex flex-col gap-3.5">
                     <h1 className="pb-1 font-display text-title font-medium text-balance">

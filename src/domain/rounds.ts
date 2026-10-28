@@ -140,6 +140,11 @@ export function roundEndHeading(end: RoundEnd): string {
     return `Você viu todos os ${end.total} títulos`;
 }
 
+/** Quantos títulos a pessoa já viu ao fim da rodada: o número grande da tela de fim (US004 C3). */
+export function roundSeenCount(end: RoundEnd): number {
+    return end.kind === "next" ? (end.round + 1) * ROUND_SIZE : end.total;
+}
+
 /** O botão que passa à rodada seguinte: "os próximos 10" ou, na última e menor, "os últimos N". */
 export function nextRoundLabel(size: number): string {
     if (size >= ROUND_SIZE) return `Sortear entre os próximos ${ROUND_SIZE}`;
