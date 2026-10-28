@@ -5,7 +5,9 @@ import { describe, expect, it } from "vitest";
 // security §4: todo módulo que lê segredo ou fala com o banco importa "server-only", e aí o build
 // falha se um componente de cliente o importar.
 const srcDir = import.meta.dirname;
-const touchesSecretsOrDb = /process\.env|createDb\(|@neondatabase|from "\.\/client"|: Db\b/;
+// process.env.NODE_ENV não é segredo (o Next o troca no build, até no cliente); qualquer outro é
+const touchesSecretsOrDb =
+    /process\.env(?!\.NODE_ENV\b)|createDb\(|@neondatabase|from "\.\/client"|: Db\b/;
 
 const files = readdirSync(srcDir, { recursive: true, encoding: "utf8" }).filter(
     (f) => /\.tsx?$/.test(f) && !/\.test\.tsx?$/.test(f),

@@ -5,6 +5,8 @@ const candidates = vi.fn();
 const personTitleIds = vi.fn();
 const admit = vi.fn();
 const drawAccount = vi.fn();
+const admitDraw = vi.fn();
+vi.mock("../_data/draw-limit", () => ({ admitDraw }));
 vi.mock("../_data/account", () => ({ drawAccount }));
 vi.mock("../_data/candidates", () => ({ candidates }));
 vi.mock("../_data/people", () => ({ personTitleIds }));
@@ -38,19 +40,36 @@ beforeEach(() => {
     candidates.mockReset().mockResolvedValue([1, 2, 3, 4].map((id) => title(id)));
     personTitleIds.mockReset().mockResolvedValue([3]);
     admit.mockReset().mockResolvedValue(true);
+    admitDraw.mockReset().mockResolvedValue(true);
+});
+
+// o sorteio que não foi limitado (os testes abaixo só tratam desse caso)
+async function draw(input: unknown) {
+    const { drawFiltered } = await import("./filters");
+    const answer = await drawFiltered(input);
+    if ("kind" in answer) throw new Error("limitado");
+    return answer;
+}
+
+describe("drawFiltered com limite (security.md §7)", () => {
+    it("passado o limite do visitante, recusa antes de qualquer consulta", async () => {
+        admitDraw.mockResolvedValue(false);
+        const { drawFiltered } = await import("./filters");
+        expect(await drawFiltered(request())).toEqual({ kind: "limited" });
+        expect(candidates).not.toHaveBeenCalled();
+        expect(drawAccount).not.toHaveBeenCalled();
+    });
 });
 
 describe("drawFiltered com pessoa (person-search A7, D1)", () => {
     it("sorteia só entre os títulos da pessoa, que o servidor deriva do id", async () => {
-        const { drawFiltered } = await import("./filters");
-        const answer = await drawFiltered(request({ filters: { ...WIRE, personId: 1056 } }));
+        const answer = await draw(request({ filters: { ...WIRE, personId: 1056 } }));
         expect(personTitleIds).toHaveBeenCalledWith(1056);
         expect(answer.slug).toBe("titulo-3");
     });
 
     it("sem pessoa, não consulta os títulos de ninguém nem gasta ficha do limite", async () => {
-        const { drawFiltered } = await import("./filters");
-        await drawFiltered(request());
+        await draw(request());
         expect(personTitleIds).not.toHaveBeenCalled();
         expect(admit).not.toHaveBeenCalled();
     });
@@ -78,14 +97,14 @@ describe("drawFiltered em rodadas (recommendation-rounds)", () => {
     it("sorteia na rodada pedida e diz o tamanho da seguinte quando ela acaba", async () => {
         candidates.mockResolvedValue(fifteen);
         const { drawFiltered } = await import("./filters");
-        const first = await drawFiltered(request());
+        const first = await draw(request());
         expect(Number(first.slug?.split("-")[1])).toBeLessThanOrEqual(10);
         const seenAll = Array.from({ length: 10 }, (_, i) => i + 1);
         expect(await drawFiltered(request({ seen: seenAll }))).toEqual({
             slug: null,
             end: { kind: "next", round: 0, size: 5 },
         });
-        const second = await drawFiltered(request({ seen: seenAll, round: 1 }));
+        const second = await draw(request({ seen: seenAll, round: 1 }));
         expect(Number(second.slug?.split("-")[1])).toBeGreaterThan(10);
     });
 
@@ -110,9 +129,8 @@ describe("drawFiltered em rodadas (recommendation-rounds)", () => {
 
     it("títulos 18 só com o chip 18+ (A1)", async () => {
         candidates.mockResolvedValue([title(1, true)]);
-        const { drawFiltered } = await import("./filters");
-        expect((await drawFiltered(request())).end).toEqual({ kind: "done", total: 0 });
-        const withChip = await drawFiltered(request({ filters: { ...WIRE, adult: true } }));
+        expect((await draw(request())).end).toEqual({ kind: "done", total: 0 });
+        const withChip = await draw(request({ filters: { ...WIRE, adult: true } }));
         expect(withChip.slug).toBe("titulo-1");
     });
 
@@ -171,31 +189,25 @@ describe("drawFiltered com a conta aberta (US015 RNE003, ameaças A4, B2, B3)", 
     it("com sessão, o 'Já vi' do pedido não vale: vale o da conta (B2)", async () => {
         // o pedido diz que todos foram vistos; a conta não viu nenhum
         drawAccount.mockResolvedValue(ACCOUNT);
-        const { drawFiltered } = await import("./filters");
-        const answer = await drawFiltered(request({ watched: [1, 2, 3, 4] }));
+        const answer = await draw(request({ watched: [1, 2, 3, 4] }));
         expect(answer.slug).not.toBeNull();
     });
 
     it("com sessão, o 'Já vi' da conta vale mesmo que o pedido mande a lista vazia", async () => {
         drawAccount.mockResolvedValue({ ...ACCOUNT, watched: [1, 2, 3, 4] });
-        const { drawFiltered } = await import("./filters");
-        const answer = await drawFiltered(request({ watched: [] }));
+        const answer = await draw(request({ watched: [] }));
         expect(answer.slug).toBeNull();
     });
 
     it("com sessão, os streamings da conta valem no lugar dos do pedido", async () => {
         candidates.mockResolvedValue([title(1), { ...title(2), streamingTmdbIds: [307] }]);
         drawAccount.mockResolvedValue({ ...ACCOUNT, streamings: ["globoplay"] });
-        const { drawFiltered } = await import("./filters");
-        const answer = await drawFiltered(
-            request({ filters: { ...WIRE, streamings: ["netflix"] } }),
-        );
+        const answer = await draw(request({ filters: { ...WIRE, streamings: ["netflix"] } }));
         expect(answer.slug).toBe("titulo-2");
     });
 
     it("sem sessão, as listas do pedido seguem valendo (visitante)", async () => {
-        const { drawFiltered } = await import("./filters");
-        const answer = await drawFiltered(request({ watched: [1, 2, 3, 4] }));
+        const answer = await draw(request({ watched: [1, 2, 3, 4] }));
         expect(answer.slug).toBeNull();
     });
 });
