@@ -21,20 +21,20 @@ Eu, como visitante, quero ver um título por vez com as informações que me aju
 **Dado** que cheguei à tela do título pela indicação do dia, pelos filtros, por "Me surpreenda" ou por um link  
 **Então** o sistema exibe os seguintes campos:
 
-| Campo         | Tipo   | Descrição                                                                                                                                                    | Exemplo                                                   |
-| ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
-| Imagem        | Imagem | Imagem larga, cantos retos                                                                                                                                   | Cena de "Corra!"                                          |
-| Pôster        | Imagem | Só no computador, à esquerda do texto, com o topo alinhado ao do título, cantos retos; sem pôster, o texto ocupa o espaço (C10)                              | Pôster de "Corra!"                                        |
-| Nota TMDB     | Número | Sobre a imagem, no canto inferior direito, oposto ao trailer; grande, em branco, sem a cor de destaque (RNE006)                                              | "7,6 TMDB"                                                |
-| Título        | Texto  | Nome em português                                                                                                                                            | "Corra!"                                                  |
-| Onde assistir | Texto  | Logo abaixo do título, antes da chamada e da sinopse: rótulo "Onde assistir" e os streamings do título, na ordem fixa, separados por fio; some sem streaming | "Onde assistir · Netflix \| Max"                          |
-| Gênero        | Texto  | Gênero principal; gênero, ano e duração ficam na linha de "Onde assistir", ao lado                                                                           | "Suspense"                                                |
-| Ano           | Número | Lançamento ou estreia                                                                                                                                        | "2017"                                                    |
-| Duração       | Texto  | Total; por episódio em séries                                                                                                                                | "1h 44min"                                                |
-| Chamada       | Texto  | Tagline em português, em branco; sem tagline, a linha não aparece (RNE004)                                                                                   | "Um fim de semana que esconde algo errado."               |
-| Sinopse       | Texto  | Sinopse completa em português (RNE004, C9)                                                                                                                   | "Chris, um fotógrafo, vai passar o fim de semana…"        |
-| Direção       | Texto  | "Direção de X", "X e Y" ou "X, Y e Z"; some sem dado                                                                                                         | "Direção de Jordan Peele"                                 |
-| Elenco        | Texto  | "Com A, B e C": os três primeiros, na ordem dos créditos; some sem dado                                                                                      | "Com Daniel Kaluuya, Allison Williams e Bradley Whitford" |
+| Campo         | Tipo   | Descrição                                                                                                                                                    | Exemplo                                            |
+| ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
+| Imagem        | Imagem | Imagem larga, cantos retos                                                                                                                                   | Cena de "Corra!"                                   |
+| Pôster        | Imagem | Só no computador, à esquerda do texto, com o topo alinhado ao do título, cantos retos; sem pôster, o texto ocupa o espaço (C10)                              | Pôster de "Corra!"                                 |
+| Nota TMDB     | Número | Sobre a imagem, no canto inferior direito, oposto ao trailer; grande, em branco, sem a cor de destaque (RNE006)                                              | "7,6 TMDB"                                         |
+| Título        | Texto  | Nome em português                                                                                                                                            | "Corra!"                                           |
+| Onde assistir | Texto  | Logo abaixo do título, antes da chamada e da sinopse: rótulo "Onde assistir" e os streamings do título, na ordem fixa, separados por fio; some sem streaming | "Onde assistir · Netflix \| Max"                   |
+| Gênero        | Texto  | Gênero principal; gênero, ano e duração ficam na linha de "Onde assistir", ao lado                                                                           | "Suspense"                                         |
+| Ano           | Número | Lançamento ou estreia                                                                                                                                        | "2017"                                             |
+| Duração       | Texto  | Total; por episódio em séries                                                                                                                                | "1h 44min"                                         |
+| Chamada       | Texto  | Tagline em português, em branco; sem tagline, a linha não aparece (RNE004)                                                                                   | "Um fim de semana que esconde algo errado."        |
+| Sinopse       | Texto  | Sinopse completa em português (RNE004, C9)                                                                                                                   | "Chris, um fotógrafo, vai passar o fim de semana…" |
+| Direção       | Texto  | "Direção de X", "X e Y" ou "X, Y e Z", na linha de gênero, ano e duração; some sem dado                                                                      | "Direção de Jordan Peele"                          |
+| Elenco        | Botão  | "Elenco", depois da direção na mesma linha; abre o elenco todo (C12); some sem elenco                                                                        | "Elenco"                                           |
 
 **E** exibe, numa mesma linha e nesta ordem, três botões em forma de pílula: "Vou assistir" (principal, com a cor de destaque), "Já vi" (secundário, com ícone de visto) e "Outra opção" (só com ícone de dado, em círculo)  
 **E** o botão do dado tem o nome "Outra opção" para leitores de tela e na dica ao passar o mouse  
@@ -118,6 +118,14 @@ Eu, como visitante, quero ver um título por vez com as informações que me aju
 **E** os três botões ficam presos à base da tela e acompanham a rolagem, respeitando a área segura do aparelho  
 **E** o elemento em foco nunca fica escondido atrás deles (WCAG 2.4.11)  
 **E** a confirmação de "Já vi" aparece logo acima dos botões
+
+### C12: Ver o elenco todo
+
+**Dado** que o título tem elenco  
+**Quando** aciono "Elenco"  
+**Então** o sistema abre, sobre a tela (à direita no computador, em tela cheia no celular), um painel de vidro com o nome do título, "Elenco", a quantidade de nomes e todo o elenco guardado (até 28), numerado na ordem dos créditos  
+**E** o foco fica dentro do painel, que fecha pelo botão "Fechar elenco", pela tecla Esc ou por um toque fora dele  
+**E** ao fechar, o foco volta a "Elenco"
 
 ## Regras de negócio específicas
 

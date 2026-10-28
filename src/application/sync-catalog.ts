@@ -16,6 +16,8 @@ export type Credit = {
     // creator e writer alimentam só o grafo de gosto (taste-graph-data D1)
     role: "director" | "cast" | "creator" | "writer";
     order: number;
+    // personagem, só no elenco (US004 C12); null quando o TMDB não informa
+    character?: string | null;
 };
 
 export const SERIES_TYPES = [

@@ -2,7 +2,7 @@ import "server-only";
 import type { CatalogEntry, TitlesRepository } from "@/application/titles";
 import type { TitleType } from "@/domain/catalog";
 import { ADULT_CERTIFICATION } from "@/domain/catalog-sync";
-import { CAST_SHOWN, MAX_DIRECTORS } from "@/domain/credits";
+import { CAST_STORED, MAX_DIRECTORS } from "@/domain/credits";
 import { feelingMask, type FeelingData } from "@/domain/feelings";
 import { isKinneGenre } from "@/domain/genre";
 import { and, asc, eq, lt, or, sql } from "drizzle-orm";
@@ -242,7 +242,7 @@ export class DrizzleTitlesRepository implements TitlesRepository {
 
 /**
  * Créditos de um título para a tela do título: todos os diretores (até MAX_DIRECTORS) e os
- * CAST_SHOWN primeiros do elenco. Elenco ("cast") antes de direção ("director"), cada um na
+ * CAST_STORED primeiros do elenco (a linha mostra três; o vidro do elenco, todos). Elenco ("cast") antes de direção ("director"), cada um na
  * ordem; o teto limita a leitura mesmo com dados inesperados (title-credits D1).
  */
 export function creditsQuery(db: Db, titleId: number) {
@@ -253,11 +253,11 @@ export function creditsQuery(db: Db, titleId: number) {
         .where(
             and(
                 eq(titleCredits.catalogTitleId, titleId),
-                or(eq(titleCredits.role, "director"), lt(titleCredits.creditOrder, CAST_SHOWN)),
+                or(eq(titleCredits.role, "director"), lt(titleCredits.creditOrder, CAST_STORED)),
             ),
         )
         .orderBy(asc(titleCredits.role), asc(titleCredits.creditOrder))
-        .limit(CAST_SHOWN + MAX_DIRECTORS);
+        .limit(CAST_STORED + MAX_DIRECTORS);
 }
 
 /**

@@ -15,6 +15,7 @@ import { Button, ButtonLink } from "../ui/Button";
 import { cx } from "../ui/cx";
 import { Dock } from "../ui/Dock";
 import { Availability } from "../ui/Availability";
+import { CastDialog } from "../ui/CastDialog";
 import { Fact, Facts } from "../ui/Facts";
 import { Frame, FrameImage } from "../ui/Frame";
 import { BackIcon, CheckIcon, DiceIcon, PlayIcon } from "../ui/icons";
@@ -206,11 +207,20 @@ export function TitleView({ title, daily }: TitleViewProps) {
                     </h1>
                     {/* onde assistir é a informação principal: logo abaixo do título */}
                     {/* gênero, ano e duração na mesma linha, ao lado */}
-                    <div className="flex flex-wrap items-end gap-x-10 gap-y-3 max-desktop:mb-5">
+                    <div className="flex flex-wrap items-end gap-x-10 gap-y-3 max-desktop:mb-5 desktop:my-2">
                         <Availability streamings={title.streamings} />
                         <Facts>
-                            {[genre, ...title.facts].map(
+                            {[genre, ...title.facts, title.direction].map(
                                 (text) => text && <Fact key={text}>{text}</Fact>,
+                            )}
+                            {title.fullCast.length > 0 && (
+                                <Fact>
+                                    <CastDialog
+                                        title={title.title}
+                                        poster={title.posterImagePath}
+                                        names={title.fullCast}
+                                    />
+                                </Fact>
                             )}
                         </Facts>
                     </div>
@@ -220,13 +230,6 @@ export function TitleView({ title, daily }: TitleViewProps) {
                         </p>
                     )}
                     {title.synopsis && <Synopsis text={title.synopsis} />}
-                    {/* direção e elenco: só texto; sem crédito, a linha não aparece */}
-                    {(title.direction || title.cast) && (
-                        <div className="flex max-w-measure flex-col text-small text-soft max-desktop:mt-4">
-                            {title.direction && <p>{title.direction}</p>}
-                            {title.cast && <p>{title.cast}</p>}
-                        </div>
-                    )}
                 </div>
 
                 <Dock

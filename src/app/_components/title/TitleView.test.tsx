@@ -22,7 +22,7 @@ const title: TitleScreen = {
     backdropWidth: null,
     recommendable: true,
     direction: "Direção de Jordan Peele",
-    cast: null,
+    fullCast: [],
 };
 
 describe("TitleView", () => {
@@ -51,5 +51,22 @@ describe("TitleView", () => {
         expect(html).toMatch(
             /<img[^>]*class="[^"]*\bhidden\b[^"]*desktop:block[^"]*"[^>]*w342|<img[^>]*w342[^>]*class="[^"]*\bhidden\b/,
         );
+    });
+
+    it("US004 C12: com elenco, o botão Elenco abre o vidro com todos, na ordem", () => {
+        const fullCast = ["Ana", "Bia", "Caio", "Davi"];
+        const html = render({ ...title, fullCast });
+        expect(html).toMatch(/<button[^>]*aria-haspopup="dialog"[^>]*>Elenco<\/button>/);
+        expect(html).toContain("4 nomes");
+        const at = (name: string) => html.indexOf(name);
+        expect(at("Ana")).toBeLessThan(at("Bia"));
+        expect(at("Caio")).toBeLessThan(at("Davi"));
+    });
+
+    it("direção na linha dos dados; sem elenco, sem botão", () => {
+        const html = render(title);
+        expect(html).toContain("Direção de Jordan Peele");
+        expect(html.indexOf("2017")).toBeLessThan(html.indexOf("Direção de Jordan Peele"));
+        expect(html).not.toContain("<dialog");
     });
 });

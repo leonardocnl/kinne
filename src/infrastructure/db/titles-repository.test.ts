@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CAST_SHOWN, MAX_DIRECTORS } from "@/domain/credits";
+import { CAST_STORED, MAX_DIRECTORS } from "@/domain/credits";
 import { createDb } from "./client";
 import { PgDialect } from "drizzle-orm/pg-core";
 import { adultTitle, creditsQuery, DrizzleTitlesRepository } from "./titles-repository";
@@ -16,11 +16,11 @@ describe("créditos da tela do título (title-credits)", () => {
         expect(query.sql).not.toContain("42");
     });
 
-    it("lê só os diretores e os três primeiros do elenco, com teto de linhas (D1)", () => {
+    it("lê só os diretores e o elenco guardado, com teto de linhas (D1)", () => {
         expect(query.sql).toContain('"title_credits"."credit_order" < $');
-        expect(query.params).toContain(CAST_SHOWN);
+        expect(query.params).toContain(CAST_STORED);
         expect(query.sql).toMatch(/limit \$\d+$/);
-        expect(query.params.at(-1)).toBe(CAST_SHOWN + MAX_DIRECTORS);
+        expect(query.params.at(-1)).toBe(CAST_STORED + MAX_DIRECTORS);
     });
 
     it("lê só papel e nome; nada além do nome sai da tabela people (C1)", () => {

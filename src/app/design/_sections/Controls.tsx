@@ -1,6 +1,7 @@
 import { Button, ButtonLink } from "../../_components/ui/Button";
 import { Dock } from "../../_components/ui/Dock";
 import { Availability } from "../../_components/ui/Availability";
+import { CastDialog } from "../../_components/ui/CastDialog";
 import { Fact, Facts } from "../../_components/ui/Facts";
 import { availableStreamings, STREAMING_SERVICES } from "@/domain/streaming";
 import { Frame } from "../../_components/ui/Frame";
@@ -191,6 +192,20 @@ export function Controls() {
                     <Availability streamings={STREAMING_SERVICES} />
                 </Row>
                 <p className="text-caption text-soft">Sem streaming, nada aparece.</p>
+            </Spec>
+
+            <Spec
+                name="CastDialog"
+                props={["title: string", "names: string[]"]}
+                does="Botão Elenco na linha dos dados do título: abre, no vidro dos filtros (à direita no computador, tela cheia no celular), todo o elenco guardado (até 28), numerado e na ordem dos créditos."
+            >
+                <Row label="normal">
+                    <CastDialog
+                        title="Título do filme"
+                        poster={null}
+                        names={Array.from({ length: 12 }, (_, i) => `Pessoa ${i + 1}`)}
+                    />
+                </Row>
             </Spec>
 
             <Spec

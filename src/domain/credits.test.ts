@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { castLine, directionLine, joinNames } from "./credits";
+import { directionLine, joinNames } from "./credits";
 
 describe("joinNames", () => {
     it.each([
@@ -28,17 +28,5 @@ describe("directionLine", () => {
 
     it("some sem diretor", () => {
         expect(directionLine([])).toBeNull();
-    });
-});
-
-describe("castLine", () => {
-    it("mostra os três primeiros, na ordem", () => {
-        expect(castLine(["A", "B", "C", "D", "E"])).toBe("Com A, B e C");
-        expect(castLine(["A", "B"])).toBe("Com A e B");
-        expect(castLine(["A"])).toBe("Com A");
-    });
-
-    it("some sem elenco", () => {
-        expect(castLine([])).toBeNull();
     });
 });
