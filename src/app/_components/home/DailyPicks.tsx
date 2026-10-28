@@ -85,6 +85,11 @@ export function DailyPicks({
     // com movimento reduzido não há troca animada, nem uma que tenha ficado pela metade
     const { shown, swap } = reducedMotion ? { shown: current, swap: "idle" } : rotation;
     const pick = picks[shown];
+    // imagens grandes: só as que já apareceram e a próxima da fila; as outras baixam quando chega
+    // a vez delas, e não as cinco de uma vez ao abrir
+    const [seen, setSeen] = useState(() => new Set([current]));
+    if (!seen.has(current)) setSeen(new Set(seen).add(current));
+    const wanted = (i: number) => seen.has(i) || i === (current + 1) % picks.length;
 
     useEffect(() => {
         const events = ["pointerdown", "keydown"] as const;
@@ -113,7 +118,8 @@ export function DailyPicks({
                 <Frame>
                     {picks.map(
                         (p, i) =>
-                            p.backdropImagePath && (
+                            p.backdropImagePath &&
+                            wanted(i) && (
                                 <FrameImage
                                     key={p.slug}
                                     path={p.backdropImagePath}
