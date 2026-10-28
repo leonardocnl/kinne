@@ -8,6 +8,7 @@ import {
     rankTitles,
     roundEnd,
     roundEndHeading,
+    roundEndArt,
     weightedRating,
 } from "./rounds";
 
@@ -169,5 +170,13 @@ describe("fim da rodada (C3)", () => {
         expect(nextRoundLabel(10)).toBe("Sortear entre os próximos 10");
         expect(nextRoundLabel(7)).toBe("Sortear entre os últimos 7");
         expect(nextRoundLabel(1)).toBe("Sortear o último");
+    });
+});
+
+describe("roundEndArt (US004 C3)", () => {
+    it("anuncia a rodada que vem e, sem mais, o fim", () => {
+        expect(roundEndArt({ kind: "next", round: 0, size: 10 })).toBe("rodada 2");
+        expect(roundEndArt({ kind: "next", round: 2, size: 4 })).toBe("rodada 4");
+        expect(roundEndArt({ kind: "done", total: 23 })).toBe("fim");
     });
 });

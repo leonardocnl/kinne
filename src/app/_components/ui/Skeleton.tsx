@@ -7,6 +7,8 @@ const shapes = {
     line: "h-3.5 rounded-pill",
     data: "h-3 w-16 rounded-pill",
     button: "h-control rounded-pill",
+    // pôster da tela do título e da home: imagem reta, só no computador
+    poster: "hidden aspect-2/3 w-title-poster desktop:block",
 };
 
 const pulse = "animate-breathe motion-reduce:animate-none";

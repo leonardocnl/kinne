@@ -15,6 +15,7 @@ import {
 } from "@/domain/filters";
 import { FEELING_LABELS, FEELINGS } from "@/domain/feelings";
 import { GENRE_LABELS, KINNE_GENRES } from "@/domain/genre";
+import { isLimited, LIMITED_MESSAGE } from "@/domain/rate-limit";
 import { STREAMING_SERVICES } from "@/domain/streaming";
 import { EMPTY_TASTE } from "@/domain/taste-signals";
 import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
@@ -28,6 +29,7 @@ import {
 import { drawFiltered, filterCandidates } from "../../_actions/filters";
 import { personTitles } from "../../_actions/people";
 import { loadError } from "../StateScreen";
+import { showToast } from "../toast";
 import { saveStreamings } from "../../_actions/account";
 import { rememberReturn } from "../account/returnTo";
 import { SHOW_SIGN_IN } from "../account/signIn";
@@ -218,7 +220,7 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
         startTransition(async () => {
             try {
                 const request = { filters, watched: watched.slice(-SURPRISE_MAX_EXCLUDED) };
-                const { slug } = await drawFiltered({
+                const answer = await drawFiltered({
                     filters: wireFilters(filters),
                     watched: request.watched,
                     seen: [],
@@ -226,6 +228,9 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
                     taste: account ? EMPTY_TASTE : tasteSignals.read(),
                     round: 0,
                 });
+                // passou do limite de pedidos (security.md §7): o aviso próprio, sem o de falha
+                if (isLimited(answer)) return showToast(LIMITED_MESSAGE);
+                const slug = answer.slug;
                 if (slug) {
                     // a rodada de "Outra opção" (US004 C2) começa aqui
                     filteredRun.start(request.filters, request.watched);

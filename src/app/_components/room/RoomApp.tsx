@@ -86,7 +86,7 @@ export function RoomApp({ joinCode }: RoomAppProps) {
 
     if (screen.kind === "loading" || (joinCode && screen.kind === "none")) {
         return (
-            <main aria-busy="true" className="min-h-60">
+            <main aria-busy="true" className="min-h-60 desktop:pt-nav">
                 <p role="status" className="text-data text-soft">
                     Entrando na sala…
                 </p>

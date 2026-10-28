@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { type ReactNode, useEffect, useId, useRef, useState } from "react";
-import { nextRoundLabel, roundEndHeading } from "@/domain/rounds";
+import { useEffect, useId, useRef, useState } from "react";
+import { nextRoundLabel, roundEndHeading, roundEndArt } from "@/domain/rounds";
 import { streamingList } from "@/domain/streaming";
 import { filteredRun, filtersOnArrival, shownTitles } from "@/infrastructure/browser-storage";
 import type { TitleScreen } from "../../_data/title";
@@ -20,7 +20,10 @@ import { BackIcon, CheckIcon, DiceIcon, PlayIcon } from "../ui/icons";
 import { Score } from "../ui/Score";
 import { TextLink } from "../ui/TextLink";
 import { TmdbImage } from "../ui/TmdbImage";
+import { AsciiArt } from "../ui/AsciiArt";
+import { TitleSpec } from "../ui/TitleSpec";
 import { largePosterSources, TITLE_POSTER_SIZES } from "../ui/tmdb-sources";
+import { beginWipe, cancelWipe, wipeRouter } from "../ui/wipe";
 import { goToTitle, RECOMMENDATION_SOURCE, useOrigin } from "./origin";
 import { useFilteredDraw } from "./useFilteredDraw";
 import { useSurprise } from "./useSurprise";
@@ -76,10 +79,14 @@ export function TitleView({ title, daily }: TitleViewProps) {
     // quinta) ou um novo sorteio
     function next(from: "seen" | "another") {
         focusOnArrival = from;
+        // a cortina começa já no clique e cobre também o tempo do sorteio
+        beginWipe();
         const stay = () => {
             focusOnArrival = null;
+            cancelWipe();
         };
-        if (origin === "dia" && nextDailySlug) goToTitle(router, "replace", nextDailySlug, "dia");
+        if (origin === "dia" && nextDailySlug)
+            goToTitle(wipeRouter(router), "replace", nextDailySlug, "dia");
         else if (origin === "filtros") filtered.draw(stay);
         else surprise.draw(stay);
     }
@@ -122,6 +129,15 @@ export function TitleView({ title, daily }: TitleViewProps) {
         return (
             <StateScreen
                 heading={roundEndHeading(end)}
+                art={
+                    // exceção do dono: os caracteres em amarelo, passeando sozinhos (DESIGN.md, Cor)
+                    <AsciiArt
+                        text={roundEndArt(end)}
+                        tone="signal"
+                        drift
+                        className="absolute inset-0 size-full"
+                    />
+                }
                 action={
                     <div className="flex flex-wrap gap-2.5" aria-busy={pending}>
                         {end.kind === "next" ? (
@@ -208,24 +224,26 @@ export function TitleView({ title, daily }: TitleViewProps) {
                     {/* ficha do título: rótulo pequeno em caixa alta e valor no tamanho do texto */}
                     <dl className="flex flex-wrap gap-x-8 gap-y-4 max-desktop:mb-5 desktop:my-2">
                         {title.streamings.length > 0 && (
-                            <Spec label="Onde assistir">
+                            <TitleSpec label="Onde assistir">
                                 <span className="font-medium">
                                     {streamingList(title.streamings)}
                                 </span>
-                            </Spec>
+                            </TitleSpec>
                         )}
-                        {genre && <Spec label="Gênero">{genre}</Spec>}
-                        {title.year && <Spec label="Ano">{title.year}</Spec>}
-                        {title.runtime && <Spec label="Duração">{title.runtime}</Spec>}
-                        {title.directors && <Spec label="Direção">{title.directors}</Spec>}
+                        {genre && <TitleSpec label="Gênero">{genre}</TitleSpec>}
+                        {title.year && <TitleSpec label="Ano">{title.year}</TitleSpec>}
+                        {title.runtime && <TitleSpec label="Duração">{title.runtime}</TitleSpec>}
+                        {title.directors && (
+                            <TitleSpec label="Direção">{title.directors}</TitleSpec>
+                        )}
                         {title.cast.length > 0 && (
-                            <Spec label="Elenco">
+                            <TitleSpec label="Elenco">
                                 <CastDialog
                                     title={title.title}
                                     poster={title.posterImagePath}
                                     cast={title.cast}
                                 />
-                            </Spec>
+                            </TitleSpec>
                         )}
                     </dl>
                     {title.tagline && (
@@ -289,18 +307,6 @@ export function TitleView({ title, daily }: TitleViewProps) {
                 </Dock>
             </div>
         </main>
-    );
-}
-
-/** Um dado da ficha do título: rótulo em caixa alta e o valor embaixo. */
-function Spec({ label, children }: { label: string; children: ReactNode }) {
-    return (
-        <div className="flex flex-col gap-1">
-            <dt className="text-caption font-semibold tracking-code text-soft uppercase">
-                {label}
-            </dt>
-            <dd className="text-body text-paper">{children}</dd>
-        </div>
     );
 }
 

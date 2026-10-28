@@ -35,7 +35,9 @@ const useOrigin = () =>
         () => null,
     );
 
-const section = "flex flex-col gap-2 border-t border-line pt-3";
+// cada escolha: o rótulo da ficha (caixa alta, pequeno) e os chips embaixo; separadas só por espaço
+const section = "flex flex-col gap-3";
+const label = "text-caption font-semibold tracking-code text-soft uppercase";
 
 type LobbyProps = { view: Room; refresh: () => Promise<void>; onLeave: () => void };
 
@@ -117,185 +119,197 @@ export function Lobby({ view, refresh, onLeave }: LobbyProps) {
     const code = view.code;
 
     return (
-        <main className="flex flex-col gap-6 pt-2 desktop:grid desktop:grid-cols-2 desktop:gap-x-12 desktop:pt-3.5">
-            <div className="flex flex-col gap-4">
-                <h1 className="pb-1 font-display text-title font-medium text-balance">
-                    Sala de grupo
-                </h1>
-                {code && (
-                    <>
-                        <p className="text-data text-soft">Código da sala</p>
-                        <p
-                            aria-label={`Código da sala: ${code.split("").join(" ")}`}
-                            className="font-display text-title font-medium"
+        // uma coluna, como a ficha da tela do título: o convite primeiro (o código grande e o
+        // QR code), quem está na sala, o que você topa e, no fim, as ações. Sem caixas nem fios
+        <main className="grid gap-12 pt-2 desktop:grid-cols-12 desktop:content-start desktop:items-start desktop:gap-x-16 desktop:pt-nav desktop:pb-12">
+            <div className="flex min-w-0 flex-col gap-10 desktop:col-span-8">
+                <div className="flex flex-col gap-3.5">
+                    <h1 className="pb-1 font-display text-title font-medium text-balance">
+                        Sala de grupo
+                    </h1>
+                    {code && (
+                        <div className="flex flex-col gap-1">
+                            <p className={label}>Código da sala</p>
+                            <p
+                                aria-label={`Código da sala: ${code.split("").join(" ")}`}
+                                className="font-display text-title font-medium whitespace-nowrap text-paper"
+                            >
+                                {formatCode(code)}
+                            </p>
+                        </div>
+                    )}
+                    <p className="max-w-measure text-tagline text-pretty text-soft">
+                        Quem está junto aponta a câmera para o QR code, ou abre o Kinne em Assistir
+                        em grupo e digita o código.
+                    </p>
+                </div>
+                <div className="flex max-w-measure flex-col gap-8">
+                    <div className={section}>
+                        <span id={`${id}-streamings`} className={label}>
+                            Streamings que você assina
+                        </span>
+                        <div
+                            role="group"
+                            aria-labelledby={`${id}-streamings`}
+                            className="flex flex-wrap gap-1.5"
                         >
-                            {formatCode(code)}
-                        </p>
-                        {origin && (
-                            <QrCode
-                                text={`${origin}/sala/${code}`}
-                                label="QR code para entrar na sala"
-                                className="size-56 max-desktop:size-48"
-                            />
+                            {STREAMING_SERVICES.map((s) => {
+                                const on = streamings.includes(s.id);
+                                return (
+                                    <Chip
+                                        key={s.id}
+                                        pressed={on}
+                                        disabled={hasAccount}
+                                        onClick={() =>
+                                            change(
+                                                "streamings",
+                                                on
+                                                    ? streamings.filter((x) => x !== s.id)
+                                                    : [...streamings, s.id],
+                                            )
+                                        }
+                                    >
+                                        {s.name}
+                                    </Chip>
+                                );
+                            })}
+                        </div>
+                        {hasAccount && (
+                            <p className="text-data text-faint">
+                                Estes são os streamings da sua conta. Para mudar, use o seu perfil.
+                            </p>
                         )}
-                    </>
-                )}
-                <People view={view} />
-            </div>
+                    </div>
 
-            <div className="flex flex-col gap-3.5">
-                <div className={section}>
-                    <span id={`${id}-streamings`} className="text-data text-soft">
-                        Streamings que você assina
-                    </span>
-                    <div
-                        role="group"
-                        aria-labelledby={`${id}-streamings`}
-                        className="flex flex-wrap gap-1.5"
-                    >
-                        {STREAMING_SERVICES.map((s) => {
-                            const on = streamings.includes(s.id);
-                            return (
-                                <Chip
-                                    key={s.id}
-                                    pressed={on}
-                                    disabled={hasAccount}
-                                    onClick={() =>
+                    <div className={section}>
+                        <span id={`${id}-genres`} className={label}>
+                            Gêneros que você topa
+                        </span>
+                        <div
+                            role="group"
+                            aria-labelledby={`${id}-genres`}
+                            className="flex flex-wrap gap-1.5"
+                        >
+                            {KINNE_GENRES.map((g) => {
+                                const on = genres.includes(g);
+                                return (
+                                    <Chip
+                                        key={g}
+                                        pressed={on}
+                                        onClick={() =>
+                                            change(
+                                                "genres",
+                                                on ? genres.filter((x) => x !== g) : [...genres, g],
+                                            )
+                                        }
+                                    >
+                                        {GENRE_LABELS[g]}
+                                    </Chip>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {view.isCreator ? (
+                        <>
+                            <div className={section}>
+                                <span id={`${id}-type`} className={label}>
+                                    Tipo
+                                </span>
+                                <div
+                                    role="radiogroup"
+                                    aria-labelledby={`${id}-type`}
+                                    className="flex flex-wrap gap-1.5"
+                                >
+                                    {TYPES.map((t) => (
+                                        <RadioChip
+                                            key={t.value}
+                                            name={`${id}-type`}
+                                            value={t.value}
+                                            checked={typeChoice === t.value}
+                                            onChange={() => change("typeChoice", t.value)}
+                                        >
+                                            {t.label}
+                                        </RadioChip>
+                                    ))}
+                                </div>
+                            </div>
+                            {typeChoice === "movie" && (
+                                <Slider
+                                    className={section}
+                                    label="Duração do filme"
+                                    min={0}
+                                    max={RUNTIME_LIMITS.length - 1}
+                                    step={1}
+                                    value={runtime}
+                                    valueText={RUNTIME_LIMITS[runtime].label}
+                                    onChange={(event) =>
                                         change(
-                                            "streamings",
-                                            on
-                                                ? streamings.filter((x) => x !== s.id)
-                                                : [...streamings, s.id],
+                                            "maxRuntime",
+                                            RUNTIME_LIMITS[Number(event.target.value)].minutes,
                                         )
                                     }
-                                >
-                                    {s.name}
-                                </Chip>
-                            );
-                        })}
-                    </div>
-                    {hasAccount && (
-                        <p className="text-data text-faint">
-                            Estes são os streamings da sua conta. Para mudar, use o seu perfil.
+                                />
+                            )}
+                        </>
+                    ) : (
+                        <p className={`${section} text-data text-soft`}>
+                            Quem criou a sala escolhe o tipo e a duração:{" "}
+                            <b className="font-medium text-paper">
+                                {TYPES.find((t) => t.value === settings.typeChoice)?.label}
+                                {settings.typeChoice === "movie" &&
+                                    `, ${RUNTIME_LIMITS.find((l) => l.minutes === settings.maxRuntime)?.label}`}
+                            </b>
                         </p>
                     )}
                 </div>
-
-                <div className={section}>
-                    <span id={`${id}-genres`} className="text-data text-soft">
-                        Gêneros que você topa
-                    </span>
-                    <div
-                        role="group"
-                        aria-labelledby={`${id}-genres`}
-                        className="flex flex-wrap gap-1.5"
-                    >
-                        {KINNE_GENRES.map((g) => {
-                            const on = genres.includes(g);
-                            return (
-                                <Chip
-                                    key={g}
-                                    pressed={on}
-                                    onClick={() =>
-                                        change(
-                                            "genres",
-                                            on ? genres.filter((x) => x !== g) : [...genres, g],
-                                        )
-                                    }
-                                >
-                                    {GENRE_LABELS[g]}
-                                </Chip>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                {view.isCreator ? (
-                    <>
-                        <div className={section}>
-                            <span id={`${id}-type`} className="text-data text-soft">
-                                Tipo
-                            </span>
-                            <div
-                                role="radiogroup"
-                                aria-labelledby={`${id}-type`}
-                                className="flex flex-wrap gap-1.5"
-                            >
-                                {TYPES.map((t) => (
-                                    <RadioChip
-                                        key={t.value}
-                                        name={`${id}-type`}
-                                        value={t.value}
-                                        checked={typeChoice === t.value}
-                                        onChange={() => change("typeChoice", t.value)}
-                                    >
-                                        {t.label}
-                                    </RadioChip>
-                                ))}
-                            </div>
-                        </div>
-                        {typeChoice === "movie" && (
-                            <Slider
-                                className={section}
-                                label="Duração do filme"
-                                min={0}
-                                max={RUNTIME_LIMITS.length - 1}
-                                step={1}
-                                value={runtime}
-                                valueText={RUNTIME_LIMITS[runtime].label}
-                                onChange={(event) =>
-                                    change(
-                                        "maxRuntime",
-                                        RUNTIME_LIMITS[Number(event.target.value)].minutes,
-                                    )
-                                }
-                            />
-                        )}
-                    </>
-                ) : (
-                    <p className={`${section} text-data text-soft`}>
-                        Quem criou a sala escolhe o tipo e a duração:{" "}
-                        <b className="font-medium text-paper">
-                            {TYPES.find((t) => t.value === settings.typeChoice)?.label}
-                            {settings.typeChoice === "movie" &&
-                                `, ${RUNTIME_LIMITS.find((l) => l.minutes === settings.maxRuntime)?.label}`}
-                        </b>
-                    </p>
-                )}
-
-                <div className="flex flex-wrap items-center gap-2.5 border-t border-line pt-4">
-                    {/* um amarelo por tela: quem criou tem "Ver as opções"; as outras, "Pronto" */}
-                    <Button
-                        variant={view.isCreator ? "quiet" : "primary"}
-                        aria-pressed={ready}
-                        onClick={() => change("ready", !ready)}
-                        className="max-desktop:min-w-0 max-desktop:flex-1 desktop:min-w-42"
-                    >
-                        {ready ? "Pronto ✓" : "Pronto"}
-                    </Button>
-                    {view.isCreator && (
+                {/* as ações, logo depois das escolhas */}
+                <div className="flex flex-col gap-3">
+                    <div className="flex flex-wrap items-center gap-2.5">
+                        {/* um amarelo por tela: quem criou tem "Ver as opções"; as outras, "Pronto" */}
                         <Button
-                            variant="primary"
-                            disabled={!view.canStart || starting}
-                            aria-busy={starting}
-                            onClick={start}
+                            variant={view.isCreator ? "quiet" : "primary"}
+                            aria-pressed={ready}
+                            onClick={() => change("ready", !ready)}
                             className="max-desktop:min-w-0 max-desktop:flex-1 desktop:min-w-42"
                         >
-                            Ver as opções
+                            {ready ? "Pronto ✓" : "Pronto"}
                         </Button>
+                        {view.isCreator && (
+                            <Button
+                                variant="primary"
+                                disabled={!view.canStart || starting}
+                                aria-busy={starting}
+                                onClick={start}
+                                className="max-desktop:min-w-0 max-desktop:flex-1 desktop:min-w-42"
+                            >
+                                Ver as opções
+                            </Button>
+                        )}
+                    </div>
+                    {view.isCreator && !view.canStart && (
+                        <p className="text-data text-soft">
+                            Precisa de pelo menos duas pessoas prontas.
+                        </p>
                     )}
+                    {message && (
+                        <p role="status" className="text-data text-soft">
+                            {message}
+                        </p>
+                    )}
+                    <TextLink onClick={onLeave}>Sair da sala</TextLink>
                 </div>
-                {view.isCreator && !view.canStart && (
-                    <p className="text-data text-soft">
-                        Precisa de pelo menos duas pessoas prontas.
-                    </p>
+            </div>
+            {/* à direita, o QR code e, embaixo dele, quem já entrou */}
+            <div className="flex w-full flex-col gap-6 desktop:col-span-4 desktop:col-start-9 desktop:max-w-88 desktop:justify-self-end">
+                {code && origin && (
+                    <QrCode
+                        text={`${origin}/sala/${code}`}
+                        label="QR code para entrar na sala"
+                        className="aspect-square w-full max-desktop:max-w-72"
+                    />
                 )}
-                {message && (
-                    <p role="status" className="text-data text-soft">
-                        {message}
-                    </p>
-                )}
-                <TextLink onClick={onLeave}>Sair da sala</TextLink>
+                <People view={view} />
             </div>
         </main>
     );

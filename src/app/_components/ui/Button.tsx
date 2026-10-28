@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 import { cx } from "./cx";
+import { smoke } from "./navItem";
 
 const base =
     "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-pill whitespace-nowrap transition duration-hover active:scale-98 disabled:cursor-not-allowed disabled:opacity-disabled disabled:active:scale-100 motion-reduce:transition-none";
@@ -15,6 +16,8 @@ const variants = {
     quiet: cx("h-control px-5.5 text-body font-medium", glass, hover),
     ghost: cx("h-control border border-line bg-ghost px-5 text-small font-medium", hover),
     round: cx("size-control", glass, hover),
+    // redondo flutuando sobre a imagem, no vidro da navbar (4,5:1 até sobre imagem branca)
+    float: cx("size-control", smoke, hover),
     // pequeno sobre a imagem; o ::before estende o alvo de toque até h-target
     overlay: cx(
         "relative size-overlay border border-line bg-veil backdrop-blur-veil before:absolute before:-inset-1.5",
@@ -35,7 +38,7 @@ type Look =
       }
     | {
           /** círculo só com o ícone (children); o nome vai em aria-label */
-          variant: "round" | "overlay";
+          variant: "round" | "overlay" | "float";
           "aria-label": string;
           /** o ícone gira um pouco no hover */
           spinIcon?: boolean;

@@ -5,16 +5,16 @@ import { AppOpened } from "./_components/AppOpened";
 import { DailyPicks } from "./_components/home/DailyPicks";
 import { HomeErrorBoundary } from "./_components/home/HomeError";
 import { HomeSkeleton } from "./_components/home/HomeSkeleton";
-import { Availability } from "./_components/ui/Availability";
+import { PickSpecs } from "./_components/home/PickSpecs";
 import { Shell } from "./_components/Shell";
 import { TopBar } from "./_components/TopBar";
 import { homePicks } from "./_data/home";
 
 export default function Home() {
     return (
-        <Shell nav="inicio">
+        <Shell nav="inicio" flush>
             <AppOpened />
-            <HomeErrorBoundary topBar={<TopBar />}>
+            <HomeErrorBoundary topBar={<TopBar floating />}>
                 <Suspense fallback={<HomeSkeleton />}>
                     <Today />
                 </Suspense>
@@ -33,12 +33,12 @@ async function Today() {
     if (picks.length === 0) throw new Error(`${day}: nenhuma indicação do dia`);
     return (
         <>
-            <TopBar date={date} />
+            <TopBar floating />
             <DailyPicks
                 date={date}
                 picks={picks}
-                availability={picks.map((p) => (
-                    <Availability key={p.slug} streamings={p.streamings} />
+                specs={picks.map((p) => (
+                    <PickSpecs key={p.slug} pick={p} />
                 ))}
             />
         </>

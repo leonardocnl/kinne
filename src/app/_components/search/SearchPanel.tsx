@@ -43,6 +43,8 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
     const [term, setTerm] = useState(initialTerm);
     const [answer, setAnswer] = useState<{ term: string; outcome: SearchOutcome } | null>(null);
     const [active, setActive] = useState(-1);
+    // só as setas rolam a lista até a opção; o mouse não, senão a lista pula sob ele
+    const byKeys = useRef(false);
 
     const ready = parseSearchTerm(term) !== null;
     const outcome = ready && answer?.term === term ? answer.outcome : null;
@@ -52,7 +54,7 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
 
     // a lista rola dentro do painel: a opção escolhida pelas setas fica sempre visível
     useEffect(() => {
-        if (active >= 0)
+        if (active >= 0 && byKeys.current)
             document.getElementById(optionId(active))?.scrollIntoView({ block: "nearest" });
         // eslint-disable-next-line react-hooks/exhaustive-deps -- optionId deriva de id, estável
     }, [active]);
@@ -95,6 +97,7 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
             if (results.length === 0) return;
             event.preventDefault();
             const step = event.key === "ArrowDown" ? 1 : -1;
+            byKeys.current = true;
             setActive((i) => {
                 if (step === 1) return i + 1 >= results.length ? 0 : i + 1;
                 return i <= 0 ? results.length - 1 : i - 1;
@@ -176,6 +179,8 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
                 <ul
                     id={listId}
                     role="listbox"
+                    // o mouse saiu da lista: nenhuma linha fica acesa
+                    onPointerLeave={() => !byKeys.current && setActive(-1)}
                     aria-label="Títulos encontrados"
                     className={cx(
                         "-mx-2 flex min-h-0 flex-col gap-1 overflow-y-auto overscroll-contain px-2",
@@ -189,10 +194,14 @@ export default function SearchPanel({ initialTerm, onClose }: SearchPanelProps) 
                             role="option"
                             aria-selected={i === active}
                             onClick={() => open(result)}
-                            onPointerMove={() => setActive(i)}
+                            onPointerMove={() => {
+                                byKeys.current = false;
+                                setActive(i);
+                            }}
                             className={cx(
-                                "flex h-result shrink-0 cursor-pointer items-center gap-3.5 rounded-control pr-5 pl-3 transition duration-hover motion-reduce:transition-none desktop:h-result-lg",
-                                i === active && "bg-hover outline outline-line-strong",
+                                "flex h-result shrink-0 cursor-pointer items-center gap-3.5 rounded-control pr-5 pl-3 transition-colors duration-hover motion-reduce:transition-none desktop:h-result-lg",
+                                // a linha ativa (mouse ou setas) só ganha o fundo, sem borda
+                                i === active && "bg-hover",
                             )}
                         >
                             {result.posterPath ? (

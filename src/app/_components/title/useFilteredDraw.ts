@@ -1,4 +1,5 @@
 import { useRouter } from "next/navigation";
+import { isLimited, LIMITED_MESSAGE } from "@/domain/rate-limit";
 import { useState, useTransition } from "react";
 import { wireFilters } from "@/domain/filters";
 import type { RoundEnd } from "@/domain/rounds";
@@ -7,6 +8,7 @@ import { filteredRun, tasteSignals, watchedTitles } from "@/infrastructure/brows
 import { drawFiltered } from "../../_actions/filters";
 import { loadError } from "../StateScreen";
 import { showToast } from "../toast";
+import { wipeRouter } from "../ui/wipe";
 import { goToTitle } from "./origin";
 
 /**
@@ -35,6 +37,11 @@ export function useFilteredDraw(currentSlug: string) {
                     taste: tasteSignals.read(),
                     round: run.round,
                 });
+                // passou do limite de pedidos (security.md §7): o aviso próprio, e a tela fica
+                if (isLimited(answer)) {
+                    showToast(LIMITED_MESSAGE);
+                    return onStay?.();
+                }
                 const slug = answer.slug;
                 // "Recomeçar" pode sortear o título que já está no endereço: só sai do fim
                 if (slug === currentSlug) return setEnd(null);
@@ -42,7 +49,7 @@ export function useFilteredDraw(currentSlug: string) {
                 if (slug)
                     return startTransition(() => {
                         setEnd(null);
-                        goToTitle(router, "replace", slug, "filtros");
+                        goToTitle(wipeRouter(router), "replace", slug, "filtros");
                     });
                 setEnd(answer.end);
             } catch {

@@ -140,6 +140,11 @@ export function roundEndHeading(end: RoundEnd): string {
     return `Você viu todos os ${end.total} títulos`;
 }
 
+/** O texto grande da tela de fim (US004 C3): a rodada que vem ("rodada 2") ou "fim". */
+export function roundEndArt(end: RoundEnd): string {
+    return end.kind === "next" ? `rodada ${end.round + 2}` : "fim";
+}
+
 /** O botão que passa à rodada seguinte: "os próximos 10" ou, na última e menor, "os últimos N". */
 export function nextRoundLabel(size: number): string {
     if (size >= ROUND_SIZE) return `Sortear entre os próximos ${ROUND_SIZE}`;
