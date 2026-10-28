@@ -183,7 +183,7 @@ export function Media() {
             <Spec
                 name="ProjectorBeam"
                 props={["className?"]}
-                does="Quadro da entrada da sala: o feixe amarelo de um projetor abrindo do alto, no centro, tremulando de leve e com poeira (o granulado) subindo dentro dele. Só CSS, do servidor (opacity e transform); com movimento reduzido fica parado. Decorativo (aria-hidden)."
+                does="Quadro da entrada da sala: o feixe amarelo de um projetor abrindo do alto, no centro, tremulando de leve. Só CSS, do servidor (opacity); com movimento reduzido fica parado. Decorativo (aria-hidden)."
             >
                 <Row label="entrada da sala">
                     <div className="relative aspect-video w-full overflow-hidden bg-skeleton">

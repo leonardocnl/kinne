@@ -259,9 +259,8 @@
     /* busca: o campo aparece depois de a lupa se alargar */
     /* horizonte do rodapé: a luz respira devagar e os caracteres cintilam, trocando de camada */
     --animate-horizon-flow: horizon-flow 14s ease-in-out infinite alternate;
-    /* feixe de projetor: a luz tremula de leve e a poeira sobe devagar (opacity e transform) */
+    /* feixe de projetor: a luz tremula de leve (opacity) */
     --animate-beam-flicker: beam-flicker 3.4s steps(6) infinite;
-    --animate-dust: dust 26s linear infinite;
     --animate-ascii-a: ascii-a 3.2s steps(1) infinite;
     --animate-ascii-b: ascii-b 3.2s steps(1) infinite;
     --animate-goo-neck: goo-neck var(--transition-duration-panel) var(--ease-settle) forwards;
@@ -617,13 +616,7 @@
     }
 }
 
-@keyframes dust {
-    to {
-        transform: translate3d(0, -50%, 0);
-    }
-}
-
-/* o feixe some para baixo: a luz e a poeira só aparecem perto da lente */
+/* o feixe some para baixo */
 @utility mask-beam {
     mask-image: linear-gradient(black, black 35%, transparent 92%);
 }

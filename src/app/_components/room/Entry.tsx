@@ -3,7 +3,6 @@
 import { type ReactNode, useId, useState } from "react";
 import { screenMain } from "../layout";
 import { Button } from "../ui/Button";
-import { Frame } from "../ui/Frame";
 import { NOT_FOUND } from "./messages";
 
 type EntryProps = {
@@ -50,7 +49,8 @@ export function Entry({ onCreate, onJoin, art }: EntryProps) {
         <main className={screenMain}>
             {/* o quadro das outras telas, encostado no topo, com o feixe de projetor (art) e, por cima,
                 o título e a frase centrados, como abertura de filme */}
-            <Frame className="bg-ink">
+            {/* a caixa do Frame, mas sem o granulado dele: o preto fica preto */}
+            <div className="relative isolate aspect-video overflow-hidden bg-ink max-desktop:-mx-gutter desktop:aspect-scope">
                 {art}
                 <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3.5 px-gutter pb-16 text-center desktop:pb-28">
                     <h1 className="pb-1 font-display text-title font-medium text-balance">
@@ -61,7 +61,7 @@ export function Entry({ onCreate, onJoin, art }: EntryProps) {
                         opções que agradam a todo mundo.
                     </p>
                 </div>
-            </Frame>
+            </div>
             {/* logo abaixo do quadro: o passo a passo à esquerda e as ações à direita, alinhados
                 pelo topo; no celular, as ações primeiro */}
             <div className="flex flex-col gap-8 pt-2 desktop:flex-row-reverse desktop:items-start desktop:justify-between desktop:gap-12 desktop:pt-3.5">
