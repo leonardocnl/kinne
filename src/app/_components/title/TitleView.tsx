@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { nextRoundLabel, roundEndHeading, roundEndArt } from "@/domain/rounds";
 import { streamingList } from "@/domain/streaming";
 import { filteredRun, filtersOnArrival, shownTitles } from "@/infrastructure/browser-storage";
@@ -21,6 +21,7 @@ import { Score } from "../ui/Score";
 import { TextLink } from "../ui/TextLink";
 import { TmdbImage } from "../ui/TmdbImage";
 import { AsciiArt } from "../ui/AsciiArt";
+import { TitleSpec } from "../ui/TitleSpec";
 import { largePosterSources, TITLE_POSTER_SIZES } from "../ui/tmdb-sources";
 import { beginWipe, cancelWipe, wipeRouter } from "../ui/wipe";
 import { goToTitle, RECOMMENDATION_SOURCE, useOrigin } from "./origin";
@@ -223,24 +224,26 @@ export function TitleView({ title, daily }: TitleViewProps) {
                     {/* ficha do título: rótulo pequeno em caixa alta e valor no tamanho do texto */}
                     <dl className="flex flex-wrap gap-x-8 gap-y-4 max-desktop:mb-5 desktop:my-2">
                         {title.streamings.length > 0 && (
-                            <Spec label="Onde assistir">
+                            <TitleSpec label="Onde assistir">
                                 <span className="font-medium">
                                     {streamingList(title.streamings)}
                                 </span>
-                            </Spec>
+                            </TitleSpec>
                         )}
-                        {genre && <Spec label="Gênero">{genre}</Spec>}
-                        {title.year && <Spec label="Ano">{title.year}</Spec>}
-                        {title.runtime && <Spec label="Duração">{title.runtime}</Spec>}
-                        {title.directors && <Spec label="Direção">{title.directors}</Spec>}
+                        {genre && <TitleSpec label="Gênero">{genre}</TitleSpec>}
+                        {title.year && <TitleSpec label="Ano">{title.year}</TitleSpec>}
+                        {title.runtime && <TitleSpec label="Duração">{title.runtime}</TitleSpec>}
+                        {title.directors && (
+                            <TitleSpec label="Direção">{title.directors}</TitleSpec>
+                        )}
                         {title.cast.length > 0 && (
-                            <Spec label="Elenco">
+                            <TitleSpec label="Elenco">
                                 <CastDialog
                                     title={title.title}
                                     poster={title.posterImagePath}
                                     cast={title.cast}
                                 />
-                            </Spec>
+                            </TitleSpec>
                         )}
                     </dl>
                     {title.tagline && (
@@ -304,18 +307,6 @@ export function TitleView({ title, daily }: TitleViewProps) {
                 </Dock>
             </div>
         </main>
-    );
-}
-
-/** Um dado da ficha do título: rótulo em caixa alta e o valor embaixo. */
-function Spec({ label, children }: { label: string; children: ReactNode }) {
-    return (
-        <div className="flex flex-col gap-1">
-            <dt className="text-caption font-semibold tracking-code text-soft uppercase">
-                {label}
-            </dt>
-            <dd className="text-body text-paper">{children}</dd>
-        </div>
     );
 }
 

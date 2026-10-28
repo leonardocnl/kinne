@@ -22,6 +22,7 @@ export type DailyPickTitle = {
     runtimeMinutes: number | null;
     backdropImagePath: string | null;
     backdropWidth: number | null;
+    posterImagePath: string | null;
     streamingTmdbIds: number[];
 };
 

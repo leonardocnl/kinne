@@ -14,10 +14,11 @@ import type { HomePick } from "../../_data/home";
 import { Button, ButtonLink } from "../ui/Button";
 import { cx } from "../ui/cx";
 import { Frame, FrameImage } from "../ui/Frame";
-import { Fact, Facts } from "../ui/Facts";
 import { GroupIcon, PauseIcon, PlayIcon } from "../ui/icons";
 import { TextLink } from "../ui/TextLink";
-import { billingRow, screenMain } from "../layout";
+import { TmdbImage } from "../ui/TmdbImage";
+import { largePosterSources, TITLE_POSTER_SIZES } from "../ui/tmdb-sources";
+import { screenMain } from "../layout";
 import { titleOrigin } from "@/infrastructure/browser-storage";
 import { titleHref } from "../title/origin";
 import { useSurprise } from "../title/useSurprise";
@@ -55,12 +56,12 @@ function useReducedMotion() {
 export function DailyPicks({
     date,
     picks,
-    availability,
+    specs,
 }: {
     date: string;
     picks: HomePick[];
-    // o Availability de cada indicação, feito no servidor: fica fora do JS da home
-    availability: ReactNode[];
+    // a ficha de cada indicação (PickSpecs), feita no servidor: fica fora do JS da home
+    specs: ReactNode[];
 }) {
     const reducedMotion = useReducedMotion();
     const [rotation, dispatch] = useReducer(rotate, initialRotation);
@@ -168,10 +169,25 @@ export function DailyPicks({
                     </div>
                 </Frame>
 
-                <div className={billingRow}>
+                {/* como a tela do título (US001 C1): no computador, pôster | texto | ações, com as
+                    ações na altura da primeira linha do título; sem sinopse nem elenco, que ficam
+                    na tela do título. No celular, sem pôster e as ações embaixo */}
+                <div className="title-layout pt-2 max-desktop:flex max-desktop:flex-col desktop:pt-3.5">
+                    {pick.posterImagePath && (
+                        // só no computador; lazy e escondido, o celular nem baixa
+                        <TmdbImage
+                            key={pick.slug}
+                            sources={largePosterSources(pick.posterImagePath)}
+                            sizes={TITLE_POSTER_SIZES}
+                            className={cx(
+                                "hidden aspect-2/3 w-title-poster transition-opacity duration-fade motion-reduce:transition-none desktop:col-start-1 desktop:row-span-3 desktop:row-start-1 desktop:mr-12 desktop:block",
+                                swap === "out" && "opacity-0",
+                            )}
+                        />
+                    )}
                     <div
                         className={cx(
-                            "flex min-w-0 flex-col gap-3.5 transition-opacity duration-fade motion-reduce:transition-none max-desktop:gap-3 desktop:flex-1",
+                            "flex min-w-0 flex-col gap-3 transition-opacity duration-fade motion-reduce:transition-none desktop:col-start-2 desktop:row-span-3 desktop:row-start-1 desktop:mr-12 desktop:gap-3.5",
                             filters.open && "opacity-35",
                         )}
                     >
@@ -195,30 +211,20 @@ export function DailyPicks({
                         </h1>
                         <div
                             className={cx(
-                                "transition-opacity duration-fade empty:hidden motion-reduce:transition-none",
+                                "transition-opacity duration-fade motion-reduce:transition-none desktop:my-2",
                                 swap === "out" && "opacity-0",
                             )}
                         >
-                            {availability[shown]}
+                            {specs[shown]}
                         </div>
                         <p
                             className={cx(
-                                "max-w-measure text-tagline text-balance text-soft transition-opacity duration-fade motion-reduce:transition-none",
+                                "max-w-measure text-tagline text-balance text-paper transition-opacity duration-fade motion-reduce:transition-none",
                                 swap === "out" && "opacity-0",
                             )}
                         >
                             {pick.phrase}
                         </p>
-                        <Facts
-                            className={cx(
-                                "transition-opacity duration-fade motion-reduce:transition-none",
-                                swap === "out" && "opacity-0",
-                            )}
-                        >
-                            {pick.facts.map((text) => (
-                                <Fact key={text}>{text}</Fact>
-                            ))}
-                        </Facts>
                         <TextLink
                             href={titleHref(pick.slug)}
                             onClick={() => titleOrigin.set(pick.slug, "dia")}
@@ -228,10 +234,11 @@ export function DailyPicks({
                             <span aria-hidden="true">→</span>
                         </TextLink>
                     </div>
-                    {/* um amarelo por tela (CM003): com os filtros abertos, o de trás some */}
+                    {/* um amarelo por tela (CM003): com os filtros abertos, o de trás some. No
+                        computador, os três lado a lado; no celular, o par e o grupo embaixo */}
                     <div
                         className={cx(
-                            "flex flex-col gap-2 transition-opacity duration-fade motion-reduce:transition-none desktop:pb-11.5",
+                            "flex flex-col gap-2 transition-opacity duration-fade motion-reduce:transition-none max-desktop:mt-5 desktop:col-start-3 desktop:row-start-1 desktop:h-title-line desktop:flex-row desktop:items-center desktop:justify-end desktop:gap-2.5",
                             filters.open && "invisible opacity-0",
                         )}
                     >
@@ -256,13 +263,8 @@ export function DailyPicks({
                             </Button>
                         </div>
                         {/* discreto, sem a cor de destaque (US011 C1, CM003): o botão ghost, o mais
-                            apagado, com o ícone de grupo, na largura do par acima */}
-                        <ButtonLink
-                            variant="ghost"
-                            href="/sala"
-                            icon={<GroupIcon />}
-                            className="w-full"
-                        >
+                            apagado, com o ícone de grupo */}
+                        <ButtonLink variant="ghost" href="/sala" icon={<GroupIcon />}>
                             Assistir em grupo
                         </ButtonLink>
                     </div>

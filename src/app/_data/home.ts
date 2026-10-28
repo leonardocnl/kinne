@@ -17,11 +17,14 @@ export type HomePick = {
     genre: string;
     phrase: string;
     seconds: number;
-    // gênero, ano e duração, nesta ordem, sem os que faltam
-    facts: string[];
+    year: string | null;
+    // total; por episódio em séries
+    runtime: string | null;
     streamings: StreamingService[];
     backdropImagePath: string | null;
     backdropWidth: number | null;
+    // pôster da ficha, só no computador (como na tela do título)
+    posterImagePath: string | null;
 };
 
 /**
@@ -45,13 +48,11 @@ function toHomePick(p: DailyPickTitle): HomePick {
         genre: GENRE_LABELS[p.genre],
         phrase,
         seconds: rotationSeconds(phrase),
-        facts: [
-            GENRE_LABELS[p.genre],
-            p.releaseYear?.toString(),
-            p.runtimeMinutes ? formatRuntime(p.runtimeMinutes, p.type) : undefined,
-        ].filter((fact) => fact !== undefined),
+        year: p.releaseYear?.toString() ?? null,
+        runtime: p.runtimeMinutes ? formatRuntime(p.runtimeMinutes, p.type) : null,
         streamings: availableStreamings(p.streamingTmdbIds),
         backdropImagePath: p.backdropImagePath,
         backdropWidth: p.backdropWidth,
+        posterImagePath: p.posterImagePath,
     };
 }

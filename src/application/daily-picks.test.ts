@@ -39,6 +39,7 @@ function memoryRepository() {
                 runtimeMinutes: 100,
                 backdropImagePath: null,
                 backdropWidth: null,
+                posterImagePath: null,
                 streamingTmdbIds: [8],
             }));
         },
