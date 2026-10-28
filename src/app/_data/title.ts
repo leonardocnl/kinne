@@ -4,7 +4,7 @@ import type { CatalogEntry } from "@/application/titles";
 import { formatRuntime, isSlug } from "@/domain/catalog";
 import { castLine, directionLine } from "@/domain/credits";
 import { GENRE_LABELS, mainGenre } from "@/domain/genre";
-import { availableStreamings, type StreamingService } from "@/domain/streaming";
+import { availableStreamings, STREAMING_LOGOS, type StreamingService } from "@/domain/streaming";
 import { createDb } from "@/infrastructure/db/client";
 import { DrizzleTitlesRepository } from "@/infrastructure/db/titles-repository";
 import { CATALOG_TAG, titleTag } from "@/infrastructure/revalidation";
@@ -21,9 +21,11 @@ export type TitleScreen = {
     // ano e duração, sem os que faltam
     facts: string[];
     score: string;
-    streamings: StreamingService[];
+    streamings: (StreamingService & { logoPath: string })[];
     trailerUrl: string | null;
     backdropImagePath: string | null;
+    // pôster à esquerda do texto, só no computador
+    posterImagePath: string | null;
     backdropWidth: number | null;
     // não recomendável: sem dado, sem "Outra opção" e fora dos buscadores (busca H6)
     recommendable: boolean;
@@ -64,11 +66,15 @@ function toTitleScreen(t: CatalogEntry): TitleScreen {
             minimumFractionDigits: 1,
             maximumFractionDigits: 1,
         }),
-        streamings: availableStreamings(t.streamingTmdbIds),
+        streamings: availableStreamings(t.streamingTmdbIds).map((s) => ({
+            ...s,
+            logoPath: STREAMING_LOGOS[s.id],
+        })),
         trailerUrl: t.trailerYoutubeKey
             ? `https://www.youtube.com/watch?v=${encodeURIComponent(t.trailerYoutubeKey)}`
             : null,
         backdropImagePath: t.backdropImagePath,
+        posterImagePath: t.posterImagePath,
         backdropWidth: t.backdropWidth,
         recommendable: t.recommendable,
         direction: directionLine(t.directors),

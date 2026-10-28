@@ -40,6 +40,7 @@ export class DrizzleTitlesRepository implements TitlesRepository {
                 tagline: catalogTitles.tagline,
                 synopsis: catalogTitles.synopsis,
                 backdropImagePath: catalogTitles.backdropImagePath,
+                posterImagePath: catalogTitles.posterImagePath,
                 backdropWidth: catalogTitles.backdropWidth,
                 trailerYoutubeKey: catalogTitles.trailerYoutubeKey,
                 releaseYear: catalogTitles.releaseYear,
