@@ -1,8 +1,8 @@
 import { RoomApp } from "../_components/room/RoomApp";
-import { AsciiHorizon } from "../_components/ui/AsciiHorizon";
+import { ProjectorBeam } from "../_components/ui/ProjectorBeam";
 
 /** `/sala`: a sala em que a pessoa está, reconhecida pelo cookie de membro (RNE002). */
 export default function RoomPage() {
-    // o quadro da entrada: o horizonte do rodapé, feito no servidor (o WebGL baixa sob demanda)
-    return <RoomApp art={<AsciiHorizon className="absolute inset-0" />} />;
+    // o quadro da entrada: o feixe de projetor, só CSS, do servidor
+    return <RoomApp art={<ProjectorBeam className="absolute inset-0" />} />;
 }

@@ -48,11 +48,11 @@ export function Entry({ onCreate, onJoin, art }: EntryProps) {
 
     return (
         <main className={screenMain}>
-            {/* o quadro das outras telas, encostado no topo, com o horizonte (art) e, por cima,
+            {/* o quadro das outras telas, encostado no topo, com o feixe de projetor (art) e, por cima,
                 o título e a frase centrados, como abertura de filme */}
             <Frame className="bg-skeleton">
                 {art}
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3.5 px-gutter pb-16 text-center desktop:pb-28">
+                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3.5 px-gutter pb-16 text-center desktop:pb-28">
                     <h1 className="pb-1 font-display text-title font-medium text-balance">
                         Assistir em grupo
                     </h1>
