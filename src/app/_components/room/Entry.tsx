@@ -48,12 +48,11 @@ export function Entry({ onCreate, onJoin, art }: EntryProps) {
 
     return (
         <main className={screenMain}>
-            {/* o quadro das outras telas, encostado no topo, com a parede de pôsteres (PosterMosaic) */}
-            <Frame className="bg-skeleton">{art}</Frame>
-            {/* como a tela do título: texto à esquerda e as ações à direita, na altura da primeira
-                linha do título; no celular, as ações embaixo */}
-            <div className="title-layout pt-2 max-desktop:flex max-desktop:flex-col max-desktop:gap-8 desktop:pt-3.5">
-                <div className="flex min-w-0 flex-col gap-3.5 desktop:col-start-2 desktop:row-span-3 desktop:row-start-1 desktop:mr-12">
+            {/* o quadro das outras telas, encostado no topo, com o horizonte (art) e, por cima,
+                o título e a frase centrados, como abertura de filme */}
+            <Frame className="bg-skeleton">
+                {art}
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3.5 px-gutter pb-16 text-center desktop:pb-28">
                     <h1 className="pb-1 font-display text-title font-medium text-balance">
                         Assistir em grupo
                     </h1>
@@ -61,27 +60,12 @@ export function Entry({ onCreate, onJoin, art }: EntryProps) {
                         Cada pessoa diz o que topa no próprio celular, e o Kinne propõe poucas
                         opções que agradam a todo mundo.
                     </p>
-                    <ol className="mt-4 grid gap-6 desktop:mt-6 desktop:grid-cols-3 desktop:gap-10">
-                        {STEPS.map((stepItem, i) => (
-                            <li
-                                key={stepItem.title}
-                                className="flex flex-col gap-1.5 border-t border-line pt-4"
-                            >
-                                <span className="text-caption font-semibold tracking-code text-soft">
-                                    {String(i + 1).padStart(2, "0")}
-                                </span>
-                                <span className="font-display text-confirm font-medium text-paper">
-                                    {stepItem.title}
-                                </span>
-                                <span className="text-small text-pretty text-soft">
-                                    {stepItem.text}
-                                </span>
-                            </li>
-                        ))}
-                    </ol>
                 </div>
-
-                <div className="flex flex-col gap-3 desktop:col-start-3 desktop:row-start-1 desktop:min-h-title-line desktop:justify-center">
+            </Frame>
+            {/* logo abaixo do quadro: o passo a passo à esquerda e as ações à direita, alinhados
+                pelo topo; no celular, as ações primeiro */}
+            <div className="flex flex-col gap-8 pt-2 desktop:flex-row-reverse desktop:items-start desktop:justify-between desktop:gap-12 desktop:pt-3.5">
+                <div className="flex flex-col gap-3 desktop:shrink-0">
                     {step === "choose" ? (
                         // as duas da mesma largura, a da maior (grid de colunas iguais)
                         <div
@@ -161,6 +145,24 @@ export function Entry({ onCreate, onJoin, art }: EntryProps) {
                         </p>
                     )}
                 </div>
+                <ol className="grid gap-6 desktop:flex-1 desktop:grid-cols-3 desktop:gap-10">
+                    {STEPS.map((stepItem, i) => (
+                        <li
+                            key={stepItem.title}
+                            className="flex flex-col gap-1.5 border-t border-line pt-4"
+                        >
+                            <span className="text-caption font-semibold tracking-code text-soft">
+                                {String(i + 1).padStart(2, "0")}
+                            </span>
+                            <span className="font-display text-confirm font-medium text-paper">
+                                {stepItem.title}
+                            </span>
+                            <span className="text-small text-pretty text-soft">
+                                {stepItem.text}
+                            </span>
+                        </li>
+                    ))}
+                </ol>
             </div>
         </main>
     );

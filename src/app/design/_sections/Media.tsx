@@ -180,17 +180,6 @@ export function Media() {
                 </Row>
             </Spec>
             <Spec
-                name="PosterMosaic"
-                props={["posters: string[]", "className?"]}
-                does="Parede de pôsteres no quadro da entrada da sala: três fileiras dos títulos mais conhecidos do catálogo, inclinadas, deslizando devagar em sentidos alternados (só transform, em CSS); a parede apagada e sem cor, e poucos pôsteres “votados” acesos, com anel e selo com o check em amarelo. Feita no servidor, sem JS; com movimento reduzido fica parada. Decorativa (aria-hidden). Aqui sem pôsteres: a lista vem do banco, na visita a /sala."
-            >
-                <Row label="em /sala">
-                    <span className="text-small text-soft">
-                        Abra /sala para ver com os pôsteres.
-                    </span>
-                </Row>
-            </Spec>
-            <Spec
                 name="AsciiType"
                 props={["text", "tone?", "drift?", "className?"]}
                 does="Texto grande desenhado em caracteres, no quadro das telas 404 (página e título). Sempre visível, apagado; perto do ponteiro (mouse ou dedo) os caracteres acendem, embaralham e ganham brilho e um leve desdobramento, e a área segue o ponteiro com atraso. Canvas 2D, sem dependência; parado quando o ponteiro está longe; com movimento reduzido, o desenho fica parado. Decorativo (aria-hidden)."

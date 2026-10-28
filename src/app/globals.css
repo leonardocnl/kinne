@@ -195,10 +195,6 @@
     --aspect-video: 16 / 9; /* celular */
     --aspect-kinne: 1000 / 250; /* "kinne" gigante do rodapé (viewBox do SVG) */
     --object-position-focus: 50% 25%; /* não corta cabeças */
-    /* mosaico da sala: bordas escuras, o centro aceso e o pé fundido com a página (ink) */
-    --background-image-mosaic-vignette:
-        radial-gradient(80% 90% at 50% 45%, rgb(2 2 2 / 0) 40%, rgb(2 2 2 / 0.85)),
-        linear-gradient(rgb(2 2 2 / 0) 70%, var(--color-ink));
     --background-image-shade-full: linear-gradient(
         to bottom,
         rgb(2 2 2 / 0.34),
@@ -254,8 +250,6 @@
     /* busca: o campo aparece depois de a lupa se alargar */
     /* horizonte do rodapé: a luz respira devagar e os caracteres cintilam, trocando de camada */
     --animate-horizon-flow: horizon-flow 14s ease-in-out infinite alternate;
-    /* mosaico de pôsteres da entrada da sala: cada fileira desliza meia volta, sem fim */
-    --animate-mosaic: mosaic 90s linear infinite;
     --animate-ascii-a: ascii-a 3.2s steps(1) infinite;
     --animate-ascii-b: ascii-b 3.2s steps(1) infinite;
     --animate-goo-neck: goo-neck var(--transition-duration-panel) var(--ease-settle) forwards;
@@ -603,18 +597,6 @@
     [data-search-rim] {
         display: none;
     }
-}
-
-/* a fileira tem os pôsteres duas vezes: andar metade dela emenda sem corte */
-@keyframes mosaic {
-    to {
-        transform: translate3d(-50%, 0, 0);
-    }
-}
-
-/* fileiras alternadas do mosaico andam ao contrário */
-@utility mosaic-reverse {
-    animation-direction: reverse;
 }
 
 @keyframes horizon-flow {
