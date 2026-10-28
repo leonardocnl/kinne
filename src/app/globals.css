@@ -94,6 +94,7 @@
     --spacing-skeleton-title: clamp(2.4rem, 4.2vw, 3.8rem);
     /* altura da primeira linha do título: os botões da tela do título se alinham a ela */
     --spacing-title-line: calc(var(--text-title) * var(--text-title--line-height));
+    --spacing-room-code: 24rem; /* campo do código da sala, no computador */
     /* altura do quadro no computador (2.39:1 da largura útil da página) */
     --spacing-hero-height: calc(
         (min(100vw, var(--container-page)) - 2 * var(--spacing-gutter)) / 2.39
