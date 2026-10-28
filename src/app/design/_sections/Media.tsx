@@ -6,7 +6,6 @@ import { Skeleton } from "../../_components/ui/Skeleton";
 import { Toast } from "../../_components/ui/Toast";
 import { AsciiHorizon } from "../../_components/ui/AsciiHorizon";
 import { AsciiType } from "../../_components/ui/AsciiType";
-import { ProjectorBeam } from "../../_components/ui/ProjectorBeam";
 import { BackIcon, PlayIcon } from "../../_components/ui/icons";
 import { TokenValue } from "./live";
 import { DoDont, Row, Spec } from "./Spec";
@@ -177,17 +176,6 @@ export function Media() {
                 <Row label="fundo do rodapé de toda tela">
                     <div className="relative aspect-kinne w-full">
                         <AsciiHorizon className="absolute inset-0" />
-                    </div>
-                </Row>
-            </Spec>
-            <Spec
-                name="ProjectorBeam"
-                props={["className?"]}
-                does="Quadro da entrada da sala: o feixe amarelo de um projetor abrindo do alto, no centro, tremulando de leve. Só CSS, do servidor (opacity); com movimento reduzido fica parado. Decorativo (aria-hidden)."
-            >
-                <Row label="entrada da sala">
-                    <div className="relative aspect-video w-full overflow-hidden bg-skeleton">
-                        <ProjectorBeam className="absolute inset-0" />
                     </div>
                 </Row>
             </Spec>

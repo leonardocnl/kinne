@@ -47,12 +47,15 @@ export function Entry({ onCreate, onJoin, art }: EntryProps) {
 
     return (
         <main className={screenMain}>
-            {/* o quadro das outras telas, encostado no topo, com o feixe de projetor (art) e, por cima,
-                o título e a frase centrados, como abertura de filme */}
-            {/* a caixa do Frame, mas sem o granulado dele: o preto fica preto */}
+            {/* a caixa do Frame, sem o granulado: o preto fica preto. Dentro, a sala funcionando
+                (art, o RoomShowcase) */}
             <div className="relative isolate aspect-video overflow-hidden bg-ink max-desktop:-mx-gutter desktop:aspect-scope">
                 {art}
-                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3.5 px-gutter pb-16 text-center desktop:pb-28">
+            </div>
+            {/* como a tela do título: o título, a frase e os passos à esquerda; as ações à direita,
+                na altura da primeira linha do título. No celular, as ações depois da frase */}
+            <div className="title-layout pt-2 max-desktop:flex max-desktop:flex-col max-desktop:gap-8 desktop:pt-3.5">
+                <div className="flex min-w-0 flex-col gap-3.5 desktop:col-start-2 desktop:row-span-3 desktop:row-start-1 desktop:mr-12">
                     <h1 className="pb-1 font-display text-title font-medium text-balance">
                         Assistir em grupo
                     </h1>
@@ -61,11 +64,7 @@ export function Entry({ onCreate, onJoin, art }: EntryProps) {
                         opções que agradam a todo mundo.
                     </p>
                 </div>
-            </div>
-            {/* logo abaixo do quadro: o passo a passo à esquerda e as ações à direita, alinhados
-                pelo topo; no celular, as ações primeiro */}
-            <div className="flex flex-col gap-8 pt-2 desktop:flex-row-reverse desktop:items-start desktop:justify-between desktop:gap-12 desktop:pt-3.5">
-                <div className="flex flex-col gap-3 desktop:shrink-0">
+                <div className="flex flex-col gap-3 desktop:col-start-3 desktop:row-start-1 desktop:min-h-title-line desktop:justify-center">
                     {step === "choose" ? (
                         // as duas da mesma largura, a da maior (grid de colunas iguais)
                         <div
@@ -145,7 +144,7 @@ export function Entry({ onCreate, onJoin, art }: EntryProps) {
                         </p>
                     )}
                 </div>
-                <ol className="grid gap-6 desktop:flex-1 desktop:grid-cols-3 desktop:gap-10">
+                <ol className="mt-4 grid gap-6 desktop:col-span-2 desktop:col-start-2 desktop:row-start-4 desktop:mt-8 desktop:grid-cols-3 desktop:gap-10">
                     {STEPS.map((stepItem, i) => (
                         <li
                             key={stepItem.title}
