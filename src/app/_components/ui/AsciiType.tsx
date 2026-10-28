@@ -21,8 +21,21 @@ const smooth = (edge0: number, edge1: number, x: number) => {
     return t * t * (3 - 2 * t);
 };
 
-/** Texto grande em caracteres que reage ao ponteiro; ocupa a caixa de quem usa. */
-export function AsciiType({ text, className }: { text: string; className?: string }) {
+/**
+ * Texto grande em caracteres que reage ao ponteiro; ocupa a caixa de quem usa. `tone` é a cor
+ * (`signal` só onde o DESIGN.md abre a exceção); com `drift`, sem ponteiro, a luz passeia sozinha.
+ */
+export function AsciiType({
+    text,
+    tone = "paper",
+    drift = false,
+    className,
+}: {
+    text: string;
+    tone?: "paper" | "signal";
+    drift?: boolean;
+    className?: string;
+}) {
     const ref = useRef<HTMLCanvasElement>(null);
 
     useEffect(() => {
@@ -31,8 +44,9 @@ export function AsciiType({ text, className }: { text: string; className?: strin
         if (!ctx) return;
         const style = getComputedStyle(canvas);
         const token = (name: string) => style.getPropertyValue(`--color-${name}`).trim();
-        const paper = token("paper");
-        const faint = token("faint");
+        const ink = token(tone);
+        // o desdobramento: o tom apagado da mesma cor
+        const ghost = token(tone === "signal" ? "signal-deep" : "faint");
         const display = style.getPropertyValue("--font-display");
         const mono = style.getPropertyValue("--font-ascii");
         const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -109,11 +123,11 @@ export function AsciiType({ text, className }: { text: string; className?: strin
                     const char = CHARSET[Math.max(1, Math.round(tone * lastChar))];
                     if (k > 0.05 && shift > 0) {
                         ctx!.globalAlpha = 0.5 * k;
-                        ctx!.fillStyle = faint;
+                        ctx!.fillStyle = ghost;
                         ctx!.fillText(char, x - shift, y);
                         ctx!.fillText(char, x + shift, y);
                     }
-                    ctx!.fillStyle = paper;
+                    ctx!.fillStyle = ink;
                     ctx!.globalAlpha = Math.min(1, 0.25 + tone * 0.75 + GLOW * 0.35 * k);
                     ctx!.fillText(char, x, y);
                 }
@@ -125,11 +139,18 @@ export function AsciiType({ text, className }: { text: string; className?: strin
             const dt = Math.min(0.05, (time - (last || time)) / 1000);
             last = time;
             const follow = 1 - Math.exp(-FOLLOW_SPEED * 4 * dt);
+            // sem ponteiro, a luz passeia devagar pelo texto (Lissajous)
+            const idle = drift && !pointer;
+            if (idle) {
+                target.x = width * (0.5 + 0.34 * Math.sin(time * 0.00042));
+                target.y = height * (0.5 + 0.22 * Math.sin(time * 0.00067 + 1));
+                if (eased.x < -1e3) Object.assign(eased, target);
+            }
             eased.x += (target.x - eased.x) * follow;
             eased.y += (target.y - eased.y) * follow;
             draw(time);
             // parado e longe do ponteiro: não gasta quadro
-            const near = target.x > -1e3;
+            const near = idle || target.x > -1e3;
             const moving = Math.hypot(target.x - eased.x, target.y - eased.y) > 0.5;
             frame = near || moving ? requestAnimationFrame(tick) : 0;
             if (!frame) last = 0;
@@ -138,7 +159,9 @@ export function AsciiType({ text, className }: { text: string; className?: strin
         const wake = () => {
             if (!frame) frame = requestAnimationFrame(tick);
         };
+        let pointer = false;
         const onMove = (e: PointerEvent) => {
+            pointer = true;
             const rect = canvas.getBoundingClientRect();
             target.x = e.clientX - rect.left;
             target.y = e.clientY - rect.top;
@@ -147,6 +170,7 @@ export function AsciiType({ text, className }: { text: string; className?: strin
             wake();
         };
         const onLeave = () => {
+            pointer = false;
             target.x = target.y = -1e4;
             wake();
         };
@@ -160,6 +184,7 @@ export function AsciiType({ text, className }: { text: string; className?: strin
         resize.observe(canvas);
         if (still) return () => resize.disconnect();
         window.addEventListener("pointermove", onMove);
+        if (drift) wake();
         document.documentElement.addEventListener("pointerleave", onLeave);
         return () => {
             resize.disconnect();
@@ -167,7 +192,7 @@ export function AsciiType({ text, className }: { text: string; className?: strin
             window.removeEventListener("pointermove", onMove);
             document.documentElement.removeEventListener("pointerleave", onLeave);
         };
-    }, [text]);
+    }, [text, tone, drift]);
 
     return <canvas ref={ref} aria-hidden="true" className={className} />;
 }

@@ -17,7 +17,9 @@ describe("AsciiType", () => {
         const source = readFileSync(join(import.meta.dirname, "AsciiType.tsx"), "utf8");
         expect(source).toContain("prefers-reduced-motion: reduce");
         expect(source).toMatch(/if \(still\) return/);
-        expect(source).not.toContain("signal");
+        // amarelo só quando quem usa pede (exceção do fim de rodada); o padrão é paper
+        expect(source).toContain('tone = "paper"');
+        expect(source).not.toMatch(/#[0-9a-f]{3,8}/i);
     });
 });
 

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
-import { nextRoundLabel, roundEndHeading, roundSeenCount } from "@/domain/rounds";
+import { nextRoundLabel, roundEndHeading, roundEndArt } from "@/domain/rounds";
 import { streamingList } from "@/domain/streaming";
 import { filteredRun, filtersOnArrival, shownTitles } from "@/infrastructure/browser-storage";
 import type { TitleScreen } from "../../_data/title";
@@ -129,8 +129,11 @@ export function TitleView({ title, daily }: TitleViewProps) {
             <StateScreen
                 heading={roundEndHeading(end)}
                 art={
+                    // exceção do dono: os caracteres em amarelo, passeando sozinhos (DESIGN.md, Cor)
                     <AsciiArt
-                        text={String(roundSeenCount(end))}
+                        text={roundEndArt(end)}
+                        tone="signal"
+                        drift
                         className="absolute inset-0 size-full"
                     />
                 }

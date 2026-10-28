@@ -8,7 +8,7 @@ import {
     rankTitles,
     roundEnd,
     roundEndHeading,
-    roundSeenCount,
+    roundEndArt,
     weightedRating,
 } from "./rounds";
 
@@ -173,11 +173,10 @@ describe("fim da rodada (C3)", () => {
     });
 });
 
-describe("roundSeenCount (US004 C3)", () => {
-    it("conta as rodadas vistas e, no fim, o total", () => {
-        expect(roundSeenCount({ kind: "next", round: 0, size: 10 })).toBe(10);
-        expect(roundSeenCount({ kind: "next", round: 2, size: 4 })).toBe(30);
-        expect(roundSeenCount({ kind: "done", total: 23 })).toBe(23);
-        expect(roundSeenCount({ kind: "done", total: 0 })).toBe(0);
+describe("roundEndArt (US004 C3)", () => {
+    it("anuncia a rodada que vem e, sem mais, o fim", () => {
+        expect(roundEndArt({ kind: "next", round: 0, size: 10 })).toBe("rodada 2");
+        expect(roundEndArt({ kind: "next", round: 2, size: 4 })).toBe("rodada 4");
+        expect(roundEndArt({ kind: "done", total: 23 })).toBe("fim");
     });
 });

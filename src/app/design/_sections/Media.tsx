@@ -181,9 +181,19 @@ export function Media() {
             </Spec>
             <Spec
                 name="AsciiType"
-                props={["text", "className?"]}
+                props={["text", "tone?", "drift?", "className?"]}
                 does="Texto grande desenhado em caracteres, no quadro das telas 404 (página e título). Sempre visível, apagado; perto do ponteiro (mouse ou dedo) os caracteres acendem, embaralham e ganham brilho e um leve desdobramento, e a área segue o ponteiro com atraso. Canvas 2D, sem dependência; parado quando o ponteiro está longe; com movimento reduzido, o desenho fica parado. Decorativo (aria-hidden)."
             >
+                <Row label="fim de rodada: signal, passeando sozinho">
+                    <div className="relative aspect-video w-full bg-skeleton">
+                        <AsciiType
+                            text="rodada 2"
+                            tone="signal"
+                            drift
+                            className="absolute inset-0 size-full"
+                        />
+                    </div>
+                </Row>
                 <Row label="passe o mouse">
                     <div className="relative aspect-video w-full bg-skeleton">
                         <AsciiType text="404" className="absolute inset-0 size-full" />
