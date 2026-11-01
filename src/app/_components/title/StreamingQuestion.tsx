@@ -27,7 +27,7 @@ import { TextLink } from "../ui/TextLink";
  * saber quem está na tela antes de calcular, para não gravar a lista do navegador por cima da conta.
  * Devolve a lista nova, ou null se não salvou.
  */
-async function declineStreaming(service: Streaming): Promise<Streaming[] | null> {
+export async function declineStreaming(service: Streaming): Promise<Streaming[] | null> {
     const status = await loadAccountStatus();
     if (status.state !== "account") {
         const next = withoutStreaming(savedStreamings(), service);

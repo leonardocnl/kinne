@@ -31,6 +31,11 @@ insert into streaming_availability (streaming_service_id, catalog_title_id, coun
 select s.id, t.id, 'BR' from streaming_services s cross join catalog_titles t
 where s.tmdb_id in (8, 119);
 
+-- Max only on this title: after declining Netflix and Prime Video, it is what is left to draw.
+insert into streaming_availability (streaming_service_id, catalog_title_id, country_code)
+select s.id, t.id, 'BR' from streaming_services s cross join catalog_titles t
+where s.tmdb_id = 1899 and t.slug = 'filme-action-2020';
+
 insert into people (tmdb_person_id, name) values (1, 'Pessoa Diretora'), (2, 'Pessoa Atriz');
 
 insert into title_credits (catalog_title_id, person_id, role, credit_order, character_name)

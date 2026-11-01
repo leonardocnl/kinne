@@ -68,7 +68,7 @@ Leitura obrigatória antes de qualquer tarefa de interface. A fonte da verdade v
 
 ## Orçamento
 
-- JS da tela inicial: no máximo 152 KB gzip (era 150; o dono subiu para 151 em 25/10/2026, para o gatilho do horizonte animado do rodapé, que baixa o WebGL só quando o rodapé chega perto, e para 152 em 28/10/2026, para o gatilho da cortina entre títulos, que baixa o motion sob demanda) no que um navegador moderno baixa (`npm run bundle:check`, no CI). Painéis que abrem por ação (filtros, busca) carregam sob demanda.
+- JS da tela inicial: no máximo 160 KB gzip (era 150; o dono subiu para 151 em 25/10/2026, para o gatilho do horizonte animado do rodapé, que baixa o WebGL só quando o rodapé chega perto, para 152 em 28/10/2026, para o gatilho da cortina entre títulos, que baixa o motion sob demanda, e para 160 em 01/11/2026, para dar folga durante a fundação, com revisão depois da F3) no que um navegador moderno baixa (`npm run bundle:check`, no CI). Painéis que abrem por ação (filtros, busca) carregam sob demanda.
 - Lighthouse na prévia do `develop`: nota ≥ 90, LCP ≤ 2,0 s, CLS ≤ 0,05, TBT ≤ 200 ms (`lighthouserc.json`).
 
 ## Componentes

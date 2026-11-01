@@ -147,14 +147,14 @@ test("streamings pelo uso: Sim guarda e Não tira o serviço", async ({ page }) 
     expect(new URL(page.url()).search).toBe("");
 });
 
-test("streamings pelo uso: Não pede outra indicação quando o título sai", async ({ page }) => {
+test("streamings pelo uso: Não leva a outro título quando este sai", async ({ page }) => {
     await page.goto(TITLE);
     await page.waitForLoadState("networkidle");
     const question = page.getByRole("group", { name: /Você assina/ });
     await question.getByRole("button", { name: "Não" }).click();
     await expect(question).toHaveAccessibleName("Você assina Prime Video?");
     await question.getByRole("button", { name: "Não" }).click();
-    // nas fixtures todo título está só nesses dois serviços: o sorteio roda e nada sobra
-    await expect(page.getByText("Você já marcou todos os títulos")).toBeVisible();
-    expect(new URL(page.url()).search).toBe("");
+    // só o Filme de Ação também está na Max, o que sobrou na lista
+    await expect(page).toHaveURL(/\/titulo\/filme-action-2020$/);
+    await expect(page.getByRole("heading", { name: "Filme de Ação" })).toBeVisible();
 });

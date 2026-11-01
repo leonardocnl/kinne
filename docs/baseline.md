@@ -46,6 +46,14 @@ Measured on 2026-11-01 at commit `2ab751b` (`develop`), on the development machi
 
 ## Points of attention for F5
 
-- **Home JS budget:** only 0.5 KB of margin (151.5 KB of 152 KB).
+- **Home JS budget:** see "Home JS budget change" below.
 - **High TBT on `/titulo` and `/sala`:** 15.5 s and 16.6 s on desktop. The footer's WebGL horizon is the suspect; confirm on the Vercel preview.
 - **CLS on `/sala`:** 0.242 on desktop, attributed to the footer's horizon container. The budget is 0.05.
+
+## Home JS budget change
+
+On 2026-11-01 the owner raised the budget from 152 KB to 160 KB gzip. The home measured **152.3 KB** with the three MVP adjustment PRs (#87, #88, #89) combined. The reason is to leave margin during the foundation work. Review the limit after F3 (design system), based on the size measured after the code cleanup.
+
+## To fix in F1
+
+- **Flaky test:** `src/app/_actions/room-account.db.test.ts` failed once on #87 and passed on a rerun. It searches stored data for the substring "9398", which may match an unrelated generated value; this cause is not confirmed.
