@@ -20,6 +20,7 @@ import { TmdbImage } from "../ui/TmdbImage";
 import { largePosterSources, TITLE_POSTER_SIZES } from "../ui/tmdb-sources";
 import { screenMain } from "../layout";
 import { titleOrigin } from "@/infrastructure/browser-storage";
+import { StreamingSummary } from "../StreamingProfile";
 import { titleHref } from "../title/origin";
 import { useSurprise } from "../title/useSurprise";
 import { useFiltersRoute } from "./filtersRoute";
@@ -269,6 +270,14 @@ export function DailyPicks({
                             Assistir em grupo
                         </ButtonLink>
                     </div>
+                    <StreamingSummary
+                        className={cx(
+                            "max-desktop:mt-1 desktop:col-start-3 desktop:row-start-2 desktop:justify-self-end",
+                            filters.open && "invisible",
+                        )}
+                    >
+                        {(label) => <TextLink onClick={filters.show}>{label}</TextLink>}
+                    </StreamingSummary>
                 </div>
                 {panelMounted && (
                     <Suspense>
