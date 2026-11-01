@@ -31,16 +31,15 @@ for file in drizzle/00*.sql e2e/visual-fixtures.sql; do
 done
 
 mkdir -p e2e/visual-baseline test-results
-"$RUNTIME" run --rm --network "container:$DB" \
+# Only files Git tracks or would track go in, on stdin: the worktree itself is never mounted.
+git ls-files -z -co --exclude-standard -- . ':!e2e/visual-baseline' | tar --null -T - -cf - |
+    "$RUNTIME" run -i --rm --network "container:$DB" \
     -e NEXT_TELEMETRY_DISABLED=1 -e CI="${CI:-}" -e UPDATE="$UPDATE" \
-    -v "$PWD:/src:ro,z" \
     -v "$PWD/e2e/visual-baseline:/work/e2e/visual-baseline:z" \
     -v "$PWD/test-results:/work/test-results:z" \
     -w /work "$IMAGE" bash -c '
         set -euo pipefail
-        tar -C /src --exclude=./node_modules --exclude=./.next --exclude=./.git \
-            --exclude="./.env*" --exclude=./test-results --exclude=./e2e/visual-baseline -cf - . |
-            tar -xf -
+        tar -xf -
         npm ci --no-audit --no-fund > /dev/null 2>&1
         npm run build > /dev/null
         npx playwright test --reporter=line $UPDATE
