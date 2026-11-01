@@ -1,0 +1,4 @@
+# Hashes from pypi.org/pypi/qrcode/8.2/json. Install with pip --require-hashes.
+qrcode==8.2 \
+    --hash=sha256:16e64e0716c14960108e85d853062c9e8bba5ca8252c0b4d0231b9df4060ff4f \
+    --hash=sha256:35c3f2a4172b33136ab9f6b3ef1c00260dd2f66f858f24d88418a015f446506c
