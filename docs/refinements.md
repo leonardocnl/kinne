@@ -1,6 +1,6 @@
 # Visual refinements
 
-Polish noticed while getting guest mode ready for the 2026-10-26 test, left for later so as not to stop the build. Earlier notes are in [refinos.md](refinos.md).
+Polish noticed during the build, left for later so as not to stop it.
 
 ## Title screen
 
@@ -21,4 +21,11 @@ Polish noticed while getting guest mode ready for the 2026-10-26 test, left for 
 ## End of rounds (phase 4)
 
 - On desktop the end-state buttons ("Sortear entre os próximos 10", "Mudar filtros", "Recomeçar") sit above the heading's baseline: StateScreen keeps the bottom margin it had for the old two-line layout. Consider aligning the button row with the heading's last line.
-- The frame of the end state is still empty (already in refinos.md).
+- The frame of the end state is still empty (US004 C3; document 04 already plans an illustration for it).
+- On mobile, "Mudar filtros" and "Ver de novo" sit in the text flow instead of pinned to the bottom like the title screen's buttons (C11).
+- On mobile, the end state lacks the round back button over the frame that the title screen has.
+- Read as text (screen reader, `textContent`), the filters counter repeats the number ("22" for 2) because of the digit animation; check what the screen reader announces.
+
+## Team secret path (US006)
+
+- The confirmation screen reuses the state screen with an empty image frame; for a screen only the team sees, the frame may not need to exist.
