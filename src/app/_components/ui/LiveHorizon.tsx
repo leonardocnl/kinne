@@ -1,8 +1,29 @@
 "use client";
 
-import { lazy, type ReactNode, Suspense, useEffect, useRef, useState } from "react";
+import {
+    type ComponentProps,
+    lazy,
+    type ReactNode,
+    Suspense,
+    useEffect,
+    useRef,
+    useState,
+} from "react";
 
 const GradientAscii = lazy(() => import("./GradientAscii"));
+const AsciiType = lazy(() => import("./AsciiType"));
+
+/**
+ * O AsciiType carregado sob demanda; até chegar, o quadro fica vazio. Mora aqui porque um módulo
+ * cliente novo no not-found da raiz faz o Turbopack criar um chunk de 2,4 KB no JS de toda página.
+ */
+export function AsciiArt(props: ComponentProps<typeof AsciiType>) {
+    return (
+        <Suspense>
+            <AsciiType {...props} />
+        </Suspense>
+    );
+}
 
 /**
  * Troca o horizonte em CSS (children, do servidor) pelo animado em WebGL quando o rodapé chega

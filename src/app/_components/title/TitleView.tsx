@@ -20,7 +20,7 @@ import { BackIcon, CheckIcon, DiceIcon, PlayIcon } from "../ui/icons";
 import { Score } from "../ui/Score";
 import { TextLink } from "../ui/TextLink";
 import { TmdbImage } from "../ui/TmdbImage";
-import { AsciiArt } from "../ui/AsciiArt";
+import { AsciiArt } from "../ui/LiveHorizon";
 import { TitleSpec } from "../ui/TitleSpec";
 import { largePosterSources, TITLE_POSTER_SIZES } from "../ui/tmdb-sources";
 import { beginWipe, cancelWipe, wipeRouter } from "../ui/wipe";
