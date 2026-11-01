@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { FEELINGS, type Feeling } from "./feelings";
 import {
-    AGE_LIMITS,
+    AGE_LIMIT_VALUES,
     DEFAULT_FILTERS,
     drawUnseen,
     matchTitles,
@@ -65,7 +65,7 @@ describe("matchTitles", () => {
             title(1, { certification: null }),
             title(2, { certification: "21" as never }),
         ];
-        for (const { value } of AGE_LIMITS) expect(ids(pool, { maxAge: value })).toEqual([]);
+        for (const maxAge of AGE_LIMIT_VALUES) expect(ids(pool, { maxAge })).toEqual([]);
     });
 
     it("com uma pessoa, conta só os títulos dela, junto com os outros filtros (fase 3)", () => {

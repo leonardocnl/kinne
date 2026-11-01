@@ -11,17 +11,9 @@ import type { SurpriseCandidate } from "./surprise";
 export type TypeChoice = TitleType | "both";
 
 // As posições do seletor; a classificação 10 entra a partir de 12.
-export const AGE_LIMITS = [
-    { value: "L", label: "Livre", spoken: "Livre" },
-    { value: "12", label: "12", spoken: "Até 12 anos" },
-    { value: "14", label: "14", spoken: "Até 14 anos" },
-    { value: "16", label: "16", spoken: "Até 16 anos" },
-    { value: "18", label: "18", spoken: "Até 18 anos" },
-] as const;
+export const AGE_LIMIT_VALUES = ["L", "12", "14", "16", "18"] as const;
 
-export type AgeLimit = (typeof AGE_LIMITS)[number]["value"];
-
-export const AGE_LIMIT_VALUES = AGE_LIMITS.map((l) => l.value);
+export type AgeLimit = (typeof AGE_LIMIT_VALUES)[number];
 
 const isAgeLimit = (value: unknown): value is AgeLimit => AGE_LIMIT_VALUES.some((v) => v === value);
 

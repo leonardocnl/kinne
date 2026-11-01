@@ -4,12 +4,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useEffectEvent, useId, useMemo, useRef, useState, useTransition } from "react";
 import { MIN_RATING } from "@/domain/catalog";
 import {
-    AGE_LIMITS,
     matchTitles,
     MAX_RATING,
     RUNTIME_LIMITS,
     wireFilters,
     withType,
+    type AgeLimit,
     type FilterCandidate,
     type Filters,
     type TypeChoice,
@@ -50,6 +50,14 @@ const TYPES: { value: TypeChoice; label: string }[] = [
     { value: "movie", label: "Filmes" },
     { value: "series", label: "Séries" },
     { value: "both", label: "Os dois" },
+];
+
+const AGE_LIMITS: { value: AgeLimit; label: string; spoken: string }[] = [
+    { value: "L", label: "Livre", spoken: "Livre" },
+    { value: "12", label: "12", spoken: "Até 12 anos" },
+    { value: "14", label: "14", spoken: "Até 14 anos" },
+    { value: "16", label: "16", spoken: "Até 16 anos" },
+    { value: "18", label: "18", spoken: "Até 18 anos" },
 ];
 
 const section = "flex flex-col gap-2 border-t border-line px-1 pt-3";
