@@ -1,7 +1,7 @@
 // Test-only preload for `next start` in the visual suite. The app's driver speaks Neon's HTTP
 // protocol, which a plain Postgres does not; this answers those requests from the disposable
 // Postgres on 127.0.0.1:5432, with no change to app code. Only intercepts the fake test host.
-const net = require("node:net");
+import net from "node:net";
 
 const HOST = "https://api.visual.test/";
 

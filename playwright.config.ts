@@ -4,7 +4,7 @@ const APP = "http://127.0.0.1:3100";
 const NO_DB = "http://127.0.0.1:3101";
 
 // Runs inside scripts/visual-run.sh (npm run test:visual). The first server reads the disposable
-// Postgres through e2e/neon-bridge.cjs. The second has an unreachable database, which is how the error screens are reached without touching app code.
+// Postgres through e2e/neon-bridge.mjs. The second has an unreachable database, which is how the error screens are reached without touching app code.
 const start = (port: number) =>
     `node node_modules/next/dist/bin/next start -p ${port} -H 127.0.0.1`;
 
@@ -35,7 +35,7 @@ export default defineConfig({
             url: `${APP}/sobre`,
             reuseExistingServer: false,
             env: {
-                NODE_OPTIONS: "--require ./e2e/neon-bridge.cjs",
+                NODE_OPTIONS: "--import ./e2e/neon-bridge.mjs",
                 DATABASE_URL_POOLED: "postgresql://visual:visual@db.visual.test/visual",
                 RATE_LIMIT_SECRET: "visual-suite-only-not-a-real-secret-000",
             },
