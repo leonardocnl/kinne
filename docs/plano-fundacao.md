@@ -150,7 +150,7 @@ docs/requisitos/                # já existe, em português
 
 ### 1.10 Ajustes do MVP
 
-**Conflitos de gênero** (em `discovery`). Título é excluído se tiver gênero conflitante; entre os restantes, os mais "puros" no gênero pedido vêm primeiro. Se o resultado ficar vazio, relaxa os conflitos e mantém só o desempate.
+**Conflitos de gênero** (em `discovery`). Título é excluído se tiver gênero conflitante. Cada gênero além dos pedidos desconta 0,10 (`EXTRA_GENRE_PENALTY`) da nota ponderada, e a ordem é pela nota ajustada: os mais "puros" sobem, mas uma obra muito bem avaliada com vários gêneros ainda aparece. O desconto só vale com gênero pedido, sem sentimento e quando o gosto não dá a ordem; com sinais de gosto, a ordem vem do grafo. Se o resultado ficar vazio, relaxa os conflitos e mantém o desconto. Guerra é só o gênero de filmes (10752): "War & Politics", das séries, não conta, para não tirar sátiras como Veep. Suspense como conflito é só Thriller (53).
 
 | Pediu             | Exclui se também tiver              |
 | ----------------- | ----------------------------------- |

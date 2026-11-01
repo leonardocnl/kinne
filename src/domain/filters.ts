@@ -1,5 +1,6 @@
 import { meetsQualityFloor, meetsTasteFloor, MIN_RATING, type TitleType } from "./catalog";
 import { isFeeling, maskAllows, type Feeling } from "./feelings";
+import { withoutConflicts } from "./genre-conflicts";
 import { isKinneGenre, KINNE_GENRES, type KinneGenre } from "./genre";
 import { parsePersonPick, type PersonPick } from "./person-search";
 import { isStreaming, STREAMING_SERVICES, streamingTmdbIds, type Streaming } from "./streaming";
@@ -64,6 +65,8 @@ export type FilterCandidate = Omit<SurpriseCandidate, "slug"> & {
     feelings: number;
     runtimeMinutes: number | null;
     kinneGenres: readonly KinneGenre[];
+    // todos os gêneros do TMDB, para os conflitos e a pureza (US017)
+    genreTmdbIds: readonly number[];
 };
 
 /** Troca o tipo; com Séries, Romance é desmarcado, porque o TMDB não o tem para séries (C8). */
@@ -92,6 +95,7 @@ function passesRating(
  * mínima de 6,4 e só precisam de 100 votos. Se a pessoa subiu o slider, o que ela pediu vale para
  * todos. 18+, streamings, sentimento e marcados valem sempre, e `reached` nunca acrescenta um
  * título: só afrouxa a nota de quem já passou nas demais regras (feelings-and-taste-ui A1, A2).
+ * Por último saem os títulos com gênero em conflito com o pedido (US017).
  */
 export function matchTitles<T extends FilterCandidate>(
     candidates: readonly T[],
@@ -103,7 +107,7 @@ export function matchTitles<T extends FilterCandidate>(
     const wanted = streamingTmdbIds(filters.streamings);
     const seen = new Set(watched);
     const limit = filters.type === "movie" ? filters.maxRuntime : null;
-    return candidates.filter(
+    const matching = candidates.filter(
         (c) =>
             (filters.adult || !c.adult) &&
             passesRating(c, filters.minRating, reached) &&
@@ -120,6 +124,7 @@ export function matchTitles<T extends FilterCandidate>(
             (personTitles === null || personTitles.has(c.id)) &&
             !seen.has(c.id),
     );
+    return [...withoutConflicts(matching, filters.genres)];
 }
 
 /**

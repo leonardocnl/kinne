@@ -24,6 +24,7 @@ export async function filterCandidates(): Promise<FilterCandidate[]> {
         votes: c.votes,
         runtimeMinutes: c.runtimeMinutes,
         kinneGenres: c.kinneGenres,
+        genreTmdbIds: c.genreTmdbIds,
         streamingTmdbIds: c.streamingTmdbIds,
         adult: c.adult,
         feelings: c.feelings,

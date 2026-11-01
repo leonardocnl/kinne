@@ -1,5 +1,6 @@
 import { orderByFeeling, orderByTaste, orderByTasteAndFeeling } from "@/domain/draw-order";
 import type { FeelingKit } from "@/domain/feelings";
+import { rankByPurity } from "@/domain/genre-conflicts";
 import { matchTitles, type FilterCriteria } from "@/domain/filters";
 import { buildRounds, meanRating, rankTitles, type CustomOrder } from "@/domain/rounds";
 import { spreadTaste, type NeighborGraph } from "@/domain/taste-graph";
@@ -50,10 +51,14 @@ export function planFilteredRounds(
               ? orderByTasteAndFeeling(matching, mean, scores, feeling)
               : orderByFeeling(matching, mean, feeling);
         order = { ranked, plain: true };
-    } else if (scores) {
+    } else {
         // US009 RNE005: as cotas por gênero seguem, e dentro de cada gênero vale o gosto
-        const ranked = orderByTaste(matching, mean, scores);
+        const ranked = scores && orderByTaste(matching, mean, scores);
         if (ranked) order = { ranked, plain: false };
+        // US017 RNE002: o desconto por gênero extra só vale quando o gosto não dá a ordem
+        else if (filters.genres.length > 0) {
+            order = { ranked: rankByPurity(matching, mean, filters.genres), plain: false };
+        }
     }
     return { matching, rounds: buildRounds(matching, filters, mean, order) };
 }
