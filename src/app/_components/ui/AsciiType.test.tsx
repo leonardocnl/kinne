@@ -30,10 +30,12 @@ describe("telas 404", () => {
         expect(page).toContain("Não encontramos esta página");
         expect(title).toContain("Não encontramos este título");
         // o efeito baixa sob demanda (AsciiArt): fora do JS de toda página
-        // o 404 da raiz fica sem: o que ele importa entra no JS de toda página (orçamento)
-        for (const file of ["titulo/[slug]/not-found.tsx"])
-            expect(readFileSync(join(import.meta.dirname, "../..", file), "utf8")).toContain(
-                '<AsciiArt text="404" tone="signal"',
-            );
+        const app = join(import.meta.dirname, "../..");
+        const read = (file: string) => readFileSync(join(app, file), "utf8");
+        for (const file of ["not-found.tsx", "titulo/[slug]/not-found.tsx"])
+            expect(read(file)).toContain("<NotFoundScreen");
+        expect(read("_components/NotFoundScreen.tsx")).toContain(
+            '<AsciiArt text="404" tone="signal"',
+        );
     });
 });
