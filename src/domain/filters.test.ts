@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { FEELINGS, type Feeling } from "./feelings";
 import {
+    AGE_LIMITS,
     DEFAULT_FILTERS,
     drawUnseen,
     matchTitles,
@@ -20,6 +21,7 @@ const title = (id: number, extra: Partial<FilterCandidate> = {}): FilterCandidat
     kinneGenres: ["drama"],
     streamingTmdbIds: [8],
     adult: false,
+    certification: extra.adult ? "18" : "14",
     // todos os sentimentos aceitam, salvo quando o teste diz o contrário
     feelings: 0b111111111,
     ...extra,
@@ -40,15 +42,30 @@ describe("matchTitles", () => {
             minRating: 6.4,
             maxRuntime: null,
             person: null,
-            adult: false,
+            maxAge: "16",
             feeling: null,
         });
     });
 
-    it("títulos 18 só com o chip 18+ (recommendation-rounds A1)", () => {
-        const pool = [title(1), title(2, { adult: true })];
-        expect(ids(pool)).toEqual([1]);
-        expect(ids(pool, { adult: true })).toEqual([1, 2]);
+    it.each([
+        ["L", [1]],
+        ["12", [1, 2, 3]],
+        ["14", [1, 2, 3, 4]],
+        ["16", [1, 2, 3, 4, 5]],
+        ["18", [1, 2, 3, 4, 5, 6]],
+    ] as const)("até %s (US002 C10)", (maxAge, expected) => {
+        const pool = (["L", "10", "12", "14", "16", "18"] as const).map((certification, i) =>
+            title(i + 1, { certification }),
+        );
+        expect(ids(pool, { maxAge })).toEqual(expected);
+    });
+
+    it("sem classificação não entra em nenhuma faixa (US002 C11)", () => {
+        const pool = [
+            title(1, { certification: null }),
+            title(2, { certification: "21" as never }),
+        ];
+        for (const { value } of AGE_LIMITS) expect(ids(pool, { maxAge: value })).toEqual([]);
     });
 
     it("com uma pessoa, conta só os títulos dela, junto com os outros filtros (fase 3)", () => {
@@ -159,7 +176,7 @@ describe("parseFilters", () => {
         minRating: 7.2,
         maxRuntime: 105,
         person: { id: 1056, name: "Tom Hanks", role: "cast" },
-        adult: true,
+        maxAge: "18",
         feeling: "cry",
     };
 
@@ -177,11 +194,12 @@ describe("parseFilters", () => {
         });
     });
 
-    it("18+ só liga com true; ausente ou adulterado é desligado (recommendation-rounds A5)", () => {
-        expect(parseFilters({ ...ok, adult: undefined })?.adult).toBe(false);
-        expect(parseFilters({ ...ok, adult: "true" })?.adult).toBe(false);
-        expect(parseFilters({ ...ok, adult: 1 })?.adult).toBe(false);
-        expect(parseFilters(ok)?.adult).toBe(true);
+    it("classificação ausente ou adulterada volta a 16 (recommendation-rounds A5)", () => {
+        for (const maxAge of [undefined, "21", 18, "__proto__"]) {
+            expect(parseFilters({ ...ok, maxAge })?.maxAge).toBe("16");
+        }
+        expect(parseFilters({ ...ok, adult: true, maxAge: undefined })?.maxAge).toBe("16");
+        expect(parseFilters(ok)?.maxAge).toBe("18");
     });
 
     it("manda ao servidor só o id da pessoa (A7)", () => {
@@ -269,7 +287,7 @@ describe("piso com gosto (US009 RNE003, feelings-and-taste-ui A2)", () => {
         expect(run([1], { minRating: 7.5 })).toEqual([]);
     });
 
-    it("18+, streaming e marcados continuam valendo", () => {
+    it("classificação, streaming e marcados continuam valendo", () => {
         const adult = title(4, { rating: 5.5, votes: 150, adult: true });
         const other = title(5, { rating: 5.5, votes: 150, streamingTmdbIds: [999] });
         const both = [adult, other, low];

@@ -167,6 +167,7 @@ const title = (id: number, extra: Partial<FilterCandidate> = {}): FilterCandidat
     kinneGenres: ["drama"],
     streamingTmdbIds: [8],
     adult: false,
+    certification: "14",
     feelings: 0,
     ...extra,
 });

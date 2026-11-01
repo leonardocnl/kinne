@@ -26,6 +26,7 @@ export async function filterCandidates(): Promise<FilterCandidate[]> {
         kinneGenres: c.kinneGenres,
         streamingTmdbIds: c.streamingTmdbIds,
         adult: c.adult,
+        certification: c.certification,
         feelings: c.feelings,
     }));
 }

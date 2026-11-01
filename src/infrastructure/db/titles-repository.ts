@@ -1,7 +1,7 @@
 import "server-only";
 import type { CastMember, CatalogEntry, TitlesRepository } from "@/application/titles";
 import type { TitleType } from "@/domain/catalog";
-import { ADULT_CERTIFICATION } from "@/domain/catalog-sync";
+import { ADULT_CERTIFICATION, type BrCertification } from "@/domain/catalog-sync";
 import { CAST_STORED, MAX_DIRECTORS } from "@/domain/credits";
 import { feelingMask, type FeelingData } from "@/domain/feelings";
 import { isKinneGenre } from "@/domain/genre";
@@ -120,7 +120,7 @@ export class DrizzleTitlesRepository implements TitlesRepository {
                 streamingServices,
                 eq(streamingServices.id, streamingAvailability.streamingServiceId),
             )
-            // Recomendável (C7). Os 18 vêm marcados em `adult`: quem decide é o chip 18+ nos
+            // Recomendável (C7). Os 18 vêm marcados em `adult`: quem decide é o seletor nos
             // filtros, e a surpresa os tira sempre (recommendation-rounds A2).
             .where(
                 and(
@@ -132,6 +132,7 @@ export class DrizzleTitlesRepository implements TitlesRepository {
             .groupBy(catalogTitles.id);
         return rows.map(({ genreTmdbIds, certification, ...r }) => ({
             ...r,
+            certification: certification as BrCertification | null,
             type: r.type as TitleType,
             rating: Number(r.rating),
             kinneGenres: r.kinneGenres.filter((g) => g !== null && isKinneGenre(g)),
@@ -267,7 +268,7 @@ export function creditsQuery(db: Db, titleId: number) {
 }
 
 /**
- * 18: os filtros só os mostram com o chip 18+, a surpresa nunca (recommendation-rounds A2). Sem
+ * 18: os filtros só os mostram com o seletor em 18, a surpresa nunca (recommendation-rounds A2). Sem
  * classificação conta como 18 (falha fechada): hoje is_recommendable já exige uma, mas esta é a
  * única marca entre esses títulos e a surpresa.
  */

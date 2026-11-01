@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useEffectEvent, useId, useMemo, useRef, useState, useTransition } from "react";
 import { MIN_RATING } from "@/domain/catalog";
 import {
+    AGE_LIMITS,
     matchTitles,
     MAX_RATING,
     RUNTIME_LIMITS,
@@ -419,21 +420,25 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
 
                         <div className={section}>
                             <span id={`${titleId}-rating`} className="text-data text-soft">
-                                Classificação
+                                Classificação: até qual idade
                             </span>
                             <div
-                                role="group"
+                                role="radiogroup"
                                 aria-labelledby={`${titleId}-rating`}
                                 className="flex flex-wrap gap-1.5"
                             >
-                                {/* desligado por padrão: só com ele os títulos 18 entram (fase 4) */}
-                                <Chip
-                                    pressed={filters.adult}
-                                    aria-label="18+, incluir títulos para maiores de 18 anos"
-                                    onClick={() => update({ ...filters, adult: !filters.adult })}
-                                >
-                                    18+
-                                </Chip>
+                                {AGE_LIMITS.map((limit) => (
+                                    <RadioChip
+                                        key={limit.value}
+                                        name={`${titleId}-rating`}
+                                        value={limit.value}
+                                        aria-label={limit.spoken}
+                                        checked={filters.maxAge === limit.value}
+                                        onChange={() => update({ ...filters, maxAge: limit.value })}
+                                    >
+                                        {limit.label}
+                                    </RadioChip>
+                                ))}
                             </div>
                         </div>
 
