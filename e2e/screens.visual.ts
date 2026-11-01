@@ -15,9 +15,9 @@ test.beforeEach(async ({ page }) => {
     );
 });
 
-async function shot(page: Page, name: string) {
+async function shot(page: Page, name: string, fullPage = true) {
     await page.evaluate(() => document.fonts.ready);
-    await expect(page).toHaveScreenshot(`${name}.png`, { fullPage: true });
+    await expect(page).toHaveScreenshot(`${name}.png`, { fullPage });
 }
 
 for (const [name, path] of [
@@ -34,7 +34,9 @@ for (const [name, path] of [
     test(name, async ({ page }) => {
         await page.goto(path);
         await page.waitForLoadState("networkidle");
-        await shot(page, name);
+        // A fullPage capture briefly shrinks innerWidth, and the 404 canvas redraws with a different
+        // raster. Viewport captures never trigger that.
+        await shot(page, name, !name.includes("404"));
     });
 }
 
