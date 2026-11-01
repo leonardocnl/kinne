@@ -56,6 +56,13 @@ describe("public/pix-qr.svg", () => {
  * segment modes the generator uses. It throws on anything else, so a regenerated QR of another shape fails here instead of passing.
  */
 function decodeQrVersion7M(svg: string): string {
+    // Nothing but these modules may draw on the symbol, or a scanner could read something else.
+    const drawn = svg.replace(/<title[^]*?<\/desc>/, "");
+    if (
+        !/^<svg [^>]*><rect [^>]*\/><path d="(M\d+ \d+h1v1h-1z)+" [^>]*\/><\/svg>\s*$/.test(drawn)
+    ) {
+        throw new Error("unexpected drawing in the SVG");
+    }
     const QUIET = 4;
     const SIZE = 45;
     const dark = new Set(
