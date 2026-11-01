@@ -109,7 +109,7 @@ Development (`next dev`) adds `'unsafe-eval'` (React debugging) and `ws:`/`wss:`
 
 ```sh
 npm run build
-npm run test:e2e   # needs Chromium; PLAYWRIGHT_MODULE=<path to playwright> if it is not in node_modules
+npm run test:e2e   # needs Chromium (npx playwright install chromium)
 ```
 
 - `e2e/headers.e2e.ts`: all six headers (and no `X-Powered-By`) on `/`, a title, `/sala`, a room code, the API route, `/entrar`, `/perfil`, `/privacidade`, `/boas-vindas`, a 404 and a static chunk; `no-referrer` only under `/sala`.
