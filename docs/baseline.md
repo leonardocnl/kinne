@@ -43,3 +43,9 @@ Measured on 2026-11-01 at commit `2ab751b` (`develop`), on the development machi
 - Other work was running on the machine during the mobile runs of the title and `/sala`, so those two rows are noisier. `/` and `/sobre` were measured again with the machine idle, and those are the numbers above.
 - On `/sala`, a one-run diagnosis attributes nearly all the blocking time to one JS chunk loaded after the page opens, and the layout shift to the footer's horizon container. The likely cause is the footer's WebGL horizon, which loads when the footer is near the viewport and renders in software in headless Chrome. The title screen shows the same pattern but was not diagnosed separately. A device with a GPU should block far less; this was not measured.
 - `/sala` and the title screen miss the desktop budget in this setup (CLS on `/sala`, TBT on both). Treat that as an open question for the preview run, not as a confirmed production regression.
+
+## Points of attention for F5
+
+- **Home JS budget:** only 0.5 KB of margin (151.5 KB of 152 KB).
+- **High TBT on `/titulo` and `/sala`:** 15.5 s and 16.6 s on desktop. The footer's WebGL horizon is the suspect; confirm on the Vercel preview.
+- **CLS on `/sala`:** 0.242 on desktop, attributed to the footer's horizon container. The budget is 0.05.
