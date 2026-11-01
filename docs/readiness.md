@@ -175,7 +175,7 @@ Note: `daily:pick` writes today's and tomorrow's picks on every run, so a late r
 - **D7 – Deleting the test events** (RNF10). Who runs it, and how (one SQL statement or a script), by 2026-11-15.
 - **D8 – Deploys during the test.** After a new deploy, an open tab still holds the old server action ids. Its draws and event writes fail until the page reloads. Draws show a toast, and events are lost silently. Suggest freezing deploys from 2026-10-26 to 2026-11-01, or accepting that loss.
 - **D9 – Sync schedule.** GitHub ran the 03:17 sync 6.5 hours late on its first scheduled day. If the picks must exist exactly at midnight, the job already writes tomorrow's picks, so the risk is only a run missed for a whole day. A manual `workflow_dispatch` covers that.
-- **D10 – Polish notes file.** Existing notes live in `docs/refinos.md`. New ones went to `docs/refinements.md` as asked, without renaming the old file. Say if you want them merged.
+- **D10 – Polish notes file.** Both notes files are now merged into `docs/refinements.md`.
 - **D11 – What "Ver recomendação" shows with default filters.** The top 10 by rating over all titles is mostly animation and anime: "Como Mágica", "Avatar: A Lenda de Aang", "Frieren". That follows RNE003 as written. Say if the test should start from a different default.
 
 ## Before 2026-10-26 (only you can do these)
