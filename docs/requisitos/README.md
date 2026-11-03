@@ -24,6 +24,7 @@ Cópia em Markdown dos requisitos mantidos no Google Drive (pasta KINNE › 01 �
 | US015  | [us015-gosto-na-conta.md](us015-gosto-na-conta.md)                             | Gosto, "Já vi" e streamings na conta (pós-MVP)                     |
 | US016  | [us016-navegacao.md](us016-navegacao.md)                                       | Navbar flutuante com Início e Sobre (pós-MVP)                      |
 | US017  | [us017-conflitos-de-genero.md](us017-conflitos-de-genero.md)                   | Conflitos de gênero e pureza (ajuste do MVP)                       |
+| US018  | [us018-streamings-pelo-uso.md](us018-streamings-pelo-uso.md)                   | Streamings aprendidos pelo uso (ajuste do MVP)                     |
 | 02     | [02-requisitos-nao-funcionais.md](02-requisitos-nao-funcionais.md)             | RNF01 a RNF11                                                      |
 | 03     | [03-medicao-da-semana-0.md](03-medicao-da-semana-0.md)                         | Critérios, definições, eventos                                     |
 | 04     | [04-mudancas-e-pendencias.md](04-mudancas-e-pendencias.md)                     | O que mudou e o que falta decidir                                  |
