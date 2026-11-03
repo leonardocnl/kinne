@@ -17,6 +17,15 @@ const events = new MemoryLimiter(
     () => 2,
 );
 
+// Lista do contador dos filtros: o painel pede uma vez por aba, mas a resposta é o catálogo
+// recomendável inteiro. Folga para um grupo atrás do mesmo IP (CGNAT, Wi-Fi de universidade).
+export const FILTER_LIST_BURST = 20;
+export const FILTER_LIST_SECONDS_PER_TOKEN = 20;
+const filterLists = new MemoryLimiter(
+    () => FILTER_LIST_BURST,
+    () => 1 / FILTER_LIST_SECONDS_PER_TOKEN,
+);
+
 async function visitor() {
     const ip = getClientIp(await headers());
     return clientKey(ip, searchConfig().secret, new Date()) ?? ipBucket(ip);
@@ -30,4 +39,9 @@ export async function admitDraw(): Promise<boolean> {
 /** Tira uma ficha de evento do visitante; false quando acabou. */
 export async function admitEvent(): Promise<boolean> {
     return events.take(await visitor());
+}
+
+/** Tira uma ficha da lista do contador dos filtros; false quando acabou. Antes de ler a lista. */
+export async function admitFilterList(): Promise<boolean> {
+    return filterLists.take(await visitor());
 }
