@@ -9,6 +9,7 @@ import {
     RUNTIME_LIMITS,
     wireFilters,
     withType,
+    type AgeLimit,
     type FilterCandidate,
     type Filters,
     type TypeChoice,
@@ -49,6 +50,14 @@ const TYPES: { value: TypeChoice; label: string }[] = [
     { value: "movie", label: "Filmes" },
     { value: "series", label: "Séries" },
     { value: "both", label: "Os dois" },
+];
+
+const AGE_LIMITS: { value: AgeLimit; label: string; spoken: string }[] = [
+    { value: "L", label: "Livre", spoken: "Livre" },
+    { value: "12", label: "12", spoken: "Até 12 anos" },
+    { value: "14", label: "14", spoken: "Até 14 anos" },
+    { value: "16", label: "16", spoken: "Até 16 anos" },
+    { value: "18", label: "18", spoken: "Até 18 anos" },
 ];
 
 const section = "flex flex-col gap-2 border-t border-line px-1 pt-3";
@@ -419,21 +428,25 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
 
                         <div className={section}>
                             <span id={`${titleId}-rating`} className="text-data text-soft">
-                                Classificação
+                                Classificação: até qual idade
                             </span>
                             <div
-                                role="group"
+                                role="radiogroup"
                                 aria-labelledby={`${titleId}-rating`}
                                 className="flex flex-wrap gap-1.5"
                             >
-                                {/* desligado por padrão: só com ele os títulos 18 entram (fase 4) */}
-                                <Chip
-                                    pressed={filters.adult}
-                                    aria-label="18+, incluir títulos para maiores de 18 anos"
-                                    onClick={() => update({ ...filters, adult: !filters.adult })}
-                                >
-                                    18+
-                                </Chip>
+                                {AGE_LIMITS.map((limit) => (
+                                    <RadioChip
+                                        key={limit.value}
+                                        name={`${titleId}-rating`}
+                                        value={limit.value}
+                                        aria-label={limit.spoken}
+                                        checked={filters.maxAge === limit.value}
+                                        onChange={() => update({ ...filters, maxAge: limit.value })}
+                                    >
+                                        {limit.label}
+                                    </RadioChip>
+                                ))}
                             </div>
                         </div>
 

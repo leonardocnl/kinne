@@ -28,7 +28,7 @@ Eu, como visitante, quero filtrar por streaming, tipo, gênero, nota e duração
 | Gênero           | Seleção múltipla | Não | "Ação", "Comédia", "Drama", "Romance", "Suspense"; Romance só com Filmes ou Os dois (C8) | "Drama"     | Nenhum                 |
 | Nota TMDB mínima | Slider           | Sim | 6,0 a 9,0, passo 0,1                                                                     | "7,2"       | "6,4"                  |
 | Duração          | Slider           | Sim | "Até 1h30", "Até 1h45", "Até 2h", "Qualquer"; só com Filmes (C2)                         | "Até 1h45"  | "Qualquer"             |
-| Classificação    | Chip "18+"       | Não | Marcado inclui títulos de classificação 18 (C10, RNG008)                                 | "18+"       | Desmarcado             |
+| Classificação    | Seleção simples  | Sim | "Livre", "12", "14", "16", "18"; até qual idade (C10, RNG008)                            | "14"        | "16"                   |
 | Ator ou diretor  | Busca            | Não | Pessoas do catálogo; uma por vez; 3 letras ou mais (C9)                                  | "Tom Hanks" | Nenhuma                |
 
 **E** exibe o contador "N títulos combinam" e a ação "Sortear um título" (principal)  
@@ -97,12 +97,20 @@ Eu, como visitante, quero filtrar por streaming, tipo, gênero, nota e duração
 **Quando** aciono "Remover"  
 **Então** o campo volta e os filtros deixam de considerar a pessoa
 
-### C10: Títulos 18+
+### C10: Classificação indicativa
 
 **Dado** que os filtros estão abertos  
-**Quando** marco o chip "18+"  
-**Então** o contador e o sorteio passam a incluir títulos de classificação 18 (RNG008)  
-**E**, com o chip desmarcado, esses títulos nunca aparecem
+**Quando** escolho uma posição em "Classificação: até qual idade"  
+**Então** o contador e o sorteio consideram só os títulos com classificação até aquela idade  
+**E** a classificação 10 entra a partir de "12"  
+**E** a classificação vem do TMDB: a brasileira e, na falta dela, a americana convertida  
+**E**, sem escolha, vale "16", e os títulos 18 só aparecem em "18" (RNG008)
+
+### C11: Título sem classificação
+
+**Dado** que um título não tem classificação  
+**Quando** o contador conta ou o sorteio escolhe  
+**Então** o título não aparece em nenhuma posição do seletor
 
 ## Regras de negócio específicas
 

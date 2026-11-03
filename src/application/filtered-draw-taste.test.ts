@@ -25,6 +25,7 @@ const title = (id: number, extra: Partial<Candidate> = {}): Candidate => ({
     kinneGenres: ["drama"],
     streamingTmdbIds: [8],
     adult: false,
+    certification: extra.adult ? "18" : "14",
     feelings: 0b111111111,
     ...extra,
     genreTmdbIds: extra.genreTmdbIds ?? (extra.kinneGenres ?? ["drama"]).map((g) => GENRE_IDS[g]),

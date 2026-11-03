@@ -1,6 +1,6 @@
 import type { TitleType } from "./catalog";
 
-// Classificação indicativa brasileira. "18" é o conteúdo adulto: só aparece pelo chip 18+ (A7).
+// Classificação indicativa brasileira. "18" é o conteúdo adulto: só aparece com o seletor em 18 (A7).
 export const BR_CERTIFICATIONS = ["L", "10", "12", "14", "16", "18"] as const;
 export type BrCertification = (typeof BR_CERTIFICATIONS)[number];
 export type CertificationSource = "br" | "us" | "none";
@@ -18,7 +18,7 @@ export function normalizeBrCertification(value: string | null | undefined): BrCe
 }
 
 // Na falta da brasileira, a americana convertida para a idade brasileira mais próxima (A7).
-// TV-MA e NC-17 viram 18: na dúvida, o título só aparece pelo chip 18+.
+// TV-MA e NC-17 viram 18: na dúvida, o título só aparece com o seletor em 18.
 const US_TO_BR: Record<TitleType, Record<string, BrCertification>> = {
     movie: { G: "L", PG: "10", "PG-13": "12", R: "16", "NC-17": "18" },
     series: {
@@ -69,7 +69,7 @@ export type RecommendabilityInput = {
 };
 
 // A única regra do que as recomendações podem usar (C7). Títulos 18 continuam recomendáveis:
-// quem os separa é a certificação, para o chip 18+.
+// quem os separa é a certificação, para o seletor de classificação.
 export function isRecommendable(t: RecommendabilityInput): boolean {
     return (
         t.hasSynopsis &&

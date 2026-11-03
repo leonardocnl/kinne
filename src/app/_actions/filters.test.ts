@@ -22,6 +22,7 @@ const title = (id: number, adult = false) => ({
     kinneGenres: ["drama" as const],
     streamingTmdbIds: [8],
     adult,
+    certification: adult ? ("18" as const) : ("14" as const),
     feelings: 0b111111111,
 });
 
@@ -127,17 +128,17 @@ describe("drawFiltered em rodadas (recommendation-rounds)", () => {
         await expect(drawFiltered(request({ round }))).rejects.toThrow();
     });
 
-    it("títulos 18 só com o chip 18+ (A1)", async () => {
+    it("títulos 18 só com o seletor em 18 (A1)", async () => {
         candidates.mockResolvedValue([title(1, true)]);
         expect((await draw(request())).end).toEqual({ kind: "done", total: 0 });
-        const withChip = await draw(request({ filters: { ...WIRE, adult: true } }));
+        const withChip = await draw(request({ filters: { ...WIRE, maxAge: "18" } }));
         expect(withChip.slug).toBe("titulo-1");
     });
 
-    it("recusa o 18+ que não é booleano (A1)", async () => {
+    it("recusa classificação fora da lista (A1)", async () => {
         const { drawFiltered } = await import("./filters");
         await expect(
-            drawFiltered(request({ filters: { ...WIRE, adult: "true" } })),
+            drawFiltered(request({ filters: { ...WIRE, maxAge: "21" } })),
         ).rejects.toThrow();
     });
 });
@@ -150,6 +151,7 @@ describe("filterCandidates (recommendation-rounds C1)", () => {
         expect(Object.keys(c).sort()).toEqual(
             [
                 "adult",
+                "certification",
                 "genreTmdbIds",
                 "feelings",
                 "id",

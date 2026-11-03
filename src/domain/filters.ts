@@ -1,3 +1,4 @@
+import { BR_CERTIFICATIONS, type BrCertification } from "./catalog-sync";
 import { meetsQualityFloor, meetsTasteFloor, MIN_RATING, type TitleType } from "./catalog";
 import { isFeeling, maskAllows, type Feeling } from "./feelings";
 import { withoutConflicts } from "./genre-conflicts";
@@ -10,6 +11,22 @@ import type { SurpriseCandidate } from "./surprise";
 
 export type TypeChoice = TitleType | "both";
 
+// As posições do seletor; a classificação 10 entra a partir de 12.
+export const AGE_LIMIT_VALUES = ["L", "12", "14", "16", "18"] as const;
+
+export type AgeLimit = (typeof AGE_LIMIT_VALUES)[number];
+
+const isAgeLimit = (value: unknown): value is AgeLimit => AGE_LIMIT_VALUES.some((v) => v === value);
+
+// Padrão: 16 mantém os títulos 18 de fora, como a RNG008 pede.
+export const DEFAULT_AGE_LIMIT: AgeLimit = "16";
+
+// Sem classificação, ou com uma fora da lista, nenhuma faixa aceita (falha fechada).
+function withinAge(certification: BrCertification | null, limit: AgeLimit): boolean {
+    const rank = BR_CERTIFICATIONS.indexOf(certification as BrCertification);
+    return rank !== -1 && rank <= BR_CERTIFICATIONS.indexOf(limit);
+}
+
 export type Filters = {
     // nenhum marcado vale como todos (RNG003)
     streamings: Streaming[];
@@ -20,8 +37,8 @@ export type Filters = {
     maxRuntime: number | null;
     // ator ou diretor escolhido na busca do painel; null é ninguém (fase 3)
     person: PersonPick | null;
-    // chip 18+: só com ele os títulos de classificação 18 entram (fase 4)
-    adult: boolean;
+    // até qual classificação indicativa entra (US002 C10)
+    maxAge: AgeLimit;
     // "O que você quer sentir hoje?" (US008); null é nenhum
     feeling: Feeling | null;
 };
@@ -54,7 +71,7 @@ export const DEFAULT_FILTERS: Filters = {
     minRating: MIN_RATING,
     maxRuntime: null,
     person: null,
-    adult: false,
+    maxAge: DEFAULT_AGE_LIMIT,
     feeling: null,
 };
 
@@ -64,6 +81,7 @@ export type FilterCandidate = Omit<SurpriseCandidate, "slug"> & {
     // quais sentimentos aceitam o título, um bit por sentimento (US008 RNE004)
     feelings: number;
     runtimeMinutes: number | null;
+    certification: BrCertification | null;
     kinneGenres: readonly KinneGenre[];
     // todos os gêneros do TMDB, para os conflitos e a pureza (US017)
     genreTmdbIds: readonly number[];
@@ -88,12 +106,12 @@ function passesRating(
 
 /**
  * Os títulos que combinam com os filtros (C3), sem os marcados (RNG004). `personTitles` são os
- * títulos da pessoa escolhida; null quando não há pessoa no filtro. Títulos 18 só com o chip 18+
- * (recommendation-rounds). A ordem e as rodadas ficam com buildRounds (rounds.ts).
+ * títulos da pessoa escolhida; null quando não há pessoa no filtro. A classificação segue o seletor
+ * (US002 C10). A ordem e as rodadas ficam com buildRounds (rounds.ts).
  *
  * `reached` são os títulos que o gosto da pessoa alcança (US009 RNE003): eles dispensam a nota
  * mínima de 6,4 e só precisam de 100 votos. Se a pessoa subiu o slider, o que ela pediu vale para
- * todos. 18+, streamings, sentimento e marcados valem sempre, e `reached` nunca acrescenta um
+ * todos. Classificação, streamings, sentimento e marcados valem sempre, e `reached` nunca acrescenta um
  * título: só afrouxa a nota de quem já passou nas demais regras (feelings-and-taste-ui A1, A2).
  * Por último saem os títulos com gênero em conflito com o pedido (US017).
  */
@@ -109,7 +127,7 @@ export function matchTitles<T extends FilterCandidate>(
     const limit = filters.type === "movie" ? filters.maxRuntime : null;
     const matching = candidates.filter(
         (c) =>
-            (filters.adult || !c.adult) &&
+            withinAge(c.certification, filters.maxAge) &&
             passesRating(c, filters.minRating, reached) &&
             c.streamingTmdbIds.some((id) => wanted.includes(id)) &&
             (filters.type === "both" || c.type === filters.type) &&
@@ -154,7 +172,7 @@ const listOf = <T extends string>(value: unknown, max: number, is: (v: string) =
  */
 export function parseFilters(value: unknown): Filters | null {
     if (typeof value !== "object" || value === null) return null;
-    const { streamings, type, genres, minRating, maxRuntime, person, adult, feeling } =
+    const { streamings, type, genres, minRating, maxRuntime, person, maxAge, feeling } =
         value as Record<string, unknown>;
     const ok =
         listOf(streamings, STREAMING_SERVICES.length, isStreaming) &&
@@ -174,8 +192,8 @@ export function parseFilters(value: unknown): Filters | null {
         maxRuntime: maxRuntime as number | null,
         // pessoa ausente ou adulterada vale como ninguém, sem perder os outros campos (A9)
         person: parsePersonPick(person),
-        // só true liga o 18+; ausente ou qualquer outra coisa é desligado (recommendation-rounds A5)
-        adult: adult === true,
+        // ausente (aba antiga) ou adulterado volta ao padrão, sem títulos 18 (recommendation-rounds A5)
+        maxAge: isAgeLimit(maxAge) ? maxAge : DEFAULT_AGE_LIMIT,
         // sentimento ausente (aba antiga) ou fora da lista vale como nenhum (A4)
         feeling: typeof feeling === "string" && isFeeling(feeling) ? feeling : null,
     };
