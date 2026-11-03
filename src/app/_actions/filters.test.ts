@@ -6,7 +6,8 @@ const personTitleIds = vi.fn();
 const admit = vi.fn();
 const drawAccount = vi.fn();
 const admitDraw = vi.fn();
-vi.mock("../_data/draw-limit", () => ({ admitDraw }));
+const admitFilterList = vi.fn();
+vi.mock("../_data/draw-limit", () => ({ admitDraw, admitFilterList }));
 vi.mock("../_data/account", () => ({ drawAccount }));
 vi.mock("../_data/candidates", () => ({ candidates }));
 vi.mock("../_data/people", () => ({ personTitleIds }));
@@ -42,6 +43,7 @@ beforeEach(() => {
     personTitleIds.mockReset().mockResolvedValue([3]);
     admit.mockReset().mockResolvedValue(true);
     admitDraw.mockReset().mockResolvedValue(true);
+    admitFilterList.mockReset().mockResolvedValue(true);
 });
 
 // o sorteio que não foi limitado (os testes abaixo só tratam desse caso)
@@ -144,10 +146,19 @@ describe("drawFiltered em rodadas (recommendation-rounds)", () => {
 });
 
 describe("filterCandidates (recommendation-rounds C1)", () => {
+    it("passado o limite, recusa antes de ler a lista (security.md §7)", async () => {
+        admitFilterList.mockResolvedValue(false);
+        const { filterCandidates } = await import("./filters");
+        expect(await filterCandidates()).toEqual({ kind: "limited" });
+        expect(candidates).not.toHaveBeenCalled();
+    });
+
     it("manda ao contador só os campos que ele usa, com a marca de 18", async () => {
         candidates.mockResolvedValue([title(1, true)]);
         const { filterCandidates } = await import("./filters");
-        const [c] = await filterCandidates();
+        const list = await filterCandidates();
+        if (!Array.isArray(list)) throw new Error("recusado");
+        const [c] = list;
         expect(Object.keys(c).sort()).toEqual(
             [
                 "adult",
