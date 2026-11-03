@@ -150,6 +150,7 @@ describe("filterCandidates (recommendation-rounds C1)", () => {
         expect(Object.keys(c).sort()).toEqual(
             [
                 "adult",
+                "genreTmdbIds",
                 "feelings",
                 "id",
                 "kinneGenres",

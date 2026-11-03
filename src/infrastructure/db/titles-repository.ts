@@ -100,7 +100,7 @@ export class DrizzleTitlesRepository implements TitlesRepository {
                 votes: catalogTitles.tmdbVoteCount,
                 runtimeMinutes: catalogTitles.runtimeMinutes,
                 kinneGenres: sql<(string | null)[]>`array_agg(distinct ${genres.kinneGenre})`,
-                // só para o bit de cada sentimento (US008 RNE004); não sai desta classe
+                // o bit de cada sentimento (US008 RNE004) e os conflitos de gênero (US017)
                 genreTmdbIds: sql<(number | null)[]>`array_agg(distinct ${genres.tmdbId})`,
                 certification: catalogTitles.certificationBr,
                 streamingTmdbIds,
@@ -132,6 +132,7 @@ export class DrizzleTitlesRepository implements TitlesRepository {
             .groupBy(catalogTitles.id);
         return rows.map(({ genreTmdbIds, certification, ...r }) => ({
             ...r,
+            genreTmdbIds: genreTmdbIds.filter((id) => id !== null),
             type: r.type as TitleType,
             rating: Number(r.rating),
             kinneGenres: r.kinneGenres.filter((g) => g !== null && isKinneGenre(g)),
