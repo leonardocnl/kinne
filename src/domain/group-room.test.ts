@@ -165,6 +165,7 @@ const title = (id: number, extra: Partial<FilterCandidate> = {}): FilterCandidat
     votes: 2000,
     runtimeMinutes: 100,
     kinneGenres: ["drama"],
+    genreTmdbIds: [18],
     streamingTmdbIds: [8],
     adult: false,
     certification: "14",

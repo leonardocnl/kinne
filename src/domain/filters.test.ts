@@ -1,3 +1,4 @@
+import type { KinneGenre } from "./genre";
 import { describe, expect, it } from "vitest";
 import { FEELINGS, type Feeling } from "./feelings";
 import {
@@ -12,6 +13,14 @@ import {
     type Filters,
 } from "./filters";
 
+const GENRE_IDS: Record<KinneGenre, number> = {
+    action: 28,
+    comedy: 35,
+    drama: 18,
+    romance: 10749,
+    suspense: 53,
+};
+
 const title = (id: number, extra: Partial<FilterCandidate> = {}): FilterCandidate => ({
     id,
     type: "movie",
@@ -25,6 +34,7 @@ const title = (id: number, extra: Partial<FilterCandidate> = {}): FilterCandidat
     // todos os sentimentos aceitam, salvo quando o teste diz o contrário
     feelings: 0b111111111,
     ...extra,
+    genreTmdbIds: extra.genreTmdbIds ?? (extra.kinneGenres ?? ["drama"]).map((g) => GENRE_IDS[g]),
 });
 
 const ids = (pool: FilterCandidate[], filters: Partial<Filters> = {}, watched: number[] = []) =>

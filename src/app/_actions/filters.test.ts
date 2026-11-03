@@ -152,6 +152,7 @@ describe("filterCandidates (recommendation-rounds C1)", () => {
             [
                 "adult",
                 "certification",
+                "genreTmdbIds",
                 "feelings",
                 "id",
                 "kinneGenres",
