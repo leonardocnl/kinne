@@ -50,7 +50,7 @@ Este conjunto especifica o modo visitante do Kinne: indicação do dia, Escolher
 - **RNG005 – Memória do navegador.** Streamings marcados, títulos marcados e o código do navegador ficam no localStorage, entre visitas. Os demais filtros ficam no sessionStorage e voltam ao padrão quando a aba é fechada.
 - **RNG006 – Horário.** Toda data e todo "dia" do sistema seguem o horário de Brasília.
 - **RNG007 – Gêneros no TMDB.** Ação = Ação (filme) e Action & Adventure (série); Comédia = Comédia; Drama = Drama; Romance = Romance, só para filmes, porque o TMDB não tem Romance para séries; Suspense = Thriller (filme) e Mistério (série).
-- **RNG008 – Classificação 18.** Títulos com classificação indicativa 18 nunca entram na indicação do dia nem no Me surpreenda. Nos filtros, só aparecem com o chip "18+" marcado (US002 C10), que vem desmarcado. Título sem classificação conta como 18.
+- **RNG008 – Classificação 18.** Títulos com classificação indicativa 18 nunca entram na indicação do dia nem no Me surpreenda. Nos filtros, só aparecem com o seletor de classificação em 18 (US002 C10), que começa em 16. Título sem classificação nunca entra nas recomendações, em nenhuma faixa (US002 C11).
 
 ## Comportamentos comuns
 

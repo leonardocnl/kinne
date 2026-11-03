@@ -1,3 +1,4 @@
+import type { KinneGenre } from "@/domain/genre";
 import { describe, expect, it } from "vitest";
 import { DEFAULT_FILTERS, wireFilters } from "@/domain/filters";
 import { KINNE_GENRES } from "@/domain/genre";
@@ -5,6 +6,14 @@ import { spreadTaste, toNeighborGraph } from "@/domain/taste-graph";
 import { EMPTY_TASTE, toSignals, type TasteLists } from "@/domain/taste-signals";
 import { planFilteredRounds } from "./filtered-draw";
 import type { Candidate } from "./titles";
+
+const GENRE_IDS: Record<KinneGenre, number> = {
+    action: 28,
+    comedy: 35,
+    drama: 18,
+    romance: 10749,
+    suspense: 53,
+};
 
 const title = (id: number, extra: Partial<Candidate> = {}): Candidate => ({
     id,
@@ -16,8 +25,10 @@ const title = (id: number, extra: Partial<Candidate> = {}): Candidate => ({
     kinneGenres: ["drama"],
     streamingTmdbIds: [8],
     adult: false,
+    certification: extra.adult ? "18" : "14",
     feelings: 0b111111111,
     ...extra,
+    genreTmdbIds: extra.genreTmdbIds ?? (extra.kinneGenres ?? ["drama"]).map((g) => GENRE_IDS[g]),
 });
 
 const edge = (a: number, b: number, proximity = 0.5) => ({ a, b, proximity });
@@ -42,6 +53,22 @@ const run = (
         signals,
     );
 const order = (plan: ReturnType<typeof run>) => plan.rounds.flat().map((t) => t.id);
+
+describe("desconto de pureza com gosto (US017 RNE003)", () => {
+    it("com sinais, a ordem vem do grafo e o gênero extra não desconta", () => {
+        const liked = title(1, { kinneGenres: ["comedy"], genreTmdbIds: [35] });
+        const neighbor = title(2, {
+            kinneGenres: ["comedy"],
+            genreTmdbIds: [35, 18, 80],
+            rating: 6.5,
+        });
+        const pure = title(3, { kinneGenres: ["comedy"], genreTmdbIds: [35], rating: 8 });
+        const plan = run([liked, neighbor, pure], [edge(1, 2)], taste({ liked: [1] }), {
+            genres: ["comedy"],
+        });
+        expect(order(plan).indexOf(2)).toBeLessThan(order(plan).indexOf(3));
+    });
+});
 
 describe("gosto invisível nos filtros (US009)", () => {
     // 1 é o título curtido; 2 e 3 são seus vizinhos; 4 e 5 não têm ligação nenhuma

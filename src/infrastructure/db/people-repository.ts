@@ -16,7 +16,7 @@ const STATEMENT_TIMEOUT = "2s"; // person-search B2
 /**
  * Os títulos que os filtros sorteiam, o mesmo critério de DrizzleTitlesRepository.candidates():
  * recomendável, não bloqueado e disponível em algum streaming no Brasil. Inclui os 18, que só
- * aparecem com o chip 18+ (recommendation-rounds C2).
+ * aparecem com o seletor em 18 (recommendation-rounds C2).
  */
 export const drawableTitle = and(
     eq(catalogTitles.isRecommendable, true),
@@ -63,7 +63,7 @@ export function titleIdsQuery(db: Db, personId: number) {
             .selectDistinct({ id: titleCredits.catalogTitleId })
             .from(titleCredits)
             .innerJoin(catalogTitles, eq(catalogTitles.id, titleCredits.catalogTitleId))
-            // com os 18: o chip 18+ decide no navegador e no sorteio (recommendation-rounds C2)
+            // com os 18: o seletor decide no navegador e no sorteio (recommendation-rounds C2)
             .where(and(eq(titleCredits.personId, personId), drawableTitle, personRole))
             .orderBy(asc(titleCredits.catalogTitleId))
             .limit(MAX_PERSON_TITLES)
