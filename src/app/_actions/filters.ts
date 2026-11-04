@@ -8,15 +8,19 @@ import { roundEnd, type RoundEnd } from "@/domain/rounds";
 import { hasPositiveSignal } from "@/domain/taste-signals";
 import { drawAccount } from "../_data/account";
 import { candidates } from "../_data/candidates";
-import { admitDraw } from "../_data/draw-limit";
+import { admitDraw, admitFilterList } from "../_data/draw-limit";
 import { loadFeelingKit } from "../_data/feelings";
 import { neighborGraphOrNull } from "../_data/taste-graph";
 import { parseFilterRequest } from "../_data/filters";
 import { personTitleIds } from "../_data/people";
 import { admitPersonQuery } from "../_data/person-limit";
 
-/** Os títulos para o contador dos filtros (US002 C3), que conta no navegador, sem o slug. */
-export async function filterCandidates(): Promise<FilterCandidate[]> {
+/**
+ * Os títulos para o contador dos filtros (US002 C3), que conta no navegador, sem o slug. Passado o
+ * limite do visitante (security.md §7), recusa antes de ler a lista.
+ */
+export async function filterCandidates(): Promise<FilterCandidate[] | Limited> {
+    if (!(await admitFilterList())) return LIMITED;
     return (await candidates()).map((c) => ({
         id: c.id,
         type: c.type,
@@ -24,8 +28,10 @@ export async function filterCandidates(): Promise<FilterCandidate[]> {
         votes: c.votes,
         runtimeMinutes: c.runtimeMinutes,
         kinneGenres: c.kinneGenres,
+        genreTmdbIds: c.genreTmdbIds,
         streamingTmdbIds: c.streamingTmdbIds,
         adult: c.adult,
+        certification: c.certification,
         feelings: c.feelings,
     }));
 }

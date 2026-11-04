@@ -70,6 +70,8 @@ export function clearAccountKeys() {
     remove("localStorage", "kinne:taste");
     remove("localStorage", "kinne:watched");
     remove("localStorage", "kinne:streamings");
+    remove("localStorage", "kinne:streaming-answers");
+    notifyStreamings();
 }
 
 /**
@@ -87,12 +89,44 @@ export function clearAccountTraces() {
 /** Títulos mostrados nesta aba, para a surpresa não repetir (US003 C3). */
 export const shownTitles = idList("sessionStorage", "kinne:shown");
 
-/** Streamings salvos pelos filtros (US002); nenhum salvo vale como todos (RNG003). */
-export function savedStreamings(): Streaming[] {
-    const value = read("localStorage", "kinne:streamings");
-    return Array.isArray(value)
+const streamingListeners = new Set<() => void>();
+
+/** Avisa quem mostra os streamings (o resumo, a pergunta) quando eles mudam nesta aba. */
+export function subscribeToStreamings(listener: () => void) {
+    streamingListeners.add(listener);
+    return () => {
+        streamingListeners.delete(listener);
+    };
+}
+
+function notifyStreamings() {
+    for (const listener of streamingListeners) listener();
+}
+
+const streamingIds = (value: unknown): Streaming[] =>
+    Array.isArray(value)
         ? value.filter((s): s is Streaming => typeof s === "string" && isStreaming(s))
         : [];
+
+export function saveStreamingsInBrowser(streamings: readonly Streaming[]) {
+    write("localStorage", "kinne:streamings", streamings);
+    notifyStreamings();
+}
+
+/** Os serviços que a pessoa já respondeu em "Você assina?", para não perguntar de novo (US018). */
+export const streamingAnswers = {
+    read: () => streamingIds(read("localStorage", "kinne:streaming-answers")),
+    add(service: Streaming) {
+        const current = streamingAnswers.read();
+        if (current.includes(service)) return;
+        write("localStorage", "kinne:streaming-answers", [...current, service]);
+        notifyStreamings();
+    },
+};
+
+/** Streamings salvos pelos filtros (US002); nenhum salvo vale como todos (RNG003). */
+export function savedStreamings(): Streaming[] {
+    return streamingIds(read("localStorage", "kinne:streamings"));
 }
 
 /**
@@ -108,7 +142,7 @@ export function savedFilters(): Filters {
 
 export function saveFilters({ streamings, ...rest }: Filters, persistStreamings = true) {
     // com a conta aberta os streamings são da conta, e o navegador não guarda nenhum (US015 RNE004)
-    if (persistStreamings) write("localStorage", "kinne:streamings", streamings);
+    if (persistStreamings) saveStreamingsInBrowser(streamings);
     write("sessionStorage", "kinne:filters", rest);
 }
 
@@ -160,6 +194,15 @@ export const filteredRun = {
 
 // Sem onde guardar, o código vale até a página recarregar, em vez de mudar a cada evento.
 let currentBrowserId: string | null = null;
+
+/** "Não" em "Você assina?" (US018 C3): a sequência aberta passa a respeitar a resposta. */
+export function setRunStreamings(streamings: Streaming[]) {
+    const run = filteredRun.read();
+    write("sessionStorage", "kinne:filtered-run", {
+        ...run,
+        filters: { ...run.filters, streamings },
+    });
+}
 
 /** Código aleatório do navegador para a medição (RNG005, RNF09); criado no primeiro evento. */
 export function browserId(): string {

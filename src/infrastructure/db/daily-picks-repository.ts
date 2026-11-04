@@ -110,7 +110,7 @@ export class DrizzleDailyPicksRepository implements DailyPicksRepository {
 
 /**
  * Quem pode ser indicação do dia: recomendável (C7), não bloqueado e nunca 18 (A7,
- * recommendation-rounds A2), seja qual for o chip 18+ de quem visita.
+ * recommendation-rounds A2), seja qual for o seletor de quem visita.
  */
 export const dailyPickTitle = and(
     eq(catalogTitles.isRecommendable, true),

@@ -6,7 +6,8 @@ const personTitleIds = vi.fn();
 const admit = vi.fn();
 const drawAccount = vi.fn();
 const admitDraw = vi.fn();
-vi.mock("../_data/draw-limit", () => ({ admitDraw }));
+const admitFilterList = vi.fn();
+vi.mock("../_data/draw-limit", () => ({ admitDraw, admitFilterList }));
 vi.mock("../_data/account", () => ({ drawAccount }));
 vi.mock("../_data/candidates", () => ({ candidates }));
 vi.mock("../_data/people", () => ({ personTitleIds }));
@@ -22,6 +23,7 @@ const title = (id: number, adult = false) => ({
     kinneGenres: ["drama" as const],
     streamingTmdbIds: [8],
     adult,
+    certification: adult ? ("18" as const) : ("14" as const),
     feelings: 0b111111111,
 });
 
@@ -41,6 +43,7 @@ beforeEach(() => {
     personTitleIds.mockReset().mockResolvedValue([3]);
     admit.mockReset().mockResolvedValue(true);
     admitDraw.mockReset().mockResolvedValue(true);
+    admitFilterList.mockReset().mockResolvedValue(true);
 });
 
 // o sorteio que não foi limitado (os testes abaixo só tratam desse caso)
@@ -127,29 +130,40 @@ describe("drawFiltered em rodadas (recommendation-rounds)", () => {
         await expect(drawFiltered(request({ round }))).rejects.toThrow();
     });
 
-    it("títulos 18 só com o chip 18+ (A1)", async () => {
+    it("títulos 18 só com o seletor em 18 (A1)", async () => {
         candidates.mockResolvedValue([title(1, true)]);
         expect((await draw(request())).end).toEqual({ kind: "done", total: 0 });
-        const withChip = await draw(request({ filters: { ...WIRE, adult: true } }));
+        const withChip = await draw(request({ filters: { ...WIRE, maxAge: "18" } }));
         expect(withChip.slug).toBe("titulo-1");
     });
 
-    it("recusa o 18+ que não é booleano (A1)", async () => {
+    it("recusa classificação fora da lista (A1)", async () => {
         const { drawFiltered } = await import("./filters");
         await expect(
-            drawFiltered(request({ filters: { ...WIRE, adult: "true" } })),
+            drawFiltered(request({ filters: { ...WIRE, maxAge: "21" } })),
         ).rejects.toThrow();
     });
 });
 
 describe("filterCandidates (recommendation-rounds C1)", () => {
+    it("passado o limite, recusa antes de ler a lista (security.md §7)", async () => {
+        admitFilterList.mockResolvedValue(false);
+        const { filterCandidates } = await import("./filters");
+        expect(await filterCandidates()).toEqual({ kind: "limited" });
+        expect(candidates).not.toHaveBeenCalled();
+    });
+
     it("manda ao contador só os campos que ele usa, com a marca de 18", async () => {
         candidates.mockResolvedValue([title(1, true)]);
         const { filterCandidates } = await import("./filters");
-        const [c] = await filterCandidates();
+        const list = await filterCandidates();
+        if (!Array.isArray(list)) throw new Error("recusado");
+        const [c] = list;
         expect(Object.keys(c).sort()).toEqual(
             [
                 "adult",
+                "certification",
+                "genreTmdbIds",
                 "feelings",
                 "id",
                 "kinneGenres",

@@ -1,5 +1,5 @@
 # Gera public/pix-qr.svg a partir do BR Code Pix. Uso (uma vez, quando a chave mudar):
-#   python3 -m venv /tmp/qr && /tmp/qr/bin/pip install ./qrcode-8.2-py3-none-any.whl
+#   python3 -m venv /tmp/qr && /tmp/qr/bin/pip install --require-hashes -r scripts/pix-qr-requirements.txt
 #   npx tsx -e 'import {pixPayload} from "./src/domain/pix"; console.log(pixPayload())' \
 #     | /tmp/qr/bin/python scripts/generate-pix-qr.py > public/pix-qr.svg
 # Não é dependência do projeto: o QR é um arquivo fixo.

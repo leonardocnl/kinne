@@ -15,8 +15,7 @@ type Page = {
 type Browser = { newPage: () => Promise<Page>; close: () => Promise<void> };
 type PlaywrightModule = { chromium: { launch: () => Promise<Browser> } };
 
-// `playwright` não é dependência do projeto (o CI o instala fora do lockfile, como o lhci).
-// PLAYWRIGHT_MODULE aponta para uma instalação existente quando ele não está no node_modules.
+// `playwright` vem do lockfile, por @playwright/test. PLAYWRIGHT_MODULE aponta para outra instalação.
 async function loadPlaywright(): Promise<PlaywrightModule> {
     const spec = process.env.PLAYWRIGHT_MODULE ?? "playwright";
     const mod = (await import(/* @vite-ignore */ spec)) as PlaywrightModule & {

@@ -9,13 +9,15 @@ import {
     RUNTIME_LIMITS,
     wireFilters,
     withType,
+    type AgeLimit,
     type FilterCandidate,
     type Filters,
     type TypeChoice,
 } from "@/domain/filters";
 import { FEELING_LABELS, FEELINGS } from "@/domain/feelings";
 import { GENRE_LABELS, KINNE_GENRES } from "@/domain/genre";
-import { isLimited, LIMITED_MESSAGE } from "@/domain/rate-limit";
+import { isLimited, LIMITED_MESSAGE, type Limited } from "@/domain/rate-limit";
+import { filtersHint } from "./filtersHint";
 import { STREAMING_SERVICES } from "@/domain/streaming";
 import { EMPTY_TASTE } from "@/domain/taste-signals";
 import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
@@ -51,17 +53,32 @@ const TYPES: { value: TypeChoice; label: string }[] = [
     { value: "both", label: "Os dois" },
 ];
 
+const AGE_LIMITS: { value: AgeLimit; label: string; spoken: string }[] = [
+    { value: "L", label: "Livre", spoken: "Livre" },
+    { value: "12", label: "12", spoken: "Até 12 anos" },
+    { value: "14", label: "14", spoken: "Até 14 anos" },
+    { value: "16", label: "16", spoken: "Até 16 anos" },
+    { value: "18", label: "18", spoken: "Até 18 anos" },
+];
+
 const section = "flex flex-col gap-2 border-t border-line px-1 pt-3";
 
 const thousands = new Intl.NumberFormat("pt-BR");
 
 // A lista do contador vem uma vez por aba; se falhar, a próxima abertura tenta de novo.
-let candidatesRequest: Promise<FilterCandidate[]> | null = null;
+// Recusa pelo limite (security.md §7) também não fica guardada.
+let candidatesRequest: Promise<FilterCandidate[] | Limited> | null = null;
 function loadCandidates() {
-    candidatesRequest ??= filterCandidates().catch((error: unknown) => {
-        candidatesRequest = null;
-        throw error;
-    });
+    candidatesRequest ??= filterCandidates().then(
+        (answer) => {
+            if (isLimited(answer)) candidatesRequest = null;
+            return answer;
+        },
+        (error: unknown) => {
+            candidatesRequest = null;
+            throw error;
+        },
+    );
     return candidatesRequest;
 }
 
@@ -118,7 +135,9 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
         }),
         [stored, account, status.state],
     );
-    const [candidates, setCandidates] = useState<FilterCandidate[] | "error" | null>(null);
+    const [candidates, setCandidates] = useState<FilterCandidate[] | "error" | "limited" | null>(
+        null,
+    );
     const [attempt, setAttempt] = useState(0);
     // os títulos da pessoa do filtro, para o contador; o sorteio deriva os seus no servidor (A7)
     const [personIds, setPersonIds] = useState<{
@@ -163,7 +182,7 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
     useEffect(() => {
         let live = true;
         loadCandidates().then(
-            (list) => live && setCandidates(list),
+            (list) => live && setCandidates(isLimited(list) ? "limited" : list),
             () => live && setCandidates("error"),
         );
         return () => {
@@ -185,7 +204,8 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
     }, [personId, attempt]);
     const personTitleSet =
         personId !== null && personIds?.id === personId ? personIds.titles : null;
-    const failed = candidates === "error" || personTitleSet === "error";
+    const limited = candidates === "limited";
+    const failed = candidates === "error" || limited || personTitleSet === "error";
 
     const count = useMemo(() => {
         if (!Array.isArray(candidates)) return null;
@@ -210,7 +230,7 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
     }
 
     function retry() {
-        if (candidates === "error") setCandidates(null);
+        if (candidates === "error" || candidates === "limited") setCandidates(null);
         setPersonIds(null);
         setAttempt((n) => n + 1);
     }
@@ -244,14 +264,7 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
     }
 
     const runtime = RUNTIME_LIMITS.findIndex((l) => l.minutes === filters.maxRuntime);
-    const hint =
-        failed || drawFailed
-            ? `${loadError.heading}. Tente de novo.`
-            : count === 0 &&
-              (filters.feeling === null
-                  ? "Tente baixar a nota ou marcar mais um streaming."
-                  : // US008 C5
-                    "Tente outro sentimento ou marque mais um streaming.");
+    const hint = filtersHint({ failed, limited, drawFailed, count, feeling: filters.feeling });
 
     return (
         <dialog
@@ -419,21 +432,25 @@ export default function FiltersPanel({ leaving, onClose, onLeft }: FiltersPanelP
 
                         <div className={section}>
                             <span id={`${titleId}-rating`} className="text-data text-soft">
-                                Classificação
+                                Classificação: até qual idade
                             </span>
                             <div
-                                role="group"
+                                role="radiogroup"
                                 aria-labelledby={`${titleId}-rating`}
                                 className="flex flex-wrap gap-1.5"
                             >
-                                {/* desligado por padrão: só com ele os títulos 18 entram (fase 4) */}
-                                <Chip
-                                    pressed={filters.adult}
-                                    aria-label="18+, incluir títulos para maiores de 18 anos"
-                                    onClick={() => update({ ...filters, adult: !filters.adult })}
-                                >
-                                    18+
-                                </Chip>
+                                {AGE_LIMITS.map((limit) => (
+                                    <RadioChip
+                                        key={limit.value}
+                                        name={`${titleId}-rating`}
+                                        value={limit.value}
+                                        aria-label={limit.spoken}
+                                        checked={filters.maxAge === limit.value}
+                                        onChange={() => update({ ...filters, maxAge: limit.value })}
+                                    >
+                                        {limit.label}
+                                    </RadioChip>
+                                ))}
                             </div>
                         </div>
 

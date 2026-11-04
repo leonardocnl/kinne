@@ -5,7 +5,13 @@ import { MIN_RATING } from "@/domain/catalog";
 import { MAX_PERSON_ID } from "@/domain/person-search";
 import { MAX_ROUND } from "@/domain/rounds";
 import { isStreaming, STREAMING_SERVICES } from "@/domain/streaming";
-import { MAX_RATING, RUNTIME_LIMITS, TYPES, type Filters } from "@/domain/filters";
+import {
+    AGE_LIMIT_VALUES,
+    MAX_RATING,
+    RUNTIME_LIMITS,
+    TYPES,
+    type Filters,
+} from "@/domain/filters";
 import { idListSchema } from "./surprise";
 import { tasteSchema } from "./taste";
 
@@ -28,8 +34,8 @@ const filtersSchema = z.strictObject({
     maxRuntime: z.custom<number | null>((v) => RUNTIME_LIMITS.some((l) => l.minutes === v)),
     // person-search A6, A7: só o id; os títulos da pessoa o servidor deriva
     personId: z.int().min(1).max(MAX_PERSON_ID).nullable(),
-    // chip 18+ (recommendation-rounds A1)
-    adult: z.boolean(),
+    // até qual classificação (US002 C10)
+    maxAge: z.enum(AGE_LIMIT_VALUES),
     // US008: um dos nove sentimentos ou nenhum; nunca vira chave de nada além da receita fixa (A4)
     feeling: z.enum(FEELINGS).nullable(),
 });

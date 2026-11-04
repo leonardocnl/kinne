@@ -445,7 +445,7 @@ describe.skipIf(!dbTestsEnabled)("ataques às ações das contas", () => {
             minRating: 6.4,
             maxRuntime: null,
             personId: null,
-            adult: false,
+            maxAge: "16",
             feeling: "cry",
         };
         const request = { filters: wire, watched: [], seen: [], taste: NO_BROWSER.taste, round: 0 };
@@ -560,7 +560,7 @@ describe.skipIf(!dbTestsEnabled)("ataques às ações das contas", () => {
                         minRating: 6.4,
                         maxRuntime: null,
                         personId: null,
-                        adult: false,
+                        maxAge: "16",
                         feeling: "cry",
                     },
                     watched: [],

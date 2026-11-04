@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { TextLink } from "../_components/ui/TextLink";
 import { Colors } from "./_sections/Colors";
 import { Components } from "./_sections/Components";
@@ -10,12 +11,15 @@ import { Shape } from "./_sections/Shape";
 import { Space } from "./_sections/Space";
 import { Typography } from "./_sections/Typography";
 
-export const metadata: Metadata = {
-    title: "Sistema de design · Kinne",
-    robots: { index: false, follow: false },
-};
+// In production the 404 must not reveal this page's title either.
+export const metadata: Metadata =
+    process.env.NODE_ENV === "production"
+        ? {}
+        : { title: "Sistema de design · Kinne", robots: { index: false, follow: false } };
 
 export default function DesignPage() {
+    // security.md §3: development only
+    if (process.env.NODE_ENV === "production") notFound();
     return (
         <div className="page-container grid gap-x-10 py-8 desktop:grid-cols-12">
             <aside className="flex flex-col gap-6 pb-8 desktop:sticky desktop:top-0 desktop:col-span-2 desktop:h-dvh desktop:self-start desktop:pt-2">

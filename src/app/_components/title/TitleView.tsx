@@ -20,11 +20,13 @@ import { BackIcon, CheckIcon, DiceIcon, PlayIcon } from "../ui/icons";
 import { Score } from "../ui/Score";
 import { TextLink } from "../ui/TextLink";
 import { TmdbImage } from "../ui/TmdbImage";
-import { AsciiArt } from "../ui/AsciiArt";
+import { AsciiArt } from "../ui/LiveHorizon";
 import { TitleSpec } from "../ui/TitleSpec";
 import { largePosterSources, TITLE_POSTER_SIZES } from "../ui/tmdb-sources";
 import { beginWipe, cancelWipe, wipeRouter } from "../ui/wipe";
 import { goToTitle, RECOMMENDATION_SOURCE, useOrigin } from "./origin";
+import { StreamingSummary } from "../StreamingProfile";
+import { StreamingQuestion } from "./StreamingQuestion";
 import { useFilteredDraw } from "./useFilteredDraw";
 import { useSurprise } from "./useSurprise";
 
@@ -228,6 +230,11 @@ export function TitleView({ title, daily }: TitleViewProps) {
                                 <span className="font-medium">
                                     {streamingList(title.streamings)}
                                 </span>
+                                <StreamingQuestion
+                                    available={title.streamings}
+                                    // US018 C3: fora dos streamings da pessoa, troca na hora
+                                    onLeft={() => title.recommendable && next("another")}
+                                />
                             </TitleSpec>
                         )}
                         {genre && <TitleSpec label="Gênero">{genre}</TitleSpec>}
@@ -246,6 +253,7 @@ export function TitleView({ title, daily }: TitleViewProps) {
                             </TitleSpec>
                         )}
                     </dl>
+                    <TitleStreamingSummary className="desktop:hidden" />
                     {title.tagline && (
                         <p className="max-w-measure text-tagline text-balance text-paper max-desktop:mb-5">
                             {title.tagline}
@@ -305,8 +313,21 @@ export function TitleView({ title, daily }: TitleViewProps) {
                         </div>
                     )}
                 </Dock>
+                <TitleStreamingSummary className="max-desktop:hidden desktop:col-start-3 desktop:row-start-2 desktop:justify-self-end" />
             </div>
         </main>
+    );
+}
+
+function TitleStreamingSummary({ className }: { className: string }) {
+    return (
+        <StreamingSummary className={className}>
+            {(label) => (
+                <TextLink href="/" replace onClick={filtersOnArrival.request}>
+                    {label}
+                </TextLink>
+            )}
+        </StreamingSummary>
     );
 }
 

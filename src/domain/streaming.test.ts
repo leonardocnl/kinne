@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { availableStreamings, isStreaming, STREAMING_SERVICES, streamingList } from "./streaming";
+import {
+    availableStreamings,
+    isOnStreamings,
+    isStreaming,
+    STREAMING_SERVICES,
+    streamingList,
+    streamingSummary,
+    streamingToAsk,
+    withoutStreaming,
+} from "./streaming";
 
 describe("isStreaming", () => {
     it("aceita streamings suportados", () => {
@@ -48,5 +57,47 @@ describe("streamingList", () => {
     // e a tela dizia só "Disponível no Max"
     it("mostra Max e Prime Video, nunca só Max", () => {
         expect(streamingList(availableStreamings([119, 1899]))).toBe("Max e Prime Video");
+    });
+});
+
+describe("streamings aprendidos pelo uso (US018)", () => {
+    const on = (...ids: number[]) => availableStreamings(ids);
+
+    it("Não com a lista vazia deixa todos menos o recusado", () => {
+        expect(withoutStreaming([], "netflix")).toEqual([
+            "max",
+            "prime-video",
+            "disney-plus",
+            "globoplay",
+        ]);
+    });
+
+    it("Não nunca esvazia a lista", () => {
+        expect(withoutStreaming(["netflix"], "netflix")).toEqual(["netflix"]);
+    });
+
+    it("pergunta o primeiro serviço ainda não respondido", () => {
+        expect(streamingToAsk(on(8, 1899), [], [])?.id).toBe("netflix");
+        expect(streamingToAsk(on(8, 1899), [], ["netflix"])?.id).toBe("max");
+        expect(streamingToAsk(on(8, 1899), [], ["netflix", "max"])).toBeNull();
+    });
+
+    it("não pergunta sobre serviço fora da lista nem com um único na lista", () => {
+        expect(streamingToAsk(on(8), ["max", "globoplay"], [])).toBeNull();
+        expect(streamingToAsk(on(8), ["netflix"], [])).toBeNull();
+    });
+
+    it("sabe quando o título saiu dos streamings da pessoa", () => {
+        expect(isOnStreamings(on(8), [])).toBe(true);
+        expect(isOnStreamings(on(8), ["max"])).toBe(false);
+        expect(isOnStreamings(on(8, 1899), ["max"])).toBe(true);
+    });
+
+    it("resume a lista; vazia ou completa é todos", () => {
+        expect(streamingSummary([])).toBeNull();
+        expect(
+            streamingSummary(["netflix", "max", "prime-video", "disney-plus", "globoplay"]),
+        ).toBeNull();
+        expect(streamingSummary(["max", "netflix"])).toBe("Netflix, Max");
     });
 });

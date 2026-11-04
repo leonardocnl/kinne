@@ -8,6 +8,14 @@ import type { Candidate } from "./titles";
 
 const bit = (f: (typeof FEELINGS)[number]) => 1 << FEELINGS.indexOf(f);
 
+const GENRE_IDS: Record<KinneGenre, number> = {
+    action: 28,
+    comedy: 35,
+    drama: 18,
+    romance: 10749,
+    suspense: 53,
+};
+
 const title = (id: number, extra: Partial<Candidate> = {}): Candidate => ({
     id,
     slug: `t-${id}`,
@@ -18,8 +26,10 @@ const title = (id: number, extra: Partial<Candidate> = {}): Candidate => ({
     kinneGenres: ["drama"],
     streamingTmdbIds: [8],
     adult: false,
+    certification: extra.adult ? "18" : "14",
     feelings: 0b111111111,
     ...extra,
+    genreTmdbIds: extra.genreTmdbIds ?? (extra.kinneGenres ?? ["drama"]).map((g) => GENRE_IDS[g]),
 });
 
 const criteria = (extra: object = {}) => ({ ...wireFilters(DEFAULT_FILTERS), ...extra });
@@ -96,5 +106,26 @@ describe("planFilteredRounds com sentimento (US008)", () => {
     it("se os dados do sentimento não carregam, segue pela nota, sem erro", () => {
         const { rounds } = plan(pool, { feeling: "cry" }, null as never);
         expect(rounds[0]).toHaveLength(10);
+    });
+});
+
+describe("conflitos e pureza (US017)", () => {
+    const comedy = (id: number, ...others: number[]) =>
+        title(id, { kinneGenres: ["comedy"], genreTmdbIds: [35, ...others] });
+
+    it("Comédia não traz Parasita, nem no contador nem nas rodadas", () => {
+        const { matching, rounds } = plan([comedy(1, 53, 18), comedy(2)], { genres: ["comedy"] });
+        expect(matching.map((t) => t.id)).toEqual([2]);
+        expect(rounds.flat().map((t) => t.id)).toEqual([2]);
+    });
+
+    it("com gênero pedido e sem gosto, o gênero extra desconta na ordem", () => {
+        const { rounds } = plan([comedy(1, 18), comedy(2)], { genres: ["comedy"] });
+        expect(rounds[0].map((t) => t.id)).toEqual([2, 1]);
+    });
+
+    it("sem gênero pedido, não há desconto", () => {
+        const { rounds } = plan([comedy(1, 18), comedy(2)]);
+        expect(rounds[0].map((t) => t.id)).toEqual([1, 2]);
     });
 });
