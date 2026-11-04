@@ -2,7 +2,12 @@ import type { KinneGenre } from "@/domain/genre";
 import { describe, expect, it } from "vitest";
 import { DEFAULT_FILTERS, wireFilters } from "@/domain/filters";
 import { KINNE_GENRES } from "@/domain/genre";
-import { spreadTaste, toNeighborGraph } from "@/domain/taste-graph";
+import {
+    STEP_DAMPING,
+    spreadTaste,
+    toNeighborGraph,
+    type NeighborGraph,
+} from "@/domain/taste-graph";
 import { EMPTY_TASTE, toSignals, type TasteLists } from "@/domain/taste-signals";
 import { planFilteredRounds } from "./filtered-draw";
 import type { Candidate } from "./titles";
@@ -191,10 +196,24 @@ describe("custo do gosto (C2)", () => {
     const signals = taste({ liked: ids(1), willWatch: ids(1001), disliked: ids(2001) });
     const graph = toNeighborGraph(edges);
 
-    it("600 sinais espalhados sobre um grafo do tamanho do catálogo levam menos de 100 ms", () => {
-        const started = performance.now();
-        spreadTaste(graph, toSignals(signals));
-        expect(performance.now() - started).toBeLessThan(100);
+    it("600 sinais espalhados sobre um grafo do tamanho do catálogo: trabalho linear no grafo", () => {
+        // conta o trabalho em vez do relógio, que varia com a carga da máquina
+        let lookups = 0;
+        let edgesWalked = 0;
+        const counted: NeighborGraph = {
+            get(id: number) {
+                lookups++;
+                const neighbors = graph.get(id);
+                edgesWalked += neighbors?.length ?? 0;
+                return neighbors;
+            },
+        } as NeighborGraph;
+        const adjacency = [...graph.values()].reduce((sum, list) => sum + list.length, 0);
+        spreadTaste(counted, toSignals(signals));
+        // cada passo visita cada título no máximo uma vez, mais uma leitura para a força dele
+        const steps = STEP_DAMPING.length;
+        expect(lookups).toBeLessThanOrEqual((steps + 1) * n);
+        expect(edgesWalked).toBeLessThanOrEqual((steps + 1) * adjacency);
     });
 
     it("o plano inteiro (filtros, gosto e rodadas) fica longe do limite de uma ação", () => {

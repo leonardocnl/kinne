@@ -197,10 +197,19 @@ describe.skipIf(!dbTestsEnabled)(
             // os gêneros são uma escolha da sala, não da conta: seguem o pedido
             expect(ana.genres).toEqual(["action"]);
             expect(bia.genres).toEqual(["action"]);
-            // nada do que foi forjado chegou ao banco
-            const all = JSON.stringify(members());
-            for (const forged of ["netflix", "globoplay", "9399", "9398", "9397", "9396", "9395"]) {
-                expect(all).not.toContain(forged);
+            // nada do que foi forjado chegou ao banco, em nenhuma das listas de nenhum membro
+            for (const m of members()) {
+                expect(m.streamings).not.toContain("netflix");
+                expect(m.streamings).not.toContain("globoplay");
+                const ids = [
+                    ...m.watched_ids,
+                    ...m.liked_ids,
+                    ...m.will_watch_ids,
+                    ...m.disliked_ids,
+                ];
+                for (const forged of [9399, 9398, 9397, 9396, 9395]) {
+                    expect(ids).not.toContain(forged);
+                }
             }
         });
 

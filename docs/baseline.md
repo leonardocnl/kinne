@@ -54,10 +54,10 @@ Measured on 2026-11-01 at commit `2ab751b` (`develop`), on the development machi
 
 On 2026-11-01 the owner raised the budget from 152 KB to 160 KB gzip. The home measured **152.3 KB** with the three MVP adjustment PRs (#87, #88, #89) combined. The reason is to leave margin during the foundation work. Review the limit after F3 (design system), based on the size measured after the code cleanup.
 
-## To fix in F1
+## Fixed in F1
 
-- **Flaky test:** `src/app/_actions/room-account.db.test.ts` failed once on #87 and passed on a rerun. It searches stored data for the substring "9398", which may match an unrelated generated value; this cause is not confirmed.
-- **Flaky timing test:** "custo do gosto (C2)" in `src/application/filtered-draw-taste.test.ts` asserts that `spreadTaste` takes under 100 ms of wall-clock time. It failed with 111 ms under load in the full suite, and passed when run alone. In F1 it should measure the amount of work (for example, nodes or edges visited) instead of wall-clock time.
+- **Flaky test** `src/app/_actions/room-account.db.test.ts`: it searched the whole stored row, as JSON, for short substrings such as "9398", which can also appear inside unrelated generated values. It now checks that no forged service is in `streamings` and no forged title id is in any of the four id lists of any member.
+- **Flaky timing test** "custo do gosto (C2)" in `src/application/filtered-draw-taste.test.ts`: the 100 ms wall-clock limit on `spreadTaste` is replaced by a count of work (graph lookups at most `(steps + 1) × titles`, edges walked at most `(steps + 1) × adjacency entries`). Without the strength cache it reads 91,892 times against a limit of 12,000, so the test still catches a regression. The plan test in the same block keeps its looser 500 ms limit.
 
 ## To fix in F2 (discovery module) or F5
 
