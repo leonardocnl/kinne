@@ -8,9 +8,6 @@ on:
   schedule:
     - cron: "41 7 * * *" # 04:41 em Brasília
   workflow_dispatch:
-  # TEMPORARY: validates the timing job in its own PR; removed in the next commit
-  pull_request:
-    paths: [.github/workflows/timing-checks.yml]
 
 concurrency:
   group: timing-checks
@@ -73,7 +70,7 @@ jobs:
 
   report:
     needs: timing
-    if: failure() && github.event_name != 'pull_request'
+    if: failure()
     runs-on: ubuntu-latest
     timeout-minutes: 5
     # The only write permission in this workflow, in a job that runs no repository code.
