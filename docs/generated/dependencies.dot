@@ -1,0 +1,70 @@
+strict digraph "dependency-cruiser output"{
+    rankdir="LR" splines="true" overlap="false" nodesep="0.16" ranksep="0.18" fontname="Helvetica-bold" fontsize="9" style="rounded,bold,filled" fillcolor="#ffffff" compound="true"
+    node [shape="box" style="rounded, filled" height="0.2" color="black" fillcolor="#ffffcc" fontcolor="black" fontname="Helvetica" fontsize="9"]
+    edge [arrowhead="normal" arrowsize="0.6" penwidth="2.0" color="#00000033" fontname="Helvetica" fontsize="9"]
+
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/[secret]" [label=<[secret]> tooltip="[secret]" URL="src/app/[secret]" shape="box3d"] } }
+    "src/app/[secret]" -> "src/app/_components"
+    "src/app/[secret]" -> "src/infrastructure"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/_actions" [label=<_actions> tooltip="_actions" URL="src/app/_actions" shape="box3d"] } }
+    "src/app/_actions" -> "src/app/_data"
+    "src/app/_actions" -> "src/application"
+    "src/app/_actions" -> "src/infrastructure"
+    "src/app/_actions" -> "src/domain"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/_components" [label=<_components> tooltip="_components" URL="src/app/_components" shape="box3d"] } }
+    "src/app/_components" -> "src/domain"
+    "src/app/_components" -> "src/app/_actions"
+    "src/app/_components" -> "src/application" [arrowhead="onormal" penwidth="1.0"]
+    "src/app/_components" -> "src/infrastructure"
+    "src/app/_components" -> "src/app/_data" [arrowhead="onormal" penwidth="1.0"]
+    "src/app/_components" -> "src/app/not-found.tsx"
+    "src/app/_components" -> "src/app/titulo"
+    "src/app/_components" -> "src/app/design"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/_data" [label=<_data> tooltip="_data" URL="src/app/_data" shape="box3d"] } }
+    "src/app/_data" -> "src/application"
+    "src/app/_data" -> "src/domain"
+    "src/app/_data" -> "src/infrastructure"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/api" [label=<api> tooltip="api" URL="src/app/api" shape="box3d"] } }
+    "src/app/api" -> "src/infrastructure"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/boas-vindas" [label=<boas-vindas> tooltip="boas-vindas" URL="src/app/boas-vindas" shape="box3d"] } }
+    "src/app/boas-vindas" -> "src/app/_components"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/design" [label=<design> tooltip="design" URL="src/app/design" shape="box3d"] } }
+    "src/app/design" -> "src/app/_components"
+    "src/app/design" -> "src/domain"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/entrar" [label=<entrar> tooltip="entrar" URL="src/app/entrar" shape="box3d"] } }
+    "src/app/entrar" -> "src/app/_components"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/globals.css" [label=<globals.css> tooltip="globals.css" URL="src/app/globals.css" ] } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/layout.tsx" [label=<layout.tsx> tooltip="layout.tsx" URL="src/app/layout.tsx" fillcolor="#bbfeff"] } }
+    "src/app/layout.tsx" -> "src/app/_components"
+    "src/app/layout.tsx" -> "src/app/globals.css"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/not-found.tsx" [label=<not-found.tsx> tooltip="not-found.tsx" URL="src/app/not-found.tsx" fillcolor="#bbfeff"] } }
+    "src/app/not-found.tsx" -> "src/app/_components"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/page.tsx" [label=<page.tsx> tooltip="page.tsx" URL="src/app/page.tsx" fillcolor="#bbfeff"] } }
+    "src/app/page.tsx" -> "src/app/_components"
+    "src/app/page.tsx" -> "src/app/_data"
+    "src/app/page.tsx" -> "src/domain"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/perfil" [label=<perfil> tooltip="perfil" URL="src/app/perfil" shape="box3d"] } }
+    "src/app/perfil" -> "src/app/_components"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/perguntas" [label=<perguntas> tooltip="perguntas" URL="src/app/perguntas" shape="box3d"] } }
+    "src/app/perguntas" -> "src/app/_components"
+    "src/app/perguntas" -> "src/domain"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/privacidade" [label=<privacidade> tooltip="privacidade" URL="src/app/privacidade" shape="box3d"] } }
+    "src/app/privacidade" -> "src/app/_components"
+    "src/app/privacidade" -> "src/domain"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/sala" [label=<sala> tooltip="sala" URL="src/app/sala" shape="box3d"] } }
+    "src/app/sala" -> "src/app/_components"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/sobre" [label=<sobre> tooltip="sobre" URL="src/app/sobre" shape="box3d"] } }
+    "src/app/sobre" -> "src/app/_components"
+    "src/app/sobre" -> "src/domain"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/app" {label="app" "src/app/titulo" [label=<titulo> tooltip="titulo" URL="src/app/titulo" shape="box3d"] } }
+    "src/app/titulo" -> "src/app/_components"
+    "src/app/titulo" -> "src/app/_data"
+    "src/app/titulo" -> "src/domain"
+    subgraph "cluster_src" {label="src" "src/application" [label=<application> tooltip="application" URL="src/application" shape="box3d"] }
+    "src/application" -> "src/domain"
+    subgraph "cluster_src" {label="src" "src/domain" [label=<domain> tooltip="domain" URL="src/domain" shape="box3d"] }
+    subgraph "cluster_src" {label="src" "src/infrastructure" [label=<infrastructure> tooltip="infrastructure" URL="src/infrastructure" shape="box3d"] }
+    "src/infrastructure" -> "src/domain"
+    "src/infrastructure" -> "src/application" [arrowhead="onormal" penwidth="1.0"]
+    subgraph "cluster_src" {label="src" "src/instrumentation-client.ts" [label=<instrumentation-client.ts> tooltip="instrumentation-client.ts" URL="src/instrumentation-client.ts" fillcolor="#ccffcc"] }
+}

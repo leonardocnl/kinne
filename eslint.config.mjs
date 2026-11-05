@@ -9,7 +9,8 @@ const eslintConfig = defineConfig([
     // Desliga regras de formatação que conflitam com o Prettier; deve vir depois das configs do Next.
     prettier,
     // security.md §6: nada de dangerouslySetInnerHTML (texto do TMDB é sempre texto)
-    { rules: { "react/no-danger": "error" } },
+    // (os mesmos arquivos em que o eslint-config-next registra o plugin react; .cjs fica de fora)
+    { files: ["**/*.{js,jsx,mjs,ts,tsx,mts,cts}"], rules: { "react/no-danger": "error" } },
     // Override default ignores of eslint-config-next.
     globalIgnores([
         // Default ignores of eslint-config-next:

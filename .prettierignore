@@ -11,3 +11,7 @@ drizzle/
 
 # maquete aprovada: guardada exatamente como veio
 docs/design/
+
+# generated (docs/generated, dependency-cruiser baseline)
+docs/generated/
+.dependency-cruiser-known-violations.json
