@@ -107,6 +107,7 @@ const contentChanged = sql.raw(
 export async function connectSyncDb(url: string) {
     const client = new Client(url);
     // D1: erro assíncrono da conexão sem handler imprimiria o erro do driver (host, usuário).
+    // eslint-disable-next-line no-console -- server log until shared/logger (F5)
     client.on("error", () => console.error("Conexão com o banco falhou (detalhe omitido)"));
     await client.connect();
     return { db: drizzle({ client }), close: () => client.end() };

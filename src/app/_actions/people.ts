@@ -41,6 +41,7 @@ export async function searchPeople(input: unknown): Promise<PersonOutcome> {
         return people.length ? { kind: "results", people } : { kind: "none" };
     } catch {
         // C1, C4: mensagem fixa; nem o termo nem o erro do banco vão para o log
+        // eslint-disable-next-line no-console -- server log until shared/logger (F5)
         console.error("Busca de pessoas falhou");
         return UNAVAILABLE;
     }
@@ -57,6 +58,7 @@ export async function personTitles(input: unknown): Promise<number[] | null> {
     try {
         return await withDeadline(personTitleIds(parsed.data.personId), null);
     } catch {
+        // eslint-disable-next-line no-console -- server log until shared/logger (F5)
         console.error("Títulos da pessoa não carregados");
         return null;
     }

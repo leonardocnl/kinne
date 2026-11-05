@@ -34,6 +34,7 @@ export async function searchTitles(input: unknown): Promise<SearchOutcome> {
     if (!term) return { kind: "none" };
 
     after(() =>
+        // eslint-disable-next-line no-console -- server log until shared/logger (F5)
         flushSearchCounters().catch(() => console.error("Contadores da busca não gravados")),
     );
     const config = searchConfig();
@@ -55,6 +56,7 @@ export async function searchTitles(input: unknown): Promise<SearchOutcome> {
         return await Promise.race([search(request, searchPorts(config)), deadline]);
     } catch (error) {
         // C5: só status e caminho do TMDB; o resto pode trazer host ou o próprio termo
+        // eslint-disable-next-line no-console -- server log until shared/logger (F5)
         console.error(
             "Busca falhou:",
             error instanceof TmdbHttpError ? error.message : "detalhe omitido",
