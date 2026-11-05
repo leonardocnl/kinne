@@ -1,3 +1,4 @@
+import { ipBucket } from "@/infrastructure/client-ip";
 // Um dia do calendário de Brasília (RNG006), como "2026-10-10".
 export type Day = string & { readonly __brand: "Day" };
 
