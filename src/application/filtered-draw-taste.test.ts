@@ -196,35 +196,53 @@ describe("custo do gosto (C2)", () => {
     const signals = taste({ liked: ids(1), willWatch: ids(1001), disliked: ids(2001) });
     const graph = toNeighborGraph(edges);
 
-    it("600 sinais espalhados sobre um grafo do tamanho do catálogo: trabalho linear no grafo", () => {
-        // conta o trabalho em vez do relógio, que varia com a carga da máquina
-        let lookups = 0;
-        let edgesWalked = 0;
-        const counted: NeighborGraph = {
+    const adjacency = [...graph.values()].reduce((sum, list) => sum + list.length, 0);
+    const steps = STEP_DAMPING.length;
+
+    // conta o trabalho em vez do relógio, que varia com a carga da máquina
+    function countingGraph() {
+        const work = { lookups: 0, edgesWalked: 0 };
+        const counted = {
             get(id: number) {
-                lookups++;
+                work.lookups++;
                 const neighbors = graph.get(id);
-                edgesWalked += neighbors?.length ?? 0;
+                work.edgesWalked += neighbors?.length ?? 0;
                 return neighbors;
             },
         } as NeighborGraph;
-        const adjacency = [...graph.values()].reduce((sum, list) => sum + list.length, 0);
+        return { counted, work };
+    }
+
+    it("600 sinais espalhados sobre um grafo do tamanho do catálogo: trabalho linear no grafo", () => {
+        const { counted, work } = countingGraph();
         spreadTaste(counted, toSignals(signals));
         // cada passo visita cada título no máximo uma vez, mais uma leitura para a força dele
-        const steps = STEP_DAMPING.length;
-        expect(lookups).toBeLessThanOrEqual((steps + 1) * n);
-        expect(edgesWalked).toBeLessThanOrEqual((steps + 1) * adjacency);
+        expect(work.lookups).toBeLessThanOrEqual((steps + 1) * n);
+        expect(work.edgesWalked).toBeLessThanOrEqual((steps + 1) * adjacency);
     });
 
-    it("o plano inteiro (filtros, gosto e rodadas) fica longe do limite de uma ação", () => {
-        const candidates = Array.from({ length: n }, (_, i) => title(i + 1));
-        const started = performance.now();
+    it("o plano inteiro (filtros, gosto e rodadas): trabalho de ordenação, nunca quadrático", () => {
+        const { counted, work } = countingGraph();
+        let reads = 0;
+        const candidates = Array.from(
+            { length: n },
+            (_, i) =>
+                new Proxy(title(i + 1), {
+                    get(target, key, receiver) {
+                        reads++;
+                        return Reflect.get(target, key, receiver);
+                    },
+                }),
+        );
         planFilteredRounds(
-            { candidates, person: null, feeling: null, graph },
+            { candidates, person: null, feeling: null, graph: counted },
             wireFilters(DEFAULT_FILTERS),
             [],
             signals,
         );
-        expect(performance.now() - started).toBeLessThan(500);
+        expect(work.lookups).toBeLessThanOrEqual((steps + 1) * n);
+        expect(work.edgesWalked).toBeLessThanOrEqual((steps + 1) * adjacency);
+        // ordenar custa n·log n leituras; algo por título que percorra o catálogo inteiro, n²
+        expect(reads).toBeLessThanOrEqual(4 * n * Math.log2(n));
     });
 });

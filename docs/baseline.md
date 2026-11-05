@@ -57,7 +57,7 @@ On 2026-11-01 the owner raised the budget from 152 KB to 160 KB gzip. The home m
 ## Fixed in F1
 
 - **Flaky test** `src/app/_actions/room-account.db.test.ts`: it searched the whole stored row, as JSON, for short substrings such as "9398", which can also appear inside unrelated generated values. It now checks that no forged service is in `streamings` and no forged title id is in any of the four id lists of any member.
-- **Flaky timing test** "custo do gosto (C2)" in `src/application/filtered-draw-taste.test.ts`: the 100 ms wall-clock limit on `spreadTaste` is replaced by a count of work (graph lookups at most `(steps + 1) × titles`, edges walked at most `(steps + 1) × adjacency entries`). Without the strength cache it reads 91,892 times against a limit of 12,000, so the test still catches a regression. The plan test in the same block keeps its looser 500 ms limit.
+- **Flaky timing test** "custo do gosto (C2)" in `src/application/filtered-draw-taste.test.ts`: the 100 ms wall-clock limit on `spreadTaste` is replaced by a count of work (graph lookups at most `(steps + 1) × titles`, edges walked at most `(steps + 1) × adjacency entries`). Without the strength cache it reads 91,892 times against a limit of 12,000, so the test still catches a regression. The plan test in the same block ("o plano inteiro") had a 500 ms limit; it now counts the same graph work plus every property read on the candidates, bounded by `4 × n·log₂n` (59,284 reads today for 3,000 titles; recomputing the catalog mean for each title reads 9,059,284). No unit test depends on wall-clock time.
 
 ## To fix in F2 (discovery module) or F5
 
