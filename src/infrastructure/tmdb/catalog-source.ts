@@ -78,6 +78,7 @@ export class TmdbCatalogSource implements CatalogSource {
             if (first.total_results >= RESULT_CAP) {
                 const [from, to] = years ?? [MIN_YEAR, new Date().getUTCFullYear() + 5];
                 if (from === to) {
+                    // eslint-disable-next-line no-console -- server log until shared/logger (F5)
                     console.warn(`Aviso: ${type} ${streamingTmdbId} ${from} no limite do TMDB`);
                     throw new Error(`Listagem ainda no limite de ${RESULT_CAP} após dividir`);
                 }

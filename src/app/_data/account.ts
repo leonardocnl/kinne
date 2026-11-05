@@ -204,6 +204,7 @@ function dailyCapAlert(event: "daily-cap-anonymous" | "daily-cap-members") {
     const now = Date.now();
     if (now - (lastAlert.get(event) ?? 0) < ALERT_EVERY_MS) return;
     lastAlert.set(event, now);
+    // eslint-disable-next-line no-console -- server log until shared/logger (F5)
     console.warn(
         event === "daily-cap-anonymous"
             ? "Teto diário de e-mails de entrada atingido: ninguém novo recebe código até meia-noite UTC"

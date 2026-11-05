@@ -19,6 +19,7 @@ export async function recordEvent(input: unknown): Promise<void> {
         recordUsageEvent(
             input,
             () => new DrizzleUsageEventsRepository(createDb()),
+            // eslint-disable-next-line no-console -- server log until shared/logger (F5)
             (error, event) => console.error("Evento não gravado:", event.name, error),
         ),
     );

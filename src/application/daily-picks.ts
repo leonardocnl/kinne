@@ -64,6 +64,7 @@ export async function dailyPicksFor(
     let picks = await repository.picksOf(day);
     if (picks.length === 0) {
         const { warnings } = await generateDailyPicks(day, repository);
+        // eslint-disable-next-line no-console -- server log until shared/logger (F5)
         for (const warning of warnings) console.warn(warning);
         picks = await repository.picksOf(day);
     }

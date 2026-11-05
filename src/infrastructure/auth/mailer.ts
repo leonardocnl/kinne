@@ -46,6 +46,7 @@ export function consoleMailer(config: Pick<AuthConfig, "devMail">): Mailer {
     return {
         async send(to, message) {
             // é o propósito deste envio, e ele só existe fora de produção
+            // eslint-disable-next-line no-console -- dev mailer, never in production (security §13)
             console.info(
                 `\n[kinne:dev-mail] para ${to}\n  ${message.subject}\n  ${message.text}\n`,
             );
