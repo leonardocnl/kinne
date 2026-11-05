@@ -156,6 +156,7 @@ Implemented in US012; decisions and attack tests in [docs/threats/accounts.md](t
   - Security headers on every page, the API route, a 404 and static files, and zero CSP violations in Chromium (`security-headers` job, §10).
   - Production bundle contains no secret patterns and no source maps.
   - Server action schemas reject out-of-range and unknown-key payloads (unit tests).
+  - Email enumeration (accounts attack 4, `src/app/_actions/account.db.test.ts`), in two parts. Required, in `test:db`: for an email with and without an account, `requestCode` gives the same answer and the same effect, sends the database the same statements in the same order (values left out), and never sends the plain email, only its HMAC, so not even the database can tell whether the account exists. Not blocking: the wall-clock check (medians within 150 ms) runs every night in `timing-checks.yml`, five runs, and fails when most of them fail; a failure opens an issue for the owner, or comments on the open one.
 - OWASP ZAP baseline scan against the preview deployment on PRs into `main`.
 - Manual test by the owner before each release to production, following OWASP ASVS level 1 as the checklist.
 

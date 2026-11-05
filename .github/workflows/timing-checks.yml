@@ -1,0 +1,95 @@
+name: Timing checks
+
+# Wall-clock checks kept out of the required set (they depend on machine load): today, that the
+# sign-in code request takes the same time with and without an account (docs/threats/accounts.md,
+# attack 4). The required check of the same attack is deterministic and runs in CI (test:db).
+# Not blocking: on a failure the report job opens an issue, or comments on the open one.
+on:
+  schedule:
+    - cron: "41 7 * * *" # 04:41 em Brasília
+  workflow_dispatch:
+
+concurrency:
+  group: timing-checks
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  timing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Disposable database of the job itself, never the project's; no secret in this job.
+    services:
+      postgres:
+        # tag and digest, the same pin as ci.yml and scripts/visual-run.sh
+        image: postgres:16@sha256:01e529f5119d4a943b55567d8aaa14a71a19c07054873617b406cd5f04b91380
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # scheduled runs test main explicitly (security.md §11); a manual run tests its own ref
+          ref: ${{ github.event_name == 'schedule' && 'main' || github.ref }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: scripts/apply-migrations-local.sh
+      # Five runs of 24 requests each. One slow run is noise; the job fails when most runs fail,
+      # which is what a real difference between the two paths does.
+      - name: Email enumeration timing (5 runs, medians within 150 ms)
+        env:
+          KINNE_TEST_DB: "1"
+          KINNE_TIMING_TEST: "1"
+        run: |
+          failed=0
+          for run in 1 2 3 4 5; do
+              if npx vitest run src/app/_actions/account.db.test.ts -t "o tempo não separa"; then
+                  echo "run $run: pass" >> "$GITHUB_STEP_SUMMARY"
+              else
+                  echo "run $run: FAIL" >> "$GITHUB_STEP_SUMMARY"
+                  failed=$((failed + 1))
+              fi
+          done
+          echo "failed runs: $failed of 5" >> "$GITHUB_STEP_SUMMARY"
+          [ "$failed" -lt 3 ]
+
+  report:
+    needs: timing
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # The only write permission in this workflow, in a job that runs no repository code.
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          OWNER: ${{ github.repository_owner }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Nightly timing check failed: email enumeration"
+          body="The timing check of attack 4 (docs/threats/accounts.md) failed in most of its runs: $RUN_URL"
+          number=$(gh issue list --repo "$REPO" --state open --search "in:title \"$title\"" \
+              --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+              gh issue comment "$number" --repo "$REPO" --body "$body"
+          else
+              gh issue create --repo "$REPO" --title "$title" --body "$body" --assignee "$OWNER"
+          fi

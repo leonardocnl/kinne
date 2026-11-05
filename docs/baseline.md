@@ -62,3 +62,7 @@ On 2026-11-01 the owner raised the budget from 152 KB to 160 KB gzip. The home m
 ## To fix in F2 (discovery module) or F5
 
 - **`filterCandidates` sends the whole recommendable catalog** (about 8,680 titles) to the browser on every call, so the counter can count locally. The target design filters on the server and returns only what the panel needs. The rate limit added in `fix/filter-candidates-rate-limit` is a temporary protection, not the solution.
+
+## Timing checks outside the required set
+
+No required test depends on wall-clock time. The one measurement kept, the email enumeration timing of `src/app/_actions/account.db.test.ts` (medians of 12 requests with and 12 without an account, within 150 ms), runs only with `KINNE_TIMING_TEST=1`, every night in `.github/workflows/timing-checks.yml` (five runs; it fails when three or more fail, and then opens an issue). The required check of the same attack compares the statements sent to the database (see docs/security.md §14).

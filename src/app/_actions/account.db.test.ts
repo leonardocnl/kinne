@@ -1,4 +1,6 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { PgDialect } from "drizzle-orm/pg-core";
+import type { SQL } from "drizzle-orm";
 import { admin, dbTestsEnabled, localDb } from "@/test/local-pg";
 
 // Os dez testes de ataque de docs/threats/accounts.md (mais o 11, entre contas), chamando as
@@ -34,7 +36,18 @@ const downDb = {
         throw new Error("banco fora do ar");
     },
 };
-vi.mock("@/infrastructure/db/client", () => ({ createDb: () => (dbDown ? downDb : localDb()) }));
+// grava o que as ações mandam ao banco, para comparar caminhos sem medir tempo (ataque 4)
+const dialect = new PgDialect();
+let statements: { sql: string; params: unknown[] }[] | null = null;
+const recorded = (db: ReturnType<typeof localDb>) => ({
+    execute: (statement: SQL) => {
+        statements?.push(dialect.sqlToQuery(statement));
+        return db.execute(statement);
+    },
+});
+vi.mock("@/infrastructure/db/client", () => ({
+    createDb: () => (dbDown ? downDb : recorded(localDb())),
+}));
 vi.mock("../_data/candidates", () => ({ candidates: async () => [] }));
 vi.mock("../_data/taste-graph", () => ({ neighborGraphOrNull: async () => null }));
 vi.mock("../_data/feelings", () => ({ loadFeelingKit: async () => null }));
@@ -217,55 +230,90 @@ describe.skipIf(!dbTestsEnabled)("ataques às ações das contas", () => {
 
     // -----------------------------------------------------------------------------------------
     describe("4. enumeração de e-mails", () => {
-        it("a resposta é a mesma, o código sai para os dois e o tempo não separa quem tem conta", async () => {
-            const rounds = 12;
-            const known = Array.from({ length: rounds }, (_, i) => `conhecido${i}@ataque.test`);
-            const unknown = Array.from(
-                { length: rounds },
-                (_, i) => `desconhecido${i}@ataque.test`,
-            );
-            for (const email of known) admin(`insert into users (email) values ('${email}')`);
+        const known = (i: number) => `conhecido${i}@ataque.test`;
+        const unknown = (i: number) => `desconhecido${i}@ataque.test`;
+        const seedKnown = (count: number) => {
+            for (let i = 0; i < count; i++) {
+                admin(`insert into users (email) values ('${known(i)}')`);
+            }
+        };
+        const freshIp = () => {
+            // um IP por pedido: o que se compara aqui é o e-mail, não o limite por IP
+            ipCounter++;
+            requestHeaders = new Headers({ "x-real-ip": `198.51.100.${ipCounter % 250}` });
+        };
 
-            const run = async (emails: string[]) => {
-                const times: number[] = [];
-                const answers: string[] = [];
-                for (const email of emails) {
-                    // um IP por pedido: o que se mede aqui é o e-mail, não o limite por IP
-                    ipCounter++;
-                    requestHeaders = new Headers({ "x-real-ip": `198.51.100.${ipCounter % 250}` });
-                    const started = performance.now();
-                    answers.push(JSON.stringify(await actions.requestCode({ email })));
-                    times.push(performance.now() - started);
+        it("a resposta, o efeito e as chamadas ao banco são os mesmos com e sem conta", async () => {
+            const rounds = 6;
+            seedKnown(rounds);
+            const run = async (email: string) => {
+                freshIp();
+                statements = [];
+                const answer = JSON.stringify(await actions.requestCode({ email }));
+                const sent = statements;
+                statements = null;
+                return {
+                    answer,
+                    // quais instruções, em que ordem, sem os valores (hashes e IPs mudam a cada pedido)
+                    path: sent.map((q) => q.sql),
+                    sentPlainEmail: sent.some((q) =>
+                        q.params.some((p) => typeof p === "string" && p.includes("@ataque.test")),
+                    ),
+                };
+            };
+            const reference = await run(known(0));
+            expect(reference.answer).toBe('"sent"');
+            expect(reference.path.length).toBeGreaterThan(0);
+            for (let i = 0; i < rounds; i++) {
+                for (const email of i === 0 ? [unknown(i)] : [known(i), unknown(i)]) {
+                    const attempt = await run(email);
+                    // bytes iguais
+                    expect(attempt.answer).toBe(reference.answer);
+                    // o mesmo caminho no banco, instrução por instrução
+                    expect(attempt.path).toEqual(reference.path);
+                    // o banco só recebe o HMAC do e-mail; sem o texto, nem ele sabe se a conta existe
+                    expect(attempt.sentPlainEmail).toBe(false);
                 }
-                return { times, answers };
-            };
-            // alterna os blocos para a deriva do ambiente não pesar só em um deles
-            const a = await run(known.slice(0, rounds / 2));
-            const b = await run(unknown.slice(0, rounds / 2));
-            const c = await run(known.slice(rounds / 2));
-            const d = await run(unknown.slice(rounds / 2));
-            const knownRun = {
-                times: [...a.times, ...c.times],
-                answers: [...a.answers, ...c.answers],
-            };
-            const unknownRun = {
-                times: [...b.times, ...d.times],
-                answers: [...b.answers, ...d.answers],
-            };
-
-            // bytes iguais
-            expect(new Set(knownRun.answers)).toEqual(new Set(['"sent"']));
-            expect(unknownRun.answers).toEqual(knownRun.answers);
+            }
+            expect(reference.sentPlainEmail).toBe(false);
             // o mesmo efeito: um código e um envio para cada, conhecido ou não
             expect(Number(admin("select count(*) from sign_in_codes"))).toBe(rounds * 2);
             expect(afterTasks).toHaveLength(rounds * 2);
             // nenhuma conta nasce só por pedir o código
-            expect(userCount("desconhecido0@ataque.test")).toBe(0);
+            expect(userCount(unknown(0))).toBe(0);
+        });
 
-            const median = (xs: number[]) =>
-                [...xs].sort((x, y) => x - y)[Math.floor(xs.length / 2)];
-            expect(Math.abs(median(knownRun.times) - median(unknownRun.times))).toBeLessThan(150);
-        }, 120_000);
+        // Medida de tempo: fora do conjunto obrigatório (varia com a carga da máquina). Roda no job
+        // noturno timing-checks.yml, com várias repetições; se falhar, ele abre uma issue.
+        it.runIf(process.env.KINNE_TIMING_TEST === "1")(
+            "o tempo não separa quem tem conta (medianas a menos de 150 ms)",
+            async () => {
+                const rounds = 12;
+                seedKnown(rounds);
+                const run = async (emails: string[]) => {
+                    const times: number[] = [];
+                    for (const email of emails) {
+                        freshIp();
+                        const started = performance.now();
+                        expect(await actions.requestCode({ email })).toBe("sent");
+                        times.push(performance.now() - started);
+                    }
+                    return times;
+                };
+                const all = (make: (i: number) => string) =>
+                    Array.from({ length: rounds }, (_, i) => make(i));
+                // alterna os blocos para a deriva do ambiente não pesar só em um deles
+                const half = rounds / 2;
+                const a = await run(all(known).slice(0, half));
+                const b = await run(all(unknown).slice(0, half));
+                const c = await run(all(known).slice(half));
+                const d = await run(all(unknown).slice(half));
+                const median = (xs: number[]) =>
+                    [...xs].sort((x, y) => x - y)[Math.floor(xs.length / 2)];
+                expect(Math.abs(median([...a, ...c]) - median([...b, ...d]))).toBeLessThan(150);
+            },
+            120_000,
+        );
 
         it("o envio roda depois da resposta: nada é enviado dentro dela", async () => {
             expect(await actions.requestCode({ email: "depois@ataque.test" })).toBe("sent");
