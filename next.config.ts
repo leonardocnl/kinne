@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
     /* config options here */
     // security.md §2/§10: sem X-Powered-By
     poweredByHeader: false,
+    // security.md §6: no console call of our own reaches the browser in production, at any level.
+    // The compiler strips it from the client bundles only (server logs stay); library code
+    // (React, the Next runtime) is not touched.
+    compiler: { removeConsole: process.env.NODE_ENV === "production" },
     cacheComponents: true,
     partialPrefetching: true,
     experimental: {

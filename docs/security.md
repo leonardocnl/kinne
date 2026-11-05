@@ -62,7 +62,10 @@ Security by design: every feature is specified, built and reviewed against these
 ## 6. Output, errors and logging
 
 - Users see only generic messages (`Não conseguimos carregar agora`). No stack traces, SQL, table names, file paths or library versions.
-- `console.*` is removed from production client bundles (`compiler.removeConsole`, keeping only `error` if needed). The browser console stays empty in normal use.
+- No console output of our own in the browser, in two layers:
+  - **Lint:** `no-console` is an error (`eslint.config.mjs`). Only command-line scripts, `e2e/` and tests may print; each server log carries an explicit `eslint-disable-next-line no-console` with its reason, until `shared/logger` (plan F5).
+  - **Build:** `compiler.removeConsole` strips every `console.*` call, at every level, from the production client bundles (`next.config.ts`, checked by `src/next-config.test.ts`). With Turbopack it acts on the client code only: server logs stay. Verified on 2026-11-05 with a probe `console.log` in a client component: gone from every production `.js` chunk, while the server's `console.error` stayed.
+  - **Limit:** neither layer touches third-party code. The production client JS still has 16 `console` calls, all from Next.js (its runtime and the `noModule` polyfill), none from `src/`. The runtime's 14 are `console.error` on error paths (failed navigation, unhandled rejection, a blocked `javascript:` URL); the polyfill's 2 load only in browsers without module support. In normal use the console stays empty.
 - Server logs never contain secrets, connection strings, full request bodies or personal data.
 - React escapes output by default; `dangerouslySetInnerHTML` is forbidden. TMDB text is always rendered as text.
 
