@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# Plan §1.7: format, lint and arch:check on what is being committed, and the generated docs
+# regenerated. Activated by `npm install` (script "prepare"). CI runs everything again on the PR.
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+# Staged files that still exist (added, copied, modified, renamed), NUL-separated for odd names.
+mapfile -d '' staged < <(git diff --cached --name-only --diff-filter=ACMR -z)
+[ "${#staged[@]}" -eq 0 ] && exit 0
+
+lintable=()
+touches_src=false
+for file in "${staged[@]}"; do
+    case "$file" in
+        *.js | *.jsx | *.mjs | *.cjs | *.ts | *.tsx | *.mts | *.cts) lintable+=("$file") ;;
+    esac
+    case "$file" in
+        src/* | .dependency-cruiser.cjs | tsconfig.json) touches_src=true ;;
+    esac
+done
+
+fail() {
+    echo "pre-commit: $1" >&2
+    exit 1
+}
+
+echo "pre-commit: prettier (${#staged[@]} files)"
+npx --no-install prettier --check --ignore-unknown -- "${staged[@]}" ||
+    fail "formatting differs; run npm run format and stage the result"
+
+if [ "${#lintable[@]}" -gt 0 ]; then
+    echo "pre-commit: eslint (${#lintable[@]} files)"
+    npx --no-install eslint --no-warn-ignored -- "${lintable[@]}" ||
+        fail "lint errors"
+fi
+
+if [ "$touches_src" = true ]; then
+    # The whole graph (about a second): a new cycle can close through files not staged.
+    echo "pre-commit: arch:check"
+    npm run --silent arch:check || fail "boundary rules broken (see .dependency-cruiser.cjs)"
+
+    command -v dot > /dev/null || fail "Graphviz is missing (Fedora: sudo dnf install graphviz)"
+    echo "pre-commit: regenerating docs/generated"
+    npm run --silent arch:graph > /dev/null
+    # The diagram follows the working tree; CI compares it with the committed .dot.
+    git add -- docs/generated
+fi

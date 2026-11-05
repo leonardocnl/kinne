@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Plan §1.7: typecheck and unit tests before anything leaves the machine. CI runs the rest.
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+echo "pre-push: typecheck"
+npm run --silent typecheck || {
+    echo "pre-push: type errors" >&2
+    exit 1
+}
+
+echo "pre-push: unit tests"
+npm test --silent || {
+    echo "pre-push: unit tests failed" >&2
+    exit 1
+}

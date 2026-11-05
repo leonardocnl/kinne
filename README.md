@@ -23,6 +23,8 @@ npm run dev
 
 Abra http://localhost:3000.
 
+O `npm install` ativa os git hooks de `.githooks/` (script `prepare`): o `pre-commit` confere formatação, lint e fronteiras (`arch:check`) do que vai no commit e regenera `docs/generated/`; o `pre-push` roda o typecheck e os testes. Precisa do Graphviz (`sudo dnf install graphviz` no Fedora). O CI roda tudo de novo em cada PR.
+
 ## Scripts
 
 | Script                               | O que faz                                                                      |
@@ -39,6 +41,8 @@ Abra http://localhost:3000.
 | `npm run test:visual`                | Compara as capturas de tela no container do Playwright (pede Docker ou Podman) |
 | `npm run test:visual:update`         | Regenera as imagens de base no mesmo container                                 |
 | `npm run test:db`                    | Testes das contas num Postgres real                                            |
+| `npm run arch:check`                 | Regras de fronteira entre camadas e módulos (dependency-cruiser)               |
+| `npm run arch:graph`                 | Regenera o diagrama de dependências em `docs/generated/` (pede Graphviz)       |
 | `npm run bundle:check`               | Orçamento de JS da tela inicial e varredura de segredos (pede `build`)         |
 | `npm run db:generate`                | Gera uma migration com o Drizzle                                               |
 | `npm run db:migrate`                 | Aplica as migrations                                                           |
