@@ -42,6 +42,7 @@ O `npm install` ativa os git hooks de `.githooks/` (script `prepare`): o `pre-co
 | `npm run test:visual:update`         | Regenera as imagens de base no mesmo container                                 |
 | `npm run test:db`                    | Testes das contas num Postgres real                                            |
 | `npm run arch:check`                 | Regras de fronteira entre camadas e módulos (dependency-cruiser)               |
+| `npm run arch:dot`                   | Regenera só o `dependencies.dot`, o arquivo que o CI compara                   |
 | `npm run arch:graph`                 | Regenera o diagrama de dependências em `docs/generated/` (pede Graphviz)       |
 | `npm run bundle:check`               | Orçamento de JS da tela inicial e varredura de segredos (pede `build`)         |
 | `npm run db:generate`                | Gera uma migration com o Drizzle                                               |
