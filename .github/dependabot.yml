@@ -7,6 +7,13 @@ updates:
       default-days: 7
     schedule:
       interval: weekly
+    # Packages that only work at matching versions go up in one PR. Apart, a PR fails CI
+    # (react-dom without react: npm ci ERESOLVE) and the required checks block it for good.
+    groups:
+      react:
+        patterns: ["react", "react-dom", "@types/react", "@types/react-dom"]
+      next:
+        patterns: ["next", "eslint-config-next"]
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
@@ -25,3 +32,7 @@ updates:
       default-days: 7
     schedule:
       interval: weekly
+    groups:
+      # every step of codeql-action must run the same version (init, analyze, ...)
+      codeql-action:
+        patterns: ["github/codeql-action*"]
