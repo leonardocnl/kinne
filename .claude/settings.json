@@ -16,5 +16,31 @@
     "enabledPlugins": {
         "ponytail@ponytail": true,
         "pstack@pstack-claude": true
+    },
+    "hooks": {
+        "PostToolUse": [
+            {
+                "matcher": "Edit|Write|MultiEdit",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/arch-check.sh",
+                        "timeout": 60,
+                        "statusMessage": "arch:check"
+                    }
+                ]
+            }
+        ],
+        "Stop": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/doc-review.sh",
+                        "timeout": 30
+                    }
+                ]
+            }
+        ]
     }
 }
