@@ -27,7 +27,9 @@
         "test:e2e": "vitest run -c vitest.e2e.config.ts",
         "test:visual": "scripts/visual-run.sh",
         "test:visual:update": "scripts/visual-run.sh --update",
-        "test:db": "KINNE_TEST_DB=1 vitest run --no-file-parallelism src/app/_actions/account.db.test.ts src/app/_actions/room-account.db.test.ts src/infrastructure/db/accounts.db.test.ts"
+        "test:db": "KINNE_TEST_DB=1 vitest run --no-file-parallelism src/app/_actions/account.db.test.ts src/app/_actions/room-account.db.test.ts src/infrastructure/db/accounts.db.test.ts",
+        "arch:check": "depcruise src --config .dependency-cruiser.cjs --ignore-known",
+        "arch:graph": "depcruise src --config .dependency-cruiser.cjs --include-only '^src/' --exclude '\\.test\\.ts$|^src/test/' --output-type dot --output-to docs/generated/dependencies.dot && dot -Tsvg docs/generated/dependencies.dot -o docs/generated/dependencies.svg"
     },
     "dependencies": {
         "@neondatabase/serverless": "^1.2.0",
@@ -45,6 +47,7 @@
         "@types/node": "^24.19.2",
         "@types/react": "^19",
         "@types/react-dom": "^19",
+        "dependency-cruiser": "18.7.0",
         "drizzle-kit": "^0.31.11",
         "eslint": "^9",
         "eslint-config-next": "16.4.2",
