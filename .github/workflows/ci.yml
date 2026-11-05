@@ -59,7 +59,8 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16
+        # tag and digest, the same pin as scripts/visual-run.sh
+        image: postgres:16@sha256:01e529f5119d4a943b55567d8aaa14a71a19c07054873617b406cd5f04b91380
         env:
           POSTGRES_PASSWORD: postgres
         ports:

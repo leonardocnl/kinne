@@ -4,8 +4,10 @@
 # Usage: scripts/visual-run.sh [--update]
 set -euo pipefail
 
-IMAGE=mcr.microsoft.com/playwright:v1.63.0
-POSTGRES=docker.io/library/postgres:16
+# Pinned by tag and digest (multi-arch index); the same pins are in .github/workflows/ci.yml.
+# To refresh: skopeo inspect --format '{{.Digest}}' docker://<image>:<tag>
+IMAGE=mcr.microsoft.com/playwright:v1.63.0@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
+POSTGRES=docker.io/library/postgres:16@sha256:01e529f5119d4a943b55567d8aaa14a71a19c07054873617b406cd5f04b91380
 DB="kinne-visual-db-$$"
 
 if docker info > /dev/null 2>&1; then
