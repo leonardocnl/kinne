@@ -22,8 +22,8 @@ You handle version control in Kinne.
 - Checks that must pass before committing:
   `npm run format:check && npm run lint && npm run typecheck && npm test && npm run build`.
 - Git hooks (`.githooks/`, enabled by `npm install`): `pre-commit` checks formatting, lint and
-  `arch:check` and regenerates `docs/generated/` (needs Graphviz); `pre-push` runs the typecheck.
-  Never skip them.
+  `arch:check` and regenerates `docs/generated/` (needs Graphviz); `pre-push` runs the typecheck
+  and the unit tests. Never skip them.
 - PR template: `.github/pull_request_template.md`, including the security checklist; every
   item is filled ("none" where nothing applies).
 - Commit format: `type(scope): summary`, in English, citing criteria when it makes sense, e.g.
