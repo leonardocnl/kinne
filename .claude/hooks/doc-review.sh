@@ -27,12 +27,13 @@ done
 stamp="$(git rev-parse --git-dir)/claude-doc-review"
 digest=$({
     git diff "$base" -- src
-    git ls-files --others --exclude-standard -z -- src | xargs -0 -r cat
+    # Names and contents: a new empty file, or a file renamed, is a new change too.
+    git ls-files --others --exclude-standard -z -- src | xargs -0 -r sha256sum --
 } | sha256sum | cut -d' ' -f1)
 [ -f "$stamp" ] && [ "$(cat "$stamp")" = "$digest" ] && exit 0
 echo "$digest" > "$stamp"
 
-is_changed() { printf '%s\n' "${changed[@]}" | grep -qx -- "$1"; }
+is_changed() { printf '%s\n' "${changed[@]}" | grep -qxF -- "$1"; }
 
 # The folder that owns each file: a module, a shared area, a legacy layer or a route folder.
 # (`t` ends the line at the first rule that matched, so the rules do not stack.)
