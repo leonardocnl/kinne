@@ -74,6 +74,7 @@ O rodapé de toda página leva a elas e ao contato. O QR code Pix é um arquivo 
 | `docs/requisitos/`           | Cópia dos requisitos e histórias de usuário                |
 | `docs/security.md`           | Regras de segurança e riscos aceitos                       |
 | `docs/threats/`              | Análises de ameaças por funcionalidade                     |
+| `docs/guides/`               | Guias passo a passo (robô de revisão)                      |
 | `docs/plano-fundacao.md`     | Plano de fundação pós-MVP, com as fases                    |
 | `docs/baseline.md`           | Métricas de referência: testes, build, bundle e Lighthouse |
 | `docs/refinements.md`        | Refinos visuais pendentes                                  |
