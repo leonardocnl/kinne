@@ -6,7 +6,7 @@
 
 Both rulesets have the same rules:
 
-- PR required (0 approvals for now; the review bot changes this in F1 item 9), no force push, no deletion, no bypass actors.
+- PR required (0 approvals for now; the review bot changes this in F1 item 9; the steps are in [the review bot guide](../guides/review-bot.md)), no force push, no deletion, no bypass actors.
 - Required checks, with "branches must be up to date before merging" (`strict`):
   - GitHub Actions (`integration_id` 15368): `format`, `lint`, `typecheck`, `test`, `build`, `bundle`, `arch`, `generated-docs`, `security-headers`, `visual`, `accounts-db` (`ci.yml`), and `gitleaks`, `semgrep`, `npm-audit`, `codeql` (`security.yml`).
   - Code scanning (`integration_id` 57789): `CodeQL`.
