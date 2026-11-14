@@ -224,8 +224,9 @@ the App lacks (see the note in section 2).
   can do is approve a pull request that the path rules already call low risk (docs and pure code), and
   a check, the approval and your review of the merge summary remain. The residual risk that remains:
   the model can read the workspace, and the verdict text is posted publicly, so a model made to leak a
-  secret would leak it there. The workflow refuses a verdict that contains the Claude token, and
-  strips symlinks and agent configuration from `pr/`, but it cannot catch an encoded leak.
+  secret would leak it there. The workflow refuses a verdict that contains the Claude token or the
+  App token, and never puts the pull request's files on disk (the reviewer gets a diff), but it
+  cannot catch an encoded leak.
 - **Forks.** A fork pull request is classified (so you see its label) and never reviewed, never
   approved and never merged: the `review` job requires the head repository to be this repository, and
   the App token is created only in that job.
