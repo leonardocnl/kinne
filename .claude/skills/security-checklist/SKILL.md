@@ -1,9 +1,9 @@
 ---
-name: security-review
+name: security-checklist
 description: Security checklist for reviewing a diff, based on the OWASP Top 10 and common web app flaws. Use when reviewing code before a commit or PR.
 ---
 
-# Security review
+# Security checklist
 
 Check the diff against each item. Report only what you can show with a concrete scenario.
 

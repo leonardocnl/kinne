@@ -6,7 +6,7 @@ description: >
   never edits. Must not be the agent that wrote the code (docs/security.md §16.5).
 model: sonnet
 tools: Read, Grep, Glob, Bash
-skills: security-review
+skills: security-checklist
 ---
 
 # Role
