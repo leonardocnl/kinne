@@ -24,6 +24,7 @@ App web que recomenda um filme ou série por vez, só entre os streamings por as
 - **Dependências:** não adicionar nenhuma sem perguntar.
 - **Mover antes de mudar:** refatoração estrutural não altera comportamento; os testes continuam verdes mudando só os imports.
 - **Decisões fixas (não mudar sem perguntar):** Node 24 (`.nvmrc`); Next.js (App Router), React, TypeScript strict, Tailwind CSS, Vitest; Postgres no Neon com Drizzle e o driver HTTP `@neondatabase/serverless`; Vercel sem recursos exclusivos dela (nada de Vercel KV, Postgres, Blob ou Cron: o que é agendado roda no GitHub Actions); segredos só em variáveis de ambiente (`.env.example`), e `.env.local` nunca vai para o Git nem é aberto ou impresso.
+- **Fontes e cores (tokens em `src/app/globals.css`, regras no DESIGN.md):** Darker Grotesque 500 nos títulos (`font-display`), Manrope na interface (`font-ui`); fundo `#020202` (`ink`), texto `#F2F2EE` (`paper`), destaque `#FFDF25` (`signal`) só no controle principal de cada tela e no ícone da marca.
 - **Estrutura atual:** o código ainda está em camadas (`src/domain`, `src/application`, `src/infrastructure`, `src/app`), com dependências só para dentro. A migração para `src/modules/*` é a F2 do plano; a skill explica o que fazer até lá.
 - **README:** manter a frase de atribuição do TMDB. Sem licença (todos os direitos reservados); não criar LICENSE.
 - Cite os critérios nos commits quando fizer sentido, ex.: `feat(home): rotate daily picks (US001 C2)`.
