@@ -3,8 +3,8 @@
 import { useState } from "react";
 import type { RoomView } from "@/application/group-room";
 import { nextRound } from "../../_actions/room";
-import { Button, ButtonLink } from "../ui/Button";
-import { TextLink } from "../ui/TextLink";
+import { Button, ButtonLink } from "@/shared/ui/Button";
+import { TextLink } from "@/shared/ui/TextLink";
 import { titleHref } from "../title/origin";
 import { ROOM_ERROR } from "./messages";
 

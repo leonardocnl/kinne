@@ -3,49 +3,8 @@ import { MAX_ROUND } from "@/domain/rounds";
 import { isStoredOrigin, type Origin, type StoredOrigin } from "@/domain/origin";
 import { isStreaming, type Streaming } from "@/domain/streaming";
 import { normalizeTaste, recordSignal, type RecordedSignal } from "@/domain/taste-signals";
-import { isBrowserId } from "@/domain/browser-id";
-
-// Memória do navegador (RNG005). Navegação privada, cota cheia ou armazenamento bloqueado fazem
-// o acesso falhar ou lançar exceção; aí a leitura vale vazio e a escrita é perdida, sem quebrar a
-// tela. O conteúdo também pode ter sido mexido à mão: só passa o que tem o formato esperado.
-type Area = "localStorage" | "sessionStorage";
-
-function read(area: Area, key: string): unknown {
-    try {
-        return JSON.parse(window[area].getItem(key) ?? "null");
-    } catch {
-        return null;
-    }
-}
-
-function remove(area: Area, key: string) {
-    try {
-        window[area].removeItem(key);
-    } catch {
-        // sem acesso ao armazenamento, não há o que apagar
-    }
-}
-
-function write(area: Area, key: string, value: unknown) {
-    try {
-        window[area].setItem(key, JSON.stringify(value));
-    } catch {
-        // sem onde guardar, a marcação vale só até a próxima tela
-    }
-}
-
-const ids = (value: unknown): number[] =>
-    Array.isArray(value) ? value.filter((v) => Number.isSafeInteger(v) && v > 0) : [];
-
-function idList(area: Area, key: string) {
-    return {
-        read: () => ids(read(area, key)),
-        add(id: number) {
-            const current = ids(read(area, key));
-            if (!current.includes(id)) write(area, key, [...current, id]);
-        },
-    };
-}
+import { isBrowserId } from "@/shared/lib/browser-id";
+import { idList, ids, read, remove, write } from "@/shared/lib/browser-storage";
 
 /** Títulos marcados como "Já vi": ficam entre visitas (RNG004). */
 export const watchedTitles = idList("localStorage", "kinne:watched");

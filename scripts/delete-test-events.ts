@@ -8,7 +8,7 @@ import {
 } from "@/application/delete-test-events";
 import { createDb } from "@/infrastructure/db/client";
 import { DrizzleUsageEventsRepository } from "@/infrastructure/db/usage-events-repository";
-import { dbEnvErrors } from "@/infrastructure/sync-env";
+import { dbEnvErrors } from "@/shared/config/sync-env";
 import { publicErrorMessage } from "@/infrastructure/tmdb/client";
 
 async function main() {

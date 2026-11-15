@@ -1,9 +1,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { CONTACT_EMAIL } from "@/domain/contact";
+import { CONTACT_EMAIL } from "@/shared/lib/contact";
 import { ToastHost } from "./ToastHost";
-import { AsciiHorizon } from "./ui/AsciiHorizon";
-import { Navbar, type NavTab } from "./ui/Navbar";
+import { AsciiHorizon } from "@/shared/ui/AsciiHorizon";
+import { Navbar, type NavTab } from "./Navbar";
 
 const COLUMNS = [
     {

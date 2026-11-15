@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { billingRow, screenMain } from "./layout";
-import { Frame } from "./ui/Frame";
+import { Frame } from "./Frame";
 
 type StateScreenProps = {
     heading: string;

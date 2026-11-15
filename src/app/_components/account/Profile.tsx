@@ -15,11 +15,11 @@ import {
     setWatched,
     signOutAll,
 } from "../../_actions/account";
-import { showToast } from "../toast";
-import { Button } from "../ui/Button";
-import { Chip } from "../ui/Chip";
-import { RemovableChip } from "../ui/RemovableChip";
-import { TextLink } from "../ui/TextLink";
+import { showToast } from "@/shared/ui/toast";
+import { Button } from "@/shared/ui/Button";
+import { Chip } from "@/shared/ui/Chip";
+import { RemovableChip } from "@/shared/ui/RemovableChip";
+import { TextLink } from "@/shared/ui/TextLink";
 import { GENERIC_ERROR, TOO_MANY } from "./messages";
 import { afterAccountDeleted, leaveAccount } from "./marks";
 import { loadAccountStatus, setAccountStatus, useAccountStatus } from "./store";

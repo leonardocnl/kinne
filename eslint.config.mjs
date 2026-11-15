@@ -85,7 +85,7 @@ const eslintConfig = defineConfig([
     },
     // Command-line scripts, tests and the browser test harness print on purpose.
     {
-        files: ["scripts/**", "e2e/**", "**/*.test.{ts,tsx}", "src/test/**"],
+        files: ["scripts/**", "e2e/**", "**/*.test.{ts,tsx}", "src/shared/db/local-*.ts"],
         rules: { "no-console": "off" },
     },
     // Override default ignores of eslint-config-next.

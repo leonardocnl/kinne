@@ -7,7 +7,7 @@ import {
     type PastPick,
     type PickCandidate,
 } from "@/domain/daily-picks";
-import { addDays, type Day } from "@/domain/day";
+import { addDays, type Day } from "@/shared/lib/day";
 import type { KinneGenre } from "@/domain/genre";
 
 // Uma indicação do dia, com o que a tela inicial mostra.

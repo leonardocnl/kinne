@@ -12,8 +12,8 @@ export function Components() {
                 aside={
                     <>
                         <p>
-                            Os componentes ficam em <code>src/app/_components/ui/</code>. Componente
-                            novo só entra se for adicionado lá e nesta página.
+                            Os componentes ficam em <code>src/shared/ui/</code>. Componente novo só
+                            entra se for adicionado lá e nesta página.
                         </p>
                         <p>
                             Navegue com Tab para ver o foco de verdade; a coluna “foco” mostra o

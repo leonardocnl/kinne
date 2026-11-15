@@ -1,13 +1,13 @@
 "use server";
 
 import "server-only";
-import { LIMITED, type Limited } from "@/domain/rate-limit";
+import { LIMITED, type Limited } from "@/shared/lib/rate-limit";
 import { drawSurprise } from "@/domain/surprise";
 import { spreadTaste } from "@/domain/taste-graph";
 import { hasPositiveSignal, toSignals } from "@/domain/taste-signals";
 import { drawAccount } from "../_data/account";
 import { candidates } from "../_data/candidates";
-import { admitDraw } from "../_data/draw-limit";
+import { admitDraw } from "@/shared/lib/draw-limit";
 import { parseSurpriseRequest } from "../_data/surprise";
 import { neighborGraphOrNull } from "../_data/taste-graph";
 

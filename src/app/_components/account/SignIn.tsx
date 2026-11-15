@@ -3,8 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
 import { requestCode, verifyCode } from "../../_actions/account";
-import { Button } from "../ui/Button";
-import { TextLink } from "../ui/TextLink";
+import { Button } from "@/shared/ui/Button";
+import { TextLink } from "@/shared/ui/TextLink";
 import { browserData } from "./browserData";
 import { GENERIC_ERROR, TOO_MANY } from "./messages";
 import { takeReturn } from "./returnTo";

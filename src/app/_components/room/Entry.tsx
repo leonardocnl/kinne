@@ -1,8 +1,8 @@
 "use client";
 
 import { useId, useState } from "react";
-import { screenMain } from "../layout";
-import { Button } from "../ui/Button";
+import { screenMain } from "@/shared/ui/layout";
+import { Button } from "@/shared/ui/Button";
 import { NOT_FOUND } from "./messages";
 
 type EntryProps = {

@@ -17,10 +17,10 @@ import {
 } from "@/infrastructure/browser-storage";
 import { saveStreamings } from "../../_actions/account";
 import { loadAccountStatus, setAccountStatus } from "../account/store";
-import { loadError } from "../StateScreen";
+import { loadError } from "@/shared/ui/StateScreen";
 import { useStreamings } from "../StreamingProfile";
-import { showToast } from "../toast";
-import { TextLink } from "../ui/TextLink";
+import { showToast } from "@/shared/ui/toast";
+import { TextLink } from "@/shared/ui/TextLink";
 
 /**
  * Tira o serviço da lista onde ela mora: na conta, com a conta aberta; senão, no navegador. Espera

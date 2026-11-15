@@ -1,7 +1,7 @@
 import { useId } from "react";
 import type { HomePick } from "../../_data/home";
-import { TmdbImage } from "../ui/TmdbImage";
-import { THUMBNAIL_SIZES, thumbnailSources } from "../ui/tmdb-sources";
+import { TmdbImage } from "@/shared/ui/TmdbImage";
+import { THUMBNAIL_SIZES, thumbnailSources } from "@/shared/ui/tmdb-sources";
 
 type TodayReelProps = {
     picks: HomePick[];

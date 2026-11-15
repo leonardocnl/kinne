@@ -13,7 +13,7 @@ import {
     ROOM_COOKIE,
 } from "@/infrastructure/group-room-session";
 import { randomBytes } from "node:crypto";
-import { searchConfig } from "@/infrastructure/search-config";
+import { searchConfig } from "@/shared/config/search-config";
 import { candidates } from "../_data/candidates";
 import {
     accountStreamings,

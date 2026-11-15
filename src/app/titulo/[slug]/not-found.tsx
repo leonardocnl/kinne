@@ -1,4 +1,4 @@
-import { NotFoundScreen } from "../../_components/NotFoundScreen";
+import { NotFoundScreen } from "@/shared/ui/NotFoundScreen";
 
 /** Título que não existe ou saiu do catálogo; a barra do topo e o rodapé vêm do layout. */
 export default function TitleNotFound() {

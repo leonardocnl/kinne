@@ -1,9 +1,9 @@
 "use client";
 
-import { markSignal } from "./account/marks";
-import { showAnswered, useToast } from "./toast";
-import { Button } from "./ui/Button";
-import { Toast } from "./ui/Toast";
+import { markSignal } from "@/app/_components/account/marks";
+import { showAnswered, useToast } from "@/shared/ui/toast";
+import { Button } from "@/shared/ui/Button";
+import { Toast } from "@/shared/ui/Toast";
 
 /**
  * O aviso da página: embaixo, ao centro; no celular, logo acima da barra presa à base. Depois de

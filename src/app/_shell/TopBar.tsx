@@ -1,7 +1,7 @@
-import { AccountButton } from "./account/AccountButton";
-import { ButtonLink } from "./ui/Button";
-import { cx } from "./ui/cx";
-import { BackIcon } from "./ui/icons";
+import { AccountButton } from "@/app/_components/account/AccountButton";
+import { ButtonLink } from "@/shared/ui/Button";
+import { cx } from "@/shared/ui/cx";
+import { BackIcon } from "@/shared/ui/icons";
 
 type TopBarProps = {
     /** "Voltar" redondo, à esquerda; no celular o voltar fica sobre a imagem */

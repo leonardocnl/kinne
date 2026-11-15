@@ -17,7 +17,7 @@ import {
 import { isSlug } from "@/domain/catalog";
 import { isStreaming, STREAMING_SERVICES, type Streaming } from "@/domain/streaming";
 import { normalizeTaste, SURPRISE_MAX_EXCLUDED, type TasteLists } from "@/domain/taste-signals";
-import { clientKey, getClientIp } from "@/infrastructure/client-ip";
+import { clientKey, getClientIp } from "@/shared/lib/client-ip";
 import {
     codeHash,
     emailHash,
@@ -31,7 +31,7 @@ import { selectMailer } from "@/infrastructure/auth/mailer";
 import { createDb } from "@/infrastructure/db/client";
 import { DrizzleAccountsRepository } from "@/infrastructure/db/accounts-repository";
 import { takeTokens } from "@/infrastructure/db/rate-limiter";
-import { MemoryLimiter } from "@/infrastructure/memory-limiter";
+import { MemoryLimiter } from "@/shared/lib/memory-limiter";
 import { idListSchema, tasteSchema } from "./taste";
 
 export const accountRepository = () => new DrizzleAccountsRepository(createDb());

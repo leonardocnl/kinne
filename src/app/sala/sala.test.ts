@@ -48,6 +48,6 @@ describe("endereço da sala", () => {
     });
 
     it("o QR code usa só tokens do design: sem cor nem medida fora do globals.css", () => {
-        expect(read("src/app/_components/ui/QrCode.tsx")).not.toMatch(/#[0-9a-fA-F]{3,6}\b|\[\d/);
+        expect(read("src/shared/ui/QrCode.tsx")).not.toMatch(/#[0-9a-fA-F]{3,6}\b|\[\d/);
     });
 });

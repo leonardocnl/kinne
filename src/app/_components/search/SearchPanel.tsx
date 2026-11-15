@@ -5,10 +5,10 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { parseSearchTerm, type SearchOutcome, type SearchResult } from "@/domain/search";
 import { searchTitles } from "../../_actions/search";
 import { goToTitle } from "../title/origin";
-import { cx } from "../ui/cx";
-import { CloseIcon } from "../ui/icons";
-import { TmdbImage } from "../ui/TmdbImage";
-import { posterSources } from "../ui/tmdb-sources";
+import { cx } from "@/shared/ui/cx";
+import { CloseIcon } from "@/shared/ui/icons";
+import { TmdbImage } from "@/shared/ui/TmdbImage";
+import { posterSources } from "@/shared/ui/tmdb-sources";
 
 const DEBOUNCE_MS = 300; // B3
 

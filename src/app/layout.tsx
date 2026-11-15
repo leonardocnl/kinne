@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Darker_Grotesque, Manrope } from "next/font/google";
-import { InputModality } from "./_components/InputModality";
-import { RouteWipe } from "./_components/ui/RouteWipe";
-import { TMDB_IMAGE_ORIGIN } from "./_components/ui/tmdb-sources";
+import { InputModality } from "@/shared/ui/InputModality";
+import { RouteWipe } from "@/shared/ui/RouteWipe";
+import { TMDB_IMAGE_ORIGIN } from "@/shared/ui/tmdb-sources";
 import "./globals.css";
 
 const darkerGrotesque = Darker_Grotesque({

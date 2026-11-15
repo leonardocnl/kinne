@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { type CSSProperties, ViewTransition } from "react";
-import { SearchLauncher } from "../search/SearchLauncher";
-import { cx } from "./cx";
-import { glass, navIdle, navItem, navPart, smoke } from "./navItem";
+import { SearchLauncher } from "@/app/_components/search/SearchLauncher";
+import { cx } from "@/shared/ui/cx";
+import { glass, navIdle, navItem, navPart, smoke } from "@/shared/ui/navItem";
 
 const TABS = [
     { id: "inicio", href: "/", label: "Início" },

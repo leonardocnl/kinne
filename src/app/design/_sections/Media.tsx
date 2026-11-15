@@ -1,12 +1,12 @@
-import { Button } from "../../_components/ui/Button";
-import { Frame } from "../../_components/ui/Frame";
-import { Score } from "../../_components/ui/Score";
-import { QrCode } from "../../_components/ui/QrCode";
-import { Skeleton } from "../../_components/ui/Skeleton";
-import { Toast } from "../../_components/ui/Toast";
-import { AsciiHorizon } from "../../_components/ui/AsciiHorizon";
-import { AsciiType } from "../../_components/ui/AsciiType";
-import { BackIcon, PlayIcon } from "../../_components/ui/icons";
+import { Button } from "@/shared/ui/Button";
+import { Frame } from "@/shared/ui/Frame";
+import { Score } from "@/shared/ui/Score";
+import { QrCode } from "@/shared/ui/QrCode";
+import { Skeleton } from "@/shared/ui/Skeleton";
+import { Toast } from "@/shared/ui/Toast";
+import { AsciiHorizon } from "@/shared/ui/AsciiHorizon";
+import { AsciiType } from "@/shared/ui/AsciiType";
+import { BackIcon, PlayIcon } from "@/shared/ui/icons";
 import { TokenValue } from "./live";
 import { DoDont, Row, Spec } from "./Spec";
 

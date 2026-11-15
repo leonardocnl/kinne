@@ -1,23 +1,16 @@
-import { Button, ButtonLink } from "../../_components/ui/Button";
-import { Dock } from "../../_components/ui/Dock";
-import { TitleSpec } from "../../_components/ui/TitleSpec";
-import { CastDialog } from "../../_components/ui/CastDialog";
-import { Fact, Facts } from "../../_components/ui/Facts";
+import { Button, ButtonLink } from "@/shared/ui/Button";
+import { Dock } from "@/shared/ui/Dock";
+import { TitleSpec } from "@/shared/ui/TitleSpec";
+import { CastDialog } from "@/shared/ui/CastDialog";
+import { Fact, Facts } from "@/shared/ui/Facts";
 import { availableStreamings, streamingList } from "@/domain/streaming";
-import { Frame } from "../../_components/ui/Frame";
-import {
-    BackIcon,
-    CheckIcon,
-    CloseIcon,
-    DiceIcon,
-    PauseIcon,
-    SearchIcon,
-} from "../../_components/ui/icons";
-import { Chip } from "../../_components/ui/Chip";
-import { GlassPanel } from "../../_components/ui/GlassPanel";
-import { Navbar } from "../../_components/ui/Navbar";
-import { Slider } from "../../_components/ui/Slider";
-import { TextLink } from "../../_components/ui/TextLink";
+import { Frame } from "@/shared/ui/Frame";
+import { BackIcon, CheckIcon, CloseIcon, DiceIcon, PauseIcon, SearchIcon } from "@/shared/ui/icons";
+import { Chip } from "@/shared/ui/Chip";
+import { GlassPanel } from "@/shared/ui/GlassPanel";
+import { Navbar } from "@/app/_shell/Navbar";
+import { Slider } from "@/shared/ui/Slider";
+import { TextLink } from "@/shared/ui/TextLink";
 import { FiltersDemo, RemovableChipDemo, TokenValue } from "./live";
 import { DoDont, focusRing, Row, Spec, States } from "./Spec";
 

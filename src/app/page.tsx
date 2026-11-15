@@ -1,13 +1,13 @@
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { brasiliaDay, longDate } from "@/domain/day";
+import { brasiliaDay, longDate } from "@/shared/lib/day";
 import { AppOpened } from "./_components/AppOpened";
 import { DailyPicks } from "./_components/home/DailyPicks";
 import { HomeErrorBoundary } from "./_components/home/HomeError";
-import { HomeSkeleton } from "./_components/home/HomeSkeleton";
+import { HomeSkeleton } from "./_shell/HomeSkeleton";
 import { PickSpecs } from "./_components/home/PickSpecs";
-import { Shell } from "./_components/Shell";
-import { TopBar } from "./_components/TopBar";
+import { Shell } from "./_shell/Shell";
+import { TopBar } from "./_shell/TopBar";
 import { homePicks } from "./_data/home";
 
 export default function Home() {

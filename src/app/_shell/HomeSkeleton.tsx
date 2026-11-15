@@ -1,7 +1,7 @@
-import { SpecsSkeleton } from "../title/SpecsSkeleton";
-import { screenMain } from "../layout";
-import { Skeleton } from "../ui/Skeleton";
-import { TopBar } from "../TopBar";
+import { SpecsSkeleton } from "@/app/_components/title/SpecsSkeleton";
+import { screenMain } from "@/shared/ui/layout";
+import { Skeleton } from "@/shared/ui/Skeleton";
+import { TopBar } from "./TopBar";
 
 /**
  * Tela inicial carregando (CM001), na disposição dela: quadro encostado no topo; pôster à esquerda

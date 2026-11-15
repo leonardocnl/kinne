@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { CONTACT_EMAIL } from "@/domain/contact";
-import { PIX } from "@/domain/pix";
-import { PageFrame } from "../_components/account/PageFrame";
+import { CONTACT_EMAIL } from "@/shared/lib/contact";
+import { PIX } from "@/shared/lib/pix";
+import { PageFrame } from "@/app/_shell/PageFrame";
 import { PixCopy } from "./PixCopy";
 
 export const metadata: Metadata = {

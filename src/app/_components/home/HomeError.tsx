@@ -1,9 +1,9 @@
 "use client";
 
 import { catchError, type ErrorInfo } from "next/error";
-import { loadError, StateScreen } from "../StateScreen";
+import { loadError, StateScreen } from "@/shared/ui/StateScreen";
 import type { ReactNode } from "react";
-import { Button } from "../ui/Button";
+import { Button } from "@/shared/ui/Button";
 
 /**
  * Tela inicial sem dados (CM002). "Tentar de novo" busca as indicações outra vez. A barra do topo

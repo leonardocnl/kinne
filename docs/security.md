@@ -72,9 +72,9 @@ Security by design: every feature is specified, built and reviewed against these
 ## 7. Abuse and rate limiting
 
 - Rate limits per client on every write and every expensive read: events, draws, filter list, surprise.
-- Draws and events (`src/app/_data/draw-limit.ts`): an in-memory per-instance limit per visitor (salted, rotating client key; IP bucket without the secret), like the catalog search. Surprise and filtered draws: burst of 30, one token every 2 s; refused before any query with `{ kind: "limited" }`, and the UI shows "Muitos pedidos seguidos. Espere alguns segundos e tente de novo." and stays where it is. Usage events: burst of 120, two per second; over the limit the event is dropped silently. The filter counter list (`filterCandidates`): burst of 20, one token every 20 s (`FILTER_LIST_BURST`, `FILTER_LIST_SECONDS_PER_TOKEN`), with room for a group behind one IP (mobile CGNAT, university Wi-Fi); refused before reading the list, and the panel shows the same message with "Tentar de novo".
+- Draws and events (`src/shared/lib/draw-limit.ts`): an in-memory per-instance limit per visitor (salted, rotating client key; IP bucket without the secret), like the catalog search. Surprise and filtered draws: burst of 30, one token every 2 s; refused before any query with `{ kind: "limited" }`, and the UI shows "Muitos pedidos seguidos. Espere alguns segundos e tente de novo." and stays where it is. Usage events: burst of 120, two per second; over the limit the event is dropped silently. The filter counter list (`filterCandidates`): burst of 20, one token every 20 s (`FILTER_LIST_BURST`, `FILTER_LIST_SECONDS_PER_TOKEN`), with room for a group behind one IP (mobile CGNAT, university Wi-Fi); refused before reading the list, and the panel shows the same message with "Tentar de novo".
 - Implementation stays portable (RNF11): a token bucket in Postgres (`kinne_take_tokens`, migration 0006) on expensive paths (TMDB search fallback, global TMDB budget, `/api/revalidate`), an in-memory per-instance limit plus caching on cheap paths (catalog search). No vendor-only store.
-- The client IP comes only from `getClientIp()` (`src/infrastructure/client-ip.ts`), the one place that knows the host: on Vercel the platform-set `x-real-ip`, never the raw `X-Forwarded-For`. IPv6 is bucketed by /64.
+- The client IP comes only from `getClientIp()` (`src/shared/lib/client-ip.ts`), the one place that knows the host: on Vercel the platform-set `x-real-ip`, never the raw `X-Forwarded-For`. IPv6 is bucketed by /64.
 - If the Postgres limiter cannot answer, the protected action is refused (fail closed).
 - The client IP is used only in memory or as a salted, rotating hash for rate limiting (HMAC with a salt derived from `RATE_LIMIT_SECRET` and the UTC date, never stored); it is never stored with events.
 - Events are idempotent where possible and deduplicated server-side within a short window.
@@ -94,13 +94,13 @@ Security by design: every feature is specified, built and reviewed against these
 
 ## 10. HTTP security headers
 
-Applied to every response (pages, the API route, the 404 page and `/_next/static/*`) by `headers()` in `next.config.ts`. The values live in one module, `src/infrastructure/http/security-headers.ts`, which the config and the tests share.
+Applied to every response (pages, the API route, the 404 page and `/_next/static/*`) by `headers()` in `next.config.ts`. The values live in one module, `src/shared/http/security-headers.ts`, which the config and the tests share.
 
 - `Content-Security-Policy`: `default-src 'none'`; `script-src 'self' 'unsafe-inline'` (never `'unsafe-eval'` in production); `style-src 'self' 'unsafe-inline'`; `img-src 'self' image.tmdb.org`; `font-src 'self'` (`next/font` serves the fonts from our own domain); `connect-src 'self'`; `manifest-src 'self'`; `frame-src 'none'`; `object-src 'none'`; `base-uri 'none'`; `form-action 'self'`; `frame-ancestors 'none'` (no embedding of the sign-in and delete-account screens); `upgrade-insecure-requests`. No `data:` or `blob:` source: the film grain is `public/grain.svg`, not a data URI. Trailers open in a new tab, so there is no `frame-src`.
 - `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`. `preload` only has an effect after the domain is submitted to hstspreload.org, and removal from the list is slow: the owner submits it on purpose, once every subdomain serves HTTPS.
 - `X-Content-Type-Options: nosniff`.
 - `Referrer-Policy: strict-origin-when-cross-origin`; `no-referrer` under `/sala` (group-room C1).
-- `Permissions-Policy`: camera, microphone, geolocation, payment, USB, serial, MIDI and display-capture off. Camera stays off because the room QR code is only displayed (`src/domain/qr.ts`); no code reads the camera. If a scanner is ever built, only `camera=(self)` changes, with its own threat analysis.
+- `Permissions-Policy`: camera, microphone, geolocation, payment, USB, serial, MIDI and display-capture off. Camera stays off because the room QR code is only displayed (`src/shared/lib/qr.ts`); no code reads the camera. If a scanner is ever built, only `camera=(self)` changes, with its own threat analysis.
 - `Cross-Origin-Opener-Policy: same-origin`.
 - No `X-Powered-By` (`poweredByHeader: false`).
 
@@ -108,7 +108,7 @@ Applied to every response (pages, the API route, the 404 page and `/_next/static
 
 Development (`next dev`) adds `'unsafe-eval'` (React debugging) and `ws:`/`wss:` (hot reload) and drops `upgrade-insecure-requests`; only the production policy is tested.
 
-**Tests.** `src/infrastructure/http/security-headers.test.ts` (in `npm test`) checks the policy text. The two browser-level suites run on the **built** app (`next start`) and are not part of `npm test`; CI runs them in the `security-headers` job:
+**Tests.** `src/shared/http/security-headers.test.ts` (in `npm test`) checks the policy text. The two browser-level suites run on the **built** app (`next start`) and are not part of `npm test`; CI runs them in the `security-headers` job:
 
 ```sh
 npm run build

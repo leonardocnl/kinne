@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { AppOpened } from "../_components/AppOpened";
-import { Shell } from "../_components/Shell";
-import { TopBar } from "../_components/TopBar";
+import { Shell } from "@/app/_shell/Shell";
+import { TopBar } from "@/app/_shell/TopBar";
 
 // A sala é privada e passageira: fora dos buscadores, e o endereço nunca vai como referência para
 // outro site (group-room C1). O Referrer-Policy da resposta está em next.config.ts.

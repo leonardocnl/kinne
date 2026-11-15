@@ -46,7 +46,7 @@ describe("CastDialog (US004 C12)", () => {
     it("só usa cores dos tokens, sem valor arbitrário nem estilo inline", () => {
         const html = render([{ name: "A", character: "X" }]);
         expect(html).not.toMatch(/-\[|-\(--|style=/);
-        const css = readFileSync(join(import.meta.dirname, "../../globals.css"), "utf8");
+        const css = readFileSync(join(import.meta.dirname, "../../app/globals.css"), "utf8");
         const tokens = new Set([
             ...[...css.matchAll(/--(?:color|text)-([a-z0-9-]+):/g)].map((m) => m[1]),
             ...["transparent", "balance", "t", "linear-to-b"],

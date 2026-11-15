@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { LIMITED_MESSAGE } from "@/domain/rate-limit";
-import { loadError } from "../StateScreen";
+import { LIMITED_MESSAGE } from "@/shared/lib/rate-limit";
+import { loadError } from "@/shared/ui/StateScreen";
 import { filtersHint } from "./filtersHint";
 
 const base = { failed: false, limited: false, drawFailed: false, count: 5, feeling: null };

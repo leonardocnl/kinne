@@ -11,7 +11,7 @@ import {
     localDb,
     runAsAsync,
     runScript,
-} from "@/test/local-pg";
+} from "@/shared/db/local-pg";
 import { DrizzleCatalogRepository } from "./catalog-repository";
 import { titleReferenced } from "./catalog-repository";
 import { catalogTitles } from "./schema";

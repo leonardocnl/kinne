@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { CONTACT_EMAIL } from "@/domain/contact";
-import { PageFrame } from "../_components/account/PageFrame";
+import { CONTACT_EMAIL } from "@/shared/lib/contact";
+import { PageFrame } from "@/app/_shell/PageFrame";
 
 export const metadata: Metadata = {
     title: "Perguntas frequentes · Kinne",

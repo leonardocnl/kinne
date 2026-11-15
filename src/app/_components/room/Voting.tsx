@@ -4,12 +4,12 @@ import { useState } from "react";
 import type { RoomView } from "@/application/group-room";
 import { STREAMING_SERVICES, streamingList } from "@/domain/streaming";
 import { closeVoting, vote } from "../../_actions/room";
-import { showToast } from "../toast";
-import { Button } from "../ui/Button";
-import { Chip } from "../ui/Chip";
-import { TmdbImage } from "../ui/TmdbImage";
-import { posterSources } from "../ui/tmdb-sources";
-import { TextLink } from "../ui/TextLink";
+import { showToast } from "@/shared/ui/toast";
+import { Button } from "@/shared/ui/Button";
+import { Chip } from "@/shared/ui/Chip";
+import { TmdbImage } from "@/shared/ui/TmdbImage";
+import { posterSources } from "@/shared/ui/tmdb-sources";
+import { TextLink } from "@/shared/ui/TextLink";
 import { ROOM_ERROR } from "./messages";
 import { People } from "./People";
 

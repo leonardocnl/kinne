@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { TextLink } from "../_components/ui/TextLink";
+import { TextLink } from "@/shared/ui/TextLink";
 import { Colors } from "./_sections/Colors";
 import { Components } from "./_sections/Components";
 import { Cover } from "./_sections/Cover";

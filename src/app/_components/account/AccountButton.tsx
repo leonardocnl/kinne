@@ -1,7 +1,7 @@
 "use client";
 
-import { ButtonLink } from "../ui/Button";
-import { UserIcon } from "../ui/icons";
+import { ButtonLink } from "@/shared/ui/Button";
+import { UserIcon } from "@/shared/ui/icons";
 import { rememberReturn } from "./returnTo";
 import { SHOW_SIGN_IN } from "./signIn";
 import { useAccountStatus } from "./store";

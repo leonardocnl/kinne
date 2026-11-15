@@ -1,8 +1,8 @@
 import "server-only";
 import { headers } from "next/headers";
-import { clientKey, getClientIp, ipBucket } from "@/infrastructure/client-ip";
-import { MemoryLimiter } from "@/infrastructure/memory-limiter";
-import { searchConfig } from "@/infrastructure/search-config";
+import { clientKey, getClientIp, ipBucket } from "@/shared/lib/client-ip";
+import { MemoryLimiter } from "@/shared/lib/memory-limiter";
+import { searchConfig } from "@/shared/config/search-config";
 
 // person-search B1, B4, B5: um limite por visitante para tudo o que consulta pessoas no banco
 // (sugestões, títulos da pessoa e o sorteio com pessoa), do tamanho de uma sala de aula.
