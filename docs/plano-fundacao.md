@@ -58,16 +58,18 @@ src/
 
 ### 1.2 Módulos
 
-| Módulo                | Responsável por                                                                                                 | Depende de               | Dono das tabelas de                                     |
-| --------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------ | ------------------------------------------------------- |
-| `catalog`             | títulos, gêneros, streamings, elenco, sync TMDB, **busca** de títulos e pessoas                                 | nenhum módulo de negócio | títulos, gêneros, streamings, créditos, índice de busca |
-| `taste`               | gosto de cada pessoa: sinais e grafo                                                                            | catalog                  | sinais de gosto, arestas do grafo                       |
-| `discovery`           | o que mostrar agora: filtros, sorteio, "Me surpreenda", indicações do dia, **sentimentos**, conflitos de gênero | taste, catalog, accounts | indicações do dia                                       |
-| `room`                | escolha em grupo                                                                                                | taste, catalog           | salas, participantes, votos                             |
-| `accounts`            | login por código, sessão, baixar e apagar meus dados                                                            | nenhum módulo de negócio | contas, sessões, códigos                                |
-| `analytics`           | eventos de uso anônimos                                                                                         | nenhum módulo de negócio | eventos de uso                                          |
-| `library` _(pós-MVP)_ | Minha lista, avaliações, resenhas                                                                               | catalog, taste, accounts | listas, avaliações                                      |
-| `shared`              | o que não é negócio                                                                                             | nada                     | limites de requisição                                   |
+| Módulo                | Responsável por                                                                                                 | Depende de                          | Dono das tabelas de                                     |
+| --------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------- |
+| `catalog`             | títulos, gêneros, streamings, elenco, sync TMDB, **busca** de títulos e pessoas                                 | nenhum módulo de negócio            | títulos, gêneros, streamings, créditos, índice de busca |
+| `taste`               | gosto de cada pessoa: sinais e grafo                                                                            | catalog                             | sinais de gosto, arestas do grafo                       |
+| `discovery`           | o que mostrar agora: filtros, sorteio, "Me surpreenda", indicações do dia, **sentimentos**, conflitos de gênero | taste, catalog, accounts, analytics | indicações do dia                                       |
+| `room`                | escolha em grupo                                                                                                | taste, catalog, accounts            | salas, participantes, votos                             |
+| `accounts`            | login por código, sessão, baixar e apagar meus dados                                                            | catalog, taste                      | contas, sessões, códigos                                |
+| `analytics`           | eventos de uso anônimos                                                                                         | nenhum módulo de negócio            | eventos de uso                                          |
+| `library` _(pós-MVP)_ | Minha lista, avaliações, resenhas                                                                               | catalog, taste, accounts            | listas, avaliações                                      |
+| `shared`              | o que não é negócio                                                                                             | nada                                | limites de requisição                                   |
+
+As dependências de `discovery`, `room` e `accounts` foram ajustadas em 15/11/2026 ([ADR 0012](architecture/adr/0012-module-dependencies-after-f2-mapping.md)).
 
 Gatilhos registrados (entram nos ADRs):
 

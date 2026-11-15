@@ -32,15 +32,15 @@ src/modules/<module>/
 src/shared/                    ui, config, logger, events, lib; no business
 ```
 
-| Module                 | Owns                                                                   | May import               |
-| ---------------------- | ---------------------------------------------------------------------- | ------------------------ |
-| `catalog`              | titles, genres, streamings, cast, TMDB sync, search                    | no business module       |
-| `taste`                | taste signals and graph                                                | catalog                  |
-| `discovery`            | filters, draw, "Me surpreenda", daily picks, feelings, genre conflicts | taste, catalog, accounts |
-| `room`                 | choosing in a group                                                    | taste, catalog           |
-| `accounts`             | sign-in by code, session, download and delete my data                  | no business module       |
-| `analytics`            | anonymous usage events                                                 | no business module       |
-| `library` _(post-MVP)_ | My list, ratings, reviews                                              | catalog, taste, accounts |
+| Module                 | Owns                                                                   | May import                          |
+| ---------------------- | ---------------------------------------------------------------------- | ----------------------------------- |
+| `catalog`              | titles, genres, streamings, cast, TMDB sync, search                    | no business module                  |
+| `taste`                | taste signals and graph                                                | catalog                             |
+| `discovery`            | filters, draw, "Me surpreenda", daily picks, feelings, genre conflicts | taste, catalog, accounts, analytics |
+| `room`                 | choosing in a group                                                    | taste, catalog, accounts            |
+| `accounts`             | sign-in by code, session, download and delete my data                  | catalog, taste                      |
+| `analytics`            | anonymous usage events                                                 | no business module                  |
+| `library` _(post-MVP)_ | My list, ratings, reviews                                              | catalog, taste, accounts            |
 
 **Today the code is still in layers** (`src/domain`, `src/application`, `src/infrastructure`, `src/app`), with dependencies pointing inward: app → application → domain. Phase F2 moves it, one module per PR. Until a module is moved, write in the layer where its code lives now. Do not create `src/modules/<x>` outside its migration PR.
 
@@ -50,7 +50,7 @@ Moving comes before changing: a structural move does not change behavior, and ex
 
 Seven rules, all checked by `npm run arch:check` and `npm run lint` (ADR 0002, rule names in `docs/architecture/boundaries.md`):
 
-1. Between modules, import only through the other module's `index.ts`.
+1. Between modules, import only through the other module's `index.ts` (`ui/index.ts` for its client components, ADR 0012).
 2. Module dependencies follow the table above.
 3. No cycles.
 4. `domain` imports no `application`, `infrastructure`, `ui`, `next` or `react`. `application` imports no `infrastructure` or `ui`.
