@@ -2,13 +2,14 @@
 // Rule 5 (client code never imports server code) is in eslint.config.mjs: it needs the
 // "use client" directive, which this tool does not see.
 
-// Table 1.2: the business modules each module may import (through its index.ts).
+// Table 1.2, amended by ADR 0012: the business modules each module may import (through its
+// index.ts, or ui/index.ts for client components).
 const ALLOWED_MODULE_DEPS = {
     catalog: [],
     taste: ["catalog"],
-    discovery: ["taste", "catalog", "accounts"],
-    room: ["taste", "catalog"],
-    accounts: [],
+    discovery: ["taste", "catalog", "accounts", "analytics"],
+    room: ["taste", "catalog", "accounts"],
+    accounts: ["catalog", "taste"],
     analytics: [],
     library: ["catalog", "taste", "accounts"],
 };
@@ -29,15 +30,16 @@ const FRAMEWORK = "(^|/)node_modules/(next|react|react-dom)/";
 /** @type {import('dependency-cruiser').IConfiguration} */
 module.exports = {
     forbidden: [
-        // 1. Between modules: only through the other module's index.ts.
+        // 1. Between modules: only through the other module's index.ts, or ui/index.ts, its
+        // entry for client components (ADR 0012).
         {
             name: "module-public-api",
-            comment: "Import another module only through its index.ts (rule 1)",
+            comment: "Import another module only through its index.ts or ui/index.ts (rule 1)",
             severity: "error",
             from: { path: "^src/modules/([^/]+)/" },
             to: {
                 path: "^src/modules/[^/]+/",
-                pathNot: ["^src/modules/$1/", "^src/modules/[^/]+/index\\.ts$"],
+                pathNot: ["^src/modules/$1/", "^src/modules/[^/]+/(ui/)?index\\.ts$"],
             },
         },
         // 2. Direction of dependencies (table 1.2).

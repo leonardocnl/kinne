@@ -27,18 +27,18 @@ src/
 
 ## Modules
 
-| Module                 | Responsible for                                                                          | May import               | Owns the tables of                          |
-| ---------------------- | ---------------------------------------------------------------------------------------- | ------------------------ | ------------------------------------------- |
-| `catalog`              | titles, genres, streamings, cast, TMDB sync, search of titles and people                 | no business module       | titles, genres, streamings, credits, search |
-| `taste`                | each person's taste: signals and graph                                                   | catalog                  | taste signals, graph edges                  |
-| `discovery`            | what to show now: filters, draw, "Me surpreenda", daily picks, feelings, genre conflicts | taste, catalog, accounts | daily picks                                 |
-| `room`                 | choosing in a group                                                                      | taste, catalog           | rooms, members, votes                       |
-| `accounts`             | sign-in by code, session, download and delete my data                                    | no business module       | accounts, sessions, codes                   |
-| `analytics`            | anonymous usage events                                                                   | no business module       | usage events                                |
-| `library` _(post-MVP)_ | My list, ratings, reviews                                                                | catalog, taste, accounts | lists, ratings                              |
-| `shared`               | everything that is not business                                                          | nothing                  | rate limits                                 |
+| Module                 | Responsible for                                                                          | May import                          | Owns the tables of                                                         |
+| ---------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------- |
+| `catalog`              | titles, genres, streamings, cast, TMDB sync, search of titles and people                 | no business module                  | titles, genres, streamings, credits, search                                |
+| `taste`                | each person's taste: signals and graph                                                   | catalog                             | graph edges                                                                |
+| `discovery`            | what to show now: filters, draw, "Me surpreenda", daily picks, feelings, genre conflicts | taste, catalog, accounts, analytics | daily picks                                                                |
+| `room`                 | choosing in a group                                                                      | taste, catalog, accounts            | rooms, members, votes                                                      |
+| `accounts`             | sign-in by code, session, download and delete my data                                    | catalog, taste                      | accounts, sessions, codes, and the account's taste, "Já vi" and streamings |
+| `analytics`            | anonymous usage events                                                                   | no business module                  | usage events                                                               |
+| `library` _(post-MVP)_ | My list, ratings, reviews                                                                | catalog, taste, accounts            | lists, ratings                                                             |
+| `shared`               | everything that is not business                                                          | nothing                             | rate limits                                                                |
 
-The About page is only a route in `app/`. Three modules are deliberately not created yet; each has a recorded trigger in [ADR 0001](adr/0001-modular-monolith.md): `search`, `support` and `social`.
+The dependency column is the table of [ADR 0001](adr/0001-modular-monolith.md) as amended by [ADR 0012](adr/0012-module-dependencies-after-f2-mapping.md). The About page is only a route in `app/`. Three modules are deliberately not created yet; each has a recorded trigger in [ADR 0001](adr/0001-modular-monolith.md): `search`, `support` and `social`.
 
 ## How the parts talk
 
@@ -56,7 +56,7 @@ The migration to modules is phase F2 of the plan and has not started. Until it d
 - Design tokens are in `src/app/globals.css` and the design system components in `src/app/_components/ui/`.
 - The boundary rules for `src/modules` and `src/shared` are already configured, next to the rules for the current layers, so the first file moved is checked from day one.
 
-Each module is moved in its own PR, in this order: `shared`, `catalog`, `taste`, `discovery`, `room`, `accounts`, `analytics`. Moving does not change behavior.
+Each module is moved in its own PR, in dependency order: `shared`, `catalog`, `taste`, `accounts`, `analytics`, `discovery`, `room`. Moving does not change behavior. The file-by-file map is in the [F2 migration plan](../plans/f2-migration.md).
 
 ## Rules that hold everywhere
 

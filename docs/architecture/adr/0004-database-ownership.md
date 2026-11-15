@@ -29,3 +29,8 @@ Kinne has one Postgres database on Neon, accessed with Drizzle. All tables are d
 ## Status
 
 Accepted, 2026-11-01. The schema is split module by module in F2. The read model of the filtered draw gets its ADR after `discovery` is moved.
+
+2026-11-15, after mapping the code for F2 ([plan](../../plans/f2-migration.md) §4):
+
+- The filtered draw reads only `catalog` tables, so it is a `catalog` query and needs no read model. The first read model is the daily picks ([ADR 0013](0013-read-model-daily-picks.md)).
+- A module's `schema.ts` may import the `schema.ts` of `catalog` or `accounts` for one purpose: to declare a foreign key to their stable IDs. The other exceptions to table ownership are listed in [ADR 0012](0012-module-dependencies-after-f2-mapping.md).
