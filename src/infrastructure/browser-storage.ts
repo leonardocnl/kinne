@@ -3,7 +3,7 @@ import { MAX_ROUND } from "@/domain/rounds";
 import { isStoredOrigin, type Origin, type StoredOrigin } from "@/domain/origin";
 import { isStreaming, type Streaming } from "@/domain/streaming";
 import { normalizeTaste, recordSignal, type RecordedSignal } from "@/domain/taste-signals";
-import { isBrowserId } from "@/domain/usage-events";
+import { isBrowserId } from "@/domain/browser-id";
 
 // Memória do navegador (RNG005). Navegação privada, cota cheia ou armazenamento bloqueado fazem
 // o acesso falhar ou lançar exceção; aí a leitura vale vazio e a escrita é perdida, sem quebrar a

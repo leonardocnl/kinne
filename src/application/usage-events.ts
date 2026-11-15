@@ -1,10 +1,6 @@
 import { z } from "zod";
-import {
-    EVENT_NAMES,
-    RECOMMENDATION_SOURCES,
-    isBrowserId,
-    type UsageEvent,
-} from "@/domain/usage-events";
+import { isBrowserId } from "@/domain/browser-id";
+import { EVENT_NAMES, RECOMMENDATION_SOURCES, type UsageEvent } from "@/domain/usage-events";
 
 export const usageEventSchema = z
     .strictObject({

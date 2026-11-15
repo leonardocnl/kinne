@@ -5,8 +5,8 @@ import type { MemberDetails } from "@/application/group-room";
 import { isKinneGenre, KINNE_GENRES, type KinneGenre } from "@/domain/genre";
 import { RUNTIME_LIMITS, TYPES } from "@/domain/filters";
 import { isStreaming, STREAMING_SERVICES, type Streaming } from "@/domain/streaming";
-import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
-import { isBrowserId } from "@/domain/usage-events";
+import { SURPRISE_MAX_EXCLUDED } from "@/domain/taste-signals";
+import { isBrowserId } from "@/domain/browser-id";
 import { clientKey, getClientIp } from "@/infrastructure/client-ip";
 import { createDb } from "@/infrastructure/db/client";
 import { DrizzleGroupRoomRepository } from "@/infrastructure/db/group-room-repository";
@@ -15,7 +15,7 @@ import { hashToken, isMemberToken, ROOM_COOKIE } from "@/infrastructure/group-ro
 import { MemoryLimiter } from "@/infrastructure/memory-limiter";
 import { searchConfig } from "@/infrastructure/search-config";
 import { drawAccount } from "./account";
-import { idListSchema } from "./surprise";
+import { idListSchema } from "./taste";
 import { tasteSchema } from "./taste";
 
 export const roomRepository = () => new DrizzleGroupRoomRepository(createDb());

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { evaluateGolden, normalizeTitleName } from "./taste-golden";
+import { evaluateGolden, normalizeTitleName } from "./feelings-golden";
 
 describe("evaluateGolden", () => {
     const ids = new Map([

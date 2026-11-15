@@ -2,7 +2,8 @@ import { orderByFeeling, orderByTaste, orderByTasteAndFeeling } from "@/domain/d
 import type { FeelingKit } from "@/domain/feelings";
 import { rankByPurity } from "@/domain/genre-conflicts";
 import { matchTitles, type FilterCriteria } from "@/domain/filters";
-import { buildRounds, meanRating, rankTitles, type CustomOrder } from "@/domain/rounds";
+import { meanRating, rankTitles } from "@/domain/rating";
+import { buildRounds, type CustomOrder } from "@/domain/rounds";
 import { spreadTaste, type NeighborGraph } from "@/domain/taste-graph";
 import { hasPositiveSignal, toSignals, type TasteLists } from "@/domain/taste-signals";
 import type { Candidate } from "./titles";

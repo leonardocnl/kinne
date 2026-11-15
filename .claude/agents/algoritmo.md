@@ -23,7 +23,7 @@ deterministic where possible, and covered by reference tests.
 - Design notes: `docs/design/taste-graph.md` (check its status line before relying on it),
   `docs/plano-fundacao.md` §1.10 (genre conflicts, `EXTRA_GENRE_PENALTY`, streamings learned by
   use) and the stories US001–US003, US008, US009, US017, US018 in `docs/requisitos/`.
-- Reference (golden) tests: `src/domain/taste-golden.ts` and `src/domain/taste-golden.test.ts`;
+- Reference (golden) tests: `src/domain/feelings-golden.ts` and `src/domain/feelings-golden.test.ts`;
   search cases in `src/domain/search-cases.ts`.
 - Pipeline and calibration scripts: `npm run graph:build`, `npm run feelings:calibrate`,
   `npm run daily:pick`, `npm run search:check-normalization`, `npm run catalog:sync`. They read

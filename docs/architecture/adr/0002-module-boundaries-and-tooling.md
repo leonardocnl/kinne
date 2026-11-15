@@ -53,3 +53,5 @@ The rule names and commands are in [boundaries.md](../boundaries.md).
 ## Status
 
 Accepted, 2026-11-01. dependency-cruiser, the ESLint rule, the git hooks and CI are in place; the Claude Code hook is in review.
+
+2026-11-15: the known-violations file was emptied and deleted in F2; `arch:check` runs without `--ignore-known`.

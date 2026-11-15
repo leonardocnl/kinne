@@ -1,7 +1,7 @@
 import type { TitleType } from "@/domain/catalog";
 import type { KinneGenre } from "@/domain/genre";
+import type { SurpriseCandidate } from "@/domain/candidate";
 import type { FilterCandidate } from "@/domain/filters";
-import type { SurpriseCandidate } from "@/domain/surprise";
 
 // Uma pessoa do elenco e o personagem, quando o TMDB informa (US004 C12).
 export type CastMember = { name: string; character: string | null };

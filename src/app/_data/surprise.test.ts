@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
+import { SURPRISE_MAX_EXCLUDED } from "@/domain/taste-signals";
 import { parseSurpriseRequest } from "./surprise";
 
 const ok = {

@@ -12,15 +12,14 @@ import {
     type AgeLimit,
     type FilterCandidate,
     type Filters,
-    type TypeChoice,
 } from "@/domain/filters";
+import type { TypeChoice } from "@/domain/candidate";
 import { FEELING_LABELS, FEELINGS } from "@/domain/feelings";
 import { GENRE_LABELS, KINNE_GENRES } from "@/domain/genre";
 import { isLimited, LIMITED_MESSAGE, type Limited } from "@/domain/rate-limit";
 import { filtersHint } from "./filtersHint";
 import { STREAMING_SERVICES } from "@/domain/streaming";
-import { EMPTY_TASTE } from "@/domain/taste-signals";
-import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
+import { EMPTY_TASTE, SURPRISE_MAX_EXCLUDED } from "@/domain/taste-signals";
 import {
     filteredRun,
     saveFilters,

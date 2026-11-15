@@ -3,7 +3,8 @@
 import { useAccountStatus } from "../account/store";
 import { useId, useRef, useState, useSyncExternalStore } from "react";
 import type { RoomView } from "@/application/group-room";
-import { RUNTIME_LIMITS, type TypeChoice } from "@/domain/filters";
+import type { TypeChoice } from "@/domain/candidate";
+import { RUNTIME_LIMITS } from "@/domain/filters";
 import { GENRE_LABELS, KINNE_GENRES, type KinneGenre } from "@/domain/genre";
 import { formatCode } from "@/domain/group-room";
 import { STREAMING_SERVICES, type Streaming } from "@/domain/streaming";

@@ -1,4 +1,4 @@
-import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
+import { SURPRISE_MAX_EXCLUDED } from "@/domain/taste-signals";
 import { savedStreamings, tasteSignals, watchedTitles } from "@/infrastructure/browser-storage";
 
 /**

@@ -58,7 +58,7 @@ Seven rules, all checked by `npm run arch:check` and `npm run lint` (ADR 0002, r
 6. Only a module's own code touches its tables.
 7. `shared` imports no module.
 
-When a check fails, fix the import. Do not add to `.dependency-cruiser-known-violations.json`, disable a lint rule or loosen the configuration: those files change only by a decision of the owner.
+When a check fails, fix the import. Do not baseline a violation, disable a lint rule or loosen the configuration: those files change only by a decision of the owner.
 
 ## Events
 

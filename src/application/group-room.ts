@@ -1,4 +1,4 @@
-import type { FilterCandidate, TypeChoice } from "@/domain/filters";
+import type { CatalogCandidate, TypeChoice } from "@/domain/candidate";
 import { isKinneGenre, type KinneGenre } from "@/domain/genre";
 import {
     everyoneVoted,
@@ -9,7 +9,7 @@ import {
     type MemberInput,
     type Tally,
 } from "@/domain/group-room";
-import { meanRating, weightedRating } from "@/domain/rounds";
+import { meanRating, weightedRating } from "@/domain/rating";
 import { isStreaming, STREAMING_SERVICES, type Streaming } from "@/domain/streaming";
 import { spreadTaste, type NeighborGraph } from "@/domain/taste-graph";
 import { hasPositiveSignal, toSignals } from "@/domain/taste-signals";
@@ -114,7 +114,7 @@ export interface GroupRoomRepository {
 // Finalistas
 
 export type FinalistDeps = {
-    candidates: readonly FilterCandidate[];
+    candidates: readonly CatalogCandidate[];
     // null se o grafo não carregou: o grupo segue pela nota ponderada (US009 RNE006)
     graph: NeighborGraph | null;
 };
@@ -123,7 +123,7 @@ export type FinalistDeps = {
 export function computeFinalists(
     { candidates, graph }: FinalistDeps,
     input: ProposalInput,
-): FinalistResult<FilterCandidate> {
+): FinalistResult<CatalogCandidate> {
     const members: MemberInput[] = input.members.map((m) => {
         const taste = { liked: m.liked, willWatch: m.willWatch, disliked: m.disliked };
         return {
@@ -145,7 +145,7 @@ export function computeFinalists(
     );
 }
 
-const rows = (result: Extract<FinalistResult<FilterCandidate>, { ok: true }>): FinalistRows => ({
+const rows = (result: Extract<FinalistResult<CatalogCandidate>, { ok: true }>): FinalistRows => ({
     titleIds: result.finalists.map((f) => f.title.id),
     scores: result.finalists.map((f) => f.groupScore),
 });

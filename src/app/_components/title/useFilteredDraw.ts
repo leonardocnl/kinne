@@ -3,7 +3,7 @@ import { isLimited, LIMITED_MESSAGE } from "@/domain/rate-limit";
 import { useState, useTransition } from "react";
 import { wireFilters } from "@/domain/filters";
 import type { RoundEnd } from "@/domain/rounds";
-import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
+import { SURPRISE_MAX_EXCLUDED } from "@/domain/taste-signals";
 import { filteredRun, tasteSignals, watchedTitles } from "@/infrastructure/browser-storage";
 import { drawFiltered } from "../../_actions/filters";
 import { loadError } from "../StateScreen";

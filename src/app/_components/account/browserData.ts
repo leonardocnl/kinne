@@ -1,4 +1,4 @@
-import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
+import { SURPRISE_MAX_EXCLUDED } from "@/domain/taste-signals";
 import { savedStreamings, tasteSignals, watchedTitles } from "@/infrastructure/browser-storage";
 
 /** O que o navegador tinha e vai para a conta ao entrar (US015 C1): gosto, "Já vi" e streamings. */
