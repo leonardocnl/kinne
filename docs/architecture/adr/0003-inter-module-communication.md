@@ -28,3 +28,5 @@ Modules need each other: `discovery` reads taste and catalog, `room` reads taste
 ## Status
 
 Accepted, 2026-11-01. `src/shared/events` is created in F2, with the first module that holds personal data.
+
+2026-11-15: with [ADR 0012](0012-module-dependencies-after-f2-mapping.md), `accounts` owns every table linked to an account, so `AccountDeleted` has no subscriber during F2. `src/shared/events` is created with the first module outside `accounts` that stores account data (expected: `library`).
