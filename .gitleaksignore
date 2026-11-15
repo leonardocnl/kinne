@@ -1,3 +1,4 @@
 # Chave Pix aleatória do Kinne: dado público por natureza (aparece na página /sobre e no QR code),
 # não um segredo. Falso positivo da regra generic-api-key, dispensado só para esta linha.
 9d23bf9a9fe7ef947fa06a574ece3a56a927137c:src/domain/pix.ts:generic-api-key:7
+4e9054550ea2cc436aba365e319868b5f78d8f5aic-api-key:7
