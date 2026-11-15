@@ -5,7 +5,7 @@ import { appendFileSync } from "node:fs";
 import { changesWindow, syncCatalog, type SyncResult } from "@/application/sync-catalog";
 import { connectSyncDb, DrizzleCatalogRepository } from "@/infrastructure/db/catalog-repository";
 import { requestRevalidation } from "@/infrastructure/revalidation";
-import { syncEnvErrors } from "@/infrastructure/sync-env";
+import { syncEnvErrors } from "@/shared/config/sync-env";
 import { TmdbCatalogSource } from "@/infrastructure/tmdb/catalog-source";
 import { publicErrorMessage, TmdbClient } from "@/infrastructure/tmdb/client";
 

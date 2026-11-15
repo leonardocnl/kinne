@@ -1,7 +1,7 @@
 "use client";
 
 import { lazy, Suspense, useRef, useState } from "react";
-import { SearchIcon } from "../ui/icons";
+import { SearchIcon } from "@/shared/ui/icons";
 
 // H9: o painel só é baixado quando a pessoa chega perto do botão.
 const loadPanel = () => import("./SearchPanel");

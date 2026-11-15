@@ -1,7 +1,7 @@
 // Indicações do dia para hoje e amanhã (Brasília), para a virada da meia-noite já ter as
 // indicações prontas. Uso: npm run daily:pick
 import { generateDailyPicks } from "@/application/daily-picks";
-import { addDays, brasiliaDay } from "@/domain/day";
+import { addDays, brasiliaDay } from "@/shared/lib/day";
 import { createDb } from "@/infrastructure/db/client";
 import { DrizzleDailyPicksRepository } from "@/infrastructure/db/daily-picks-repository";
 import { publicErrorMessage } from "@/infrastructure/tmdb/client";

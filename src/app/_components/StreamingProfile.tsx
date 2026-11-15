@@ -4,7 +4,7 @@ import { useSyncExternalStore, type ReactNode } from "react";
 import { streamingSummary, type Streaming } from "@/domain/streaming";
 import { savedStreamings, subscribeToStreamings } from "@/infrastructure/browser-storage";
 import { useAccountStatus } from "./account/store";
-import { cx } from "./ui/cx";
+import { cx } from "@/shared/ui/cx";
 
 // Os streamings salvos (US018), do navegador ou da conta. O snapshot é texto para ficar estável
 // entre as leituras do localStorage.

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { contrast } from "../../design/_sections/contrast";
+import { contrast } from "@/app/design/_sections/contrast";
 import { Navbar } from "./Navbar";
 
 const dir = import.meta.dirname;
@@ -67,10 +67,10 @@ describe("Navbar", () => {
     // vidro claro sutil sobre a pior imagem possível (branco puro), escurecida pelo
     // backdrop-brightness. A navbar tem exceção à regra de 7:1 (decisão do dono): 4,5:1 (AA).
     it("dá 4,5:1 no texto sobre o vidro, mesmo com imagem branca atrás", () => {
-        const css = readFileSync(join(dir, "../../globals.css"), "utf8");
+        const css = readFileSync(join(dir, "../globals.css"), "utf8");
         const token = (name: string) => css.match(new RegExp(`--${name}: ([^;]+);`))![1];
         const paper = token("color-paper");
-        const source = readFileSync(join(dir, "navItem.ts"), "utf8");
+        const source = readFileSync(join(dir, "../../shared/ui/navItem.ts"), "utf8");
         const behind = (255 * Number(source.match(/backdrop-brightness-(\d+)/)![1])) / 100;
         const [r, g, b, a] = token("color-nav")
             .match(/[\d.]+/g)!

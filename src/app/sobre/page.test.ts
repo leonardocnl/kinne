@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { PIX } from "@/domain/pix";
+import { PIX } from "@/shared/lib/pix";
 
 const dir = import.meta.dirname;
 const page = readFileSync(join(dir, "page.tsx"), "utf8");

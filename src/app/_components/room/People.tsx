@@ -1,5 +1,5 @@
 import type { RoomView } from "@/application/group-room";
-import { CheckIcon } from "../ui/icons";
+import { CheckIcon } from "@/shared/ui/icons";
 
 type Room = Extract<RoomView, { kind: "room" }>;
 

@@ -63,7 +63,7 @@ O `npm install` ativa os git hooks de `.githooks/` (script `prepare`): o `pre-co
 - `/sobre`: por que o Kinne existe, resumo de privacidade, perguntas frequentes, apoio por Pix e créditos.
 - `/privacidade`: texto de privacidade (rascunho).
 
-O rodapé de toda página leva a elas e ao contato. O QR code Pix é um arquivo fixo (`public/pix-qr.svg`), gerado de `src/domain/pix.ts` por `scripts/generate-pix-qr.py`.
+O rodapé de toda página leva a elas e ao contato. O QR code Pix é um arquivo fixo (`public/pix-qr.svg`), gerado de `src/shared/lib/pix.ts` por `scripts/generate-pix-qr.py`.
 
 ## Documentação
 

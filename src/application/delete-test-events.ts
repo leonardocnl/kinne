@@ -1,4 +1,4 @@
-import { addDays, parseDay, type Day } from "@/domain/day";
+import { addDays, parseDay, type Day } from "@/shared/lib/day";
 
 // Apagamento dos eventos do teste (RNF10). Os dias são de Brasília (RNG006) e entram inteiros:
 // de 00:00 de --from até 00:00 do dia seguinte a --to.

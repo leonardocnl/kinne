@@ -3,7 +3,7 @@ import type { DailyPickTitle, DailyPicksRepository } from "@/application/daily-p
 import type { TitleType } from "@/domain/catalog";
 import { ADULT_CERTIFICATION } from "@/domain/catalog-sync";
 import type { DailyPick } from "@/domain/daily-picks";
-import type { Day } from "@/domain/day";
+import type { Day } from "@/shared/lib/day";
 import type { KinneGenre } from "@/domain/genre";
 import { and, eq, gte, isNotNull, ne, sql } from "drizzle-orm";
 import type { Db } from "./client";

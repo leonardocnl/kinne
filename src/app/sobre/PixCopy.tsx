@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { PIX } from "@/domain/pix";
-import { Button } from "../_components/ui/Button";
+import { PIX } from "@/shared/lib/pix";
+import { Button } from "@/shared/ui/Button";
 
 type Status = "idle" | "copied" | "failed";
 

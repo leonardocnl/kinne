@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isBrowserId } from "@/domain/browser-id";
+import { isBrowserId } from "@/shared/lib/browser-id";
 import { EVENT_NAMES, RECOMMENDATION_SOURCES, type UsageEvent } from "@/domain/usage-events";
 
 export const usageEventSchema = z

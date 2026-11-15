@@ -31,7 +31,7 @@
         "arch:check": "depcruise src --config .dependency-cruiser.cjs",
         "arch:graph": "npm run --silent arch:dot && dot -Tsvg docs/generated/dependencies.dot -o docs/generated/dependencies.svg",
         "prepare": "git rev-parse --is-inside-work-tree > /dev/null 2>&1 && git config core.hooksPath .githooks || true",
-        "arch:dot": "depcruise src --config .dependency-cruiser.cjs --include-only '^src/' --exclude '\\.test\\.ts$|^src/test/' --output-type dot --output-to docs/generated/dependencies.dot"
+        "arch:dot": "depcruise src --config .dependency-cruiser.cjs --include-only '^src/' --exclude '\\.test\\.ts$|^src/shared/db/local-' --output-type dot --output-to docs/generated/dependencies.dot"
     },
     "dependencies": {
         "@neondatabase/serverless": "^1.2.0",

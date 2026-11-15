@@ -5,7 +5,7 @@ import type { SearchResult } from "@/domain/search";
 import { createDb } from "@/infrastructure/db/client";
 import { DrizzleSearchRepository } from "@/infrastructure/db/search-repository";
 import { CATALOG_TAG } from "@/infrastructure/revalidation";
-import type { SearchConfig } from "@/infrastructure/search-config";
+import type { SearchConfig } from "@/shared/config/search-config";
 import { searchTmdb, TmdbRateLimitedError } from "@/infrastructure/tmdb/search";
 
 const MIN_CACHED_LENGTH = 3; // G6

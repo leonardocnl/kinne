@@ -27,7 +27,7 @@ accessible.
 - Fonts (`next/font/google`): Darker Grotesque 500 for titles (`font-display`), Manrope for the
   interface (`font-ui`).
 - Breakpoints: mobile up to 860px; use `max-desktop:` for mobile and `desktop:` for desktop.
-- Components: `src/app/_components/ui/` (design system pieces) and
+- Components: `src/shared/ui/` (design system pieces) and
   `src/app/_components/<area>/` (`account`, `home`, `room`, `search`, `title`).
   Living reference at `/design` (development only).
 - Motion: the `motion` package is already installed; respect `prefers-reduced-motion`.

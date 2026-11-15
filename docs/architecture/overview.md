@@ -49,11 +49,11 @@ The dependency column is the table of [ADR 0001](adr/0001-modular-monolith.md) a
 
 ## Where the code is today
 
-The migration to modules is phase F2 of the plan and has not started. Until it does:
+The migration to modules is phase F2 of the plan. `src/shared` exists since F2 PR 3; the modules do not exist yet. Until they do:
 
 - Code lives in the layers `src/domain`, `src/application`, `src/infrastructure` and `src/app`. Dependencies point inward: app → application → domain.
-- All tables are in `src/infrastructure/db/schema.ts`.
-- Design tokens are in `src/app/globals.css` and the design system components in `src/app/_components/ui/`.
+- All tables are in `src/infrastructure/db/schema.ts`, except `rate_limit_buckets` and `meta`, which are defined in `src/shared/db/schema.ts` and re-exported there.
+- Design tokens are in `src/app/globals.css` and the design system components in `src/shared/ui`. The page frame (`Shell`, `TopBar`, `Navbar`, `PageFrame`) is in `src/app/_shell`.
 - The boundary rules for `src/modules` and `src/shared` are already configured, next to the rules for the current layers, so the first file moved is checked from day one.
 
 Each module is moved in its own PR, in dependency order: `shared`, `catalog`, `taste`, `accounts`, `analytics`, `discovery`, `room`. Moving does not change behavior. The file-by-file map is in the [F2 migration plan](../plans/f2-migration.md).

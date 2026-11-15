@@ -7,7 +7,6 @@ import {
     char,
     check,
     date,
-    doublePrecision,
     foreignKey,
     index,
     integer,
@@ -331,12 +330,6 @@ export const syncRuns = pgTable(
     ],
 );
 
-// Configuração por banco. A linha 'environment' é gravada à mão em cada branch do Neon (C3).
-export const meta = pgTable("meta", {
-    key: text("key").primaryKey(),
-    value: text("value").notNull(),
-});
-
 // Respostas da busca no TMDB (busca G5, C2): a chave é o hash do termo normalizado, nunca o termo.
 // "pending" marca quem já está perguntando ao TMDB (G4). Só ids e tipos: nada vai para a tela.
 export const searchCache = pgTable(
@@ -352,17 +345,6 @@ export const searchCache = pgTable(
         check("search_cache_status_check", sql`${t.status} in ('pending', 'done')`),
         index("search_cache_created_at_idx").on(t.createdAt),
     ],
-);
-
-// Token bucket (busca B1, G15). A chave do visitante é um HMAC do IP com sal diário (E2, G16).
-export const rateLimitBuckets = pgTable(
-    "rate_limit_buckets",
-    {
-        key: text("key").primaryKey(),
-        tokens: doublePrecision("tokens").notNull(),
-        updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
-    },
-    (t) => [index("rate_limit_buckets_updated_at_idx").on(t.updatedAt)],
 );
 
 // Disjuntor da busca no TMDB (B2): aberto até open_until depois de um 429.
@@ -703,3 +685,5 @@ export const groupRoomVotes = pgTable(
         }).onDelete("cascade"),
     ],
 );
+
+export { meta, rateLimitBuckets } from "@/shared/db/schema";

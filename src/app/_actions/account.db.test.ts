@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { PgDialect } from "drizzle-orm/pg-core";
 import type { SQL } from "drizzle-orm";
-import { admin, dbTestsEnabled, localDb } from "@/test/local-pg";
+import { admin, dbTestsEnabled, localDb } from "@/shared/db/local-pg";
 
 // Os dez testes de ataque de docs/threats/accounts.md (mais o 11, entre contas), chamando as
 // AÇÕES de verdade com entradas forjadas, contra um PostgreSQL de verdade. O que o banco garante

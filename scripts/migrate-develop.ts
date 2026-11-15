@@ -4,7 +4,7 @@
 // Nenhuma saída traz a URL nem o erro do driver: só mensagens genéricas (security §6).
 import { neon } from "@neondatabase/serverless";
 import { readFileSync } from "node:fs";
-import { migrationsBehind, migrationTargetAllowed } from "@/application/migration-guard";
+import { migrationsBehind, migrationTargetAllowed } from "@/shared/db/migration-guard";
 
 const POSTGRES_URL = /^postgres(ql)?:\/\/[^"'\s]+$/;
 

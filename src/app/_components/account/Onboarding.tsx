@@ -15,12 +15,12 @@ import { STREAMING_SERVICES, type Streaming } from "@/domain/streaming";
 import { saveOnboardingStep } from "../../_actions/account";
 import { onboardingTitles } from "../../_actions/onboarding";
 import { searchTitles } from "../../_actions/search";
-import { Button } from "../ui/Button";
-import { Chip } from "../ui/Chip";
-import { cx } from "../ui/cx";
-import { TextLink } from "../ui/TextLink";
-import { TmdbImage } from "../ui/TmdbImage";
-import { posterSources } from "../ui/tmdb-sources";
+import { Button } from "@/shared/ui/Button";
+import { Chip } from "@/shared/ui/Chip";
+import { cx } from "@/shared/ui/cx";
+import { TextLink } from "@/shared/ui/TextLink";
+import { TmdbImage } from "@/shared/ui/TmdbImage";
+import { posterSources } from "@/shared/ui/tmdb-sources";
 import { GENERIC_ERROR } from "./messages";
 import { loadAccountStatus, useAccountStatus } from "./store";
 

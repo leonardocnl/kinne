@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Button } from "./Button";
-import { Toast } from "./Toast";
+import { Toast } from "@/shared/ui/Toast";
 
 describe("Toast", () => {
     it("fica na página vazio, para o leitor de tela anunciar o texto novo", () => {

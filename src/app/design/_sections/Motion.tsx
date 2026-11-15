@@ -1,4 +1,4 @@
-import { Skeleton } from "../../_components/ui/Skeleton";
+import { Skeleton } from "@/shared/ui/Skeleton";
 import { MotionDemo, TokenValue } from "./live";
 import { Section, Split, Subhead } from "./Section";
 

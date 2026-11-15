@@ -94,7 +94,7 @@ Also: nothing in URL parameters (transient state goes in `sessionStorage` or `hi
 The code is the only source (ADR 0008). `DESIGN.md` holds the rules: read it before any interface task, and it wins over this summary.
 
 - Only tokens. A color, spacing, radius or font size that is not a token is a bug. A new value enters first as a named token.
-- Components with no business rule belong to the design system (`src/shared/ui`; today `src/app/_components/ui/`). A component that knows the business belongs to its module's `ui/`.
+- Components with no business rule belong to the design system (`src/shared/ui`). A component that knows the business belongs to its module's `ui/`.
 - One accent (`signal`) per screen, on the main control. The exceptions are the ones listed in `DESIGN.md`; do not add one.
 - Interface text is in Brazilian Portuguese.
 - Every visual choice is the owner's. If `DESIGN.md` does not settle it, ask with options. Do not invent components, tokens or copy.

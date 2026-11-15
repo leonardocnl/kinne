@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Button } from "../../_components/ui/Button";
-import { Chip, RadioChip } from "../../_components/ui/Chip";
-import { RemovableChip } from "../../_components/ui/RemovableChip";
-import { GlassPanel } from "../../_components/ui/GlassPanel";
-import { Digits, Slider } from "../../_components/ui/Slider";
-import { cx } from "../../_components/ui/cx";
+import { Button } from "@/shared/ui/Button";
+import { Chip, RadioChip } from "@/shared/ui/Chip";
+import { RemovableChip } from "@/shared/ui/RemovableChip";
+import { GlassPanel } from "@/shared/ui/GlassPanel";
+import { Digits, Slider } from "@/shared/ui/Slider";
+import { cx } from "@/shared/ui/cx";
 import { contrast, wcagLevel } from "./contrast";
 
 // Tudo aqui é lido do CSS já aplicado, e relido ao redimensionar (alguns tokens mudam no

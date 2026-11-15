@@ -36,7 +36,7 @@ describe("BR Code Pix estático", () => {
 });
 
 describe("public/pix-qr.svg", () => {
-    const svg = readFileSync(join(import.meta.dirname, "../../public/pix-qr.svg"), "utf8");
+    const svg = readFileSync(join(import.meta.dirname, "../../../public/pix-qr.svg"), "utf8");
 
     it("foi gerado do payload atual (<desc>) e esse payload tem o CRC certo", () => {
         const embedded = /<desc id="d">([^<]+)<\/desc>/.exec(svg)?.[1];

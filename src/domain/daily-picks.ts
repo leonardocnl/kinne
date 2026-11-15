@@ -1,5 +1,5 @@
 import type { TitleType } from "./catalog";
-import { addDays, type Day } from "./day";
+import { addDays, type Day } from "@/shared/lib/day";
 import type { KinneGenre } from "./genre";
 
 // Ordem das indicações na tela inicial (US001).

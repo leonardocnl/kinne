@@ -3,7 +3,7 @@
 import { neon } from "@neondatabase/serverless";
 import { normalizeSearchText } from "@/domain/search";
 import { NORMALIZATION_CASES } from "@/domain/search-cases";
-import { dbEnvErrors } from "@/infrastructure/sync-env";
+import { dbEnvErrors } from "@/shared/config/sync-env";
 
 async function main() {
     const errors = dbEnvErrors(process.env);

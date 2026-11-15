@@ -11,8 +11,11 @@ const forbidden = [
 ];
 
 const appDir = import.meta.dirname;
-const files = readdirSync(appDir, { recursive: true, encoding: "utf8" }).filter(
-    (file) => /\.tsx?$/.test(file) && !file.endsWith(".test.ts"),
+// as telas (src/app) e o design system (src/shared/ui); os caminhos são relativos a src/app
+const files = [".", "../shared/ui"].flatMap((dir) =>
+    readdirSync(join(appDir, dir), { recursive: true, encoding: "utf8" })
+        .filter((file) => /\.tsx?$/.test(file) && !file.endsWith(".test.ts"))
+        .map((file) => join(dir, file)),
 );
 
 describe("design tokens", () => {

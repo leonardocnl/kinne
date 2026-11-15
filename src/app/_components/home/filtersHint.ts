@@ -1,6 +1,6 @@
 import type { Feeling } from "@/domain/feelings";
-import { LIMITED_MESSAGE } from "@/domain/rate-limit";
-import { loadError } from "../StateScreen";
+import { LIMITED_MESSAGE } from "@/shared/lib/rate-limit";
+import { loadError } from "@/shared/ui/StateScreen";
 
 type HintInput = {
     failed: boolean;

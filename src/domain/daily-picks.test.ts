@@ -6,7 +6,7 @@ import {
     rotationSeconds,
     type PickCandidate,
 } from "./daily-picks";
-import { addDays, parseDay } from "./day";
+import { addDays, parseDay } from "@/shared/lib/day";
 import type { KinneGenre } from "./genre";
 
 const today = parseDay("2026-10-10");

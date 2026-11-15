@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
-import { cx } from "./cx";
+import { cx } from "@/shared/ui/cx";
 import { smoke } from "./navItem";
 
 const base =

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PageFrame } from "../_components/account/PageFrame";
+import { PageFrame } from "@/app/_shell/PageFrame";
 import { Profile } from "../_components/account/Profile";
 
 export const metadata: Metadata = {

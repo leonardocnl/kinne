@@ -1,8 +1,8 @@
 import "server-only";
 import { headers } from "next/headers";
-import { clientKey, getClientIp, ipBucket } from "@/infrastructure/client-ip";
-import { MemoryLimiter } from "@/infrastructure/memory-limiter";
-import { searchConfig } from "@/infrastructure/search-config";
+import { clientKey, getClientIp, ipBucket } from "@/shared/lib/client-ip";
+import { MemoryLimiter } from "@/shared/lib/memory-limiter";
+import { searchConfig } from "@/shared/config/search-config";
 
 // security.md §7: limite por visitante nos sorteios (surpresa e filtros) e nos eventos, em memória
 // por instância, como a busca. ponytail: cada instância conta sozinha; Postgres se não bastar.

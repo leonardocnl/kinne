@@ -10,8 +10,8 @@ import {
     type PersonSuggestion,
 } from "@/domain/person-search";
 import { searchPeople } from "../../_actions/people";
-import { RemovableChip } from "../ui/RemovableChip";
-import { cx } from "../ui/cx";
+import { RemovableChip } from "@/shared/ui/RemovableChip";
+import { cx } from "@/shared/ui/cx";
 
 const DEBOUNCE_MS = 300; // person-search B1
 

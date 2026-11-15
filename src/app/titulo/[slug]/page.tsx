@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { brasiliaDay } from "@/domain/day";
+import { brasiliaDay } from "@/shared/lib/day";
 import { TitleSkeleton } from "../../_components/title/TitleSkeleton";
 import { TitleView } from "../../_components/title/TitleView";
 import { homePicks } from "../../_data/home";

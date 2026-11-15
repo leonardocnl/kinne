@@ -1,14 +1,14 @@
 import { useRouter } from "next/navigation";
-import { isLimited, LIMITED_MESSAGE } from "@/domain/rate-limit";
+import { isLimited, LIMITED_MESSAGE } from "@/shared/lib/rate-limit";
 import { useState, useTransition } from "react";
 import { wireFilters } from "@/domain/filters";
 import type { RoundEnd } from "@/domain/rounds";
 import { SURPRISE_MAX_EXCLUDED } from "@/domain/taste-signals";
 import { filteredRun, tasteSignals, watchedTitles } from "@/infrastructure/browser-storage";
 import { drawFiltered } from "../../_actions/filters";
-import { loadError } from "../StateScreen";
-import { showToast } from "../toast";
-import { wipeRouter } from "../ui/wipe";
+import { loadError } from "@/shared/ui/StateScreen";
+import { showToast } from "@/shared/ui/toast";
+import { wipeRouter } from "@/shared/ui/wipe";
 import { goToTitle } from "./origin";
 
 /**

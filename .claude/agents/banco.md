@@ -34,7 +34,7 @@ Leonardo has not yet confirmed which database the `DATABASE_URL` in `.env.local`
 Until he does:
 
 - Allowed: `npm run db:generate` (generates SQL, does not connect) and `npm run test:db`
-  (database tests; they refuse any Postgres that is not on this machine, `src/test/local-guard.ts`).
+  (database tests; they refuse any Postgres that is not on this machine, `src/shared/db/local-guard.ts`).
   `test:db` needs a disposable local Postgres with the migrations already applied; if there is
   none, say so and stop.
 - Not allowed: `npm run db:migrate`, `npm run db:seed`, `scripts/apply-migrations-local.sh`, or

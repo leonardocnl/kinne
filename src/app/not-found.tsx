@@ -1,6 +1,6 @@
-import { NotFoundScreen } from "./_components/NotFoundScreen";
-import { Shell } from "./_components/Shell";
-import { TopBar } from "./_components/TopBar";
+import { NotFoundScreen } from "@/shared/ui/NotFoundScreen";
+import { Shell } from "./_shell/Shell";
+import { TopBar } from "./_shell/TopBar";
 
 /** Endereço que não existe (o título desconhecido tem a tela dele, em titulo/[slug]). */
 export default function NotFound() {

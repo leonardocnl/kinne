@@ -2,8 +2,8 @@ import "server-only";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { Shell } from "../_components/Shell";
-import { TopBar } from "../_components/TopBar";
+import { Shell } from "@/app/_shell/Shell";
+import { TopBar } from "@/app/_shell/TopBar";
 import { TeamMark } from "./TeamMark";
 
 // US006: o endereço secreto vem de TEAM_SECRET_PATH (RNE001), com ou sem a barra. Qualquer outro

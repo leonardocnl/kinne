@@ -1,5 +1,5 @@
-import { screenMain } from "../layout";
-import { Skeleton } from "../ui/Skeleton";
+import { screenMain } from "@/shared/ui/layout";
+import { Skeleton } from "@/shared/ui/Skeleton";
 import { SpecsSkeleton } from "./SpecsSkeleton";
 
 /**

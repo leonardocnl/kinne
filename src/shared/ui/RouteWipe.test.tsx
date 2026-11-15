@@ -30,7 +30,7 @@ describe("RouteWipe", () => {
     it("só os sorteios da tela do título pedem a cortina; abas e links não", () => {
         const wipe = readFileSync(join(dir, "RouteWipe.tsx"), "utf8");
         expect(wipe).not.toMatch(/addEventListener\("click"/);
-        const title = join(dir, "..", "title");
+        const title = join(dir, "..", "..", "app", "_components", "title");
         for (const file of ["TitleView.tsx", "useFilteredDraw.ts", "useSurprise.ts"])
             expect(readFileSync(join(title, file), "utf8")).toContain("wipeRouter(router)");
     });

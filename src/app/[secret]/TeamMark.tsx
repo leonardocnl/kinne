@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { teamBrowser } from "@/infrastructure/browser-storage";
-import { StateScreen } from "../_components/StateScreen";
-import { ButtonLink } from "../_components/ui/Button";
+import { StateScreen } from "@/shared/ui/StateScreen";
+import { ButtonLink } from "@/shared/ui/Button";
 
 /** Marca o navegador como da equipe (US006 C1): daqui em diante ele não envia eventos (C2). */
 export function TeamMark() {

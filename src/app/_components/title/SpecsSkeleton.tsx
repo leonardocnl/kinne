@@ -1,4 +1,4 @@
-import { Skeleton } from "../ui/Skeleton";
+import { Skeleton } from "@/shared/ui/Skeleton";
 
 /** A ficha carregando (tela do título e home): rótulo pequeno e valor embaixo, lado a lado. */
 export function SpecsSkeleton({ count }: { count: number }) {

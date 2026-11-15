@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { contentSecurityPolicy } from "@/infrastructure/http/security-headers";
+import { contentSecurityPolicy } from "@/shared/http/security-headers";
 import { type RunningApp, startBuiltApp } from "./server";
 
 // security.md §10: os cabeçalhos chegam em toda resposta do app construído e servido.

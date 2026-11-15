@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { admin, dbTestsEnabled, localDb } from "@/test/local-pg";
+import { admin, dbTestsEnabled, localDb } from "@/shared/db/local-pg";
 
 // A sala de grupo lê o gosto, o "Já vi" e os streamings da conta pelo token da sessão (US015 C2,
 // RNE003). Ataque: um membro com sessão manda listas forjadas ao criar, entrar ou mudar as

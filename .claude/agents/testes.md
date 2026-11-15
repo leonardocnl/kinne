@@ -20,7 +20,7 @@ You write and run automated tests for Kinne.
 - Where tests live: next to the code, `<name>.test.ts` (e.g. `src/domain/surprise.test.ts`).
   Database tests are `<name>.db.test.ts`; end-to-end tests are `e2e/*.e2e.ts`.
 - Database tests: they run only with `KINNE_TEST_DB=1` and a disposable local Postgres, and the
-  guard `src/test/local-guard.ts` refuses anything else. If no such database is ready, report it;
+  guard `src/shared/db/local-guard.ts` refuses anything else. If no such database is ready, report it;
   never point them anywhere else and never open `.env.local`.
 - Visual suite: do NOT run `test:visual` or `test:visual:update`, and do not create or change
   files in `e2e/visual-baseline/` or `e2e/screens.visual.ts`.

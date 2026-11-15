@@ -1,4 +1,4 @@
-import { encodeQr } from "@/domain/qr";
+import { encodeQr } from "@/shared/lib/qr";
 import { cx } from "./cx";
 
 /**

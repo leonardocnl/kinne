@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-import { securityHeaders } from "./src/infrastructure/http/security-headers";
+import { securityHeaders } from "./src/shared/http/security-headers";
 
 const nextConfig: NextConfig = {
     /* config options here */

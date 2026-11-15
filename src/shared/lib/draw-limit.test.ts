@@ -2,12 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const ip = vi.hoisted(() => ({ value: "203.0.113.7" }));
 vi.mock("next/headers", () => ({ headers: async () => new Headers({ "x-real-ip": ip.value }) }));
-vi.mock("@/infrastructure/client-ip", () => ({
+vi.mock("@/shared/lib/client-ip", () => ({
     getClientIp: (h: Headers) => h.get("x-real-ip"),
     clientKey: (value: string) => value,
     ipBucket: (value: string) => value,
 }));
-vi.mock("@/infrastructure/search-config", () => ({ searchConfig: () => ({ secret: "s" }) }));
+vi.mock("@/shared/config/search-config", () => ({ searchConfig: () => ({ secret: "s" }) }));
 
 describe("admitFilterList (security.md §7)", () => {
     beforeEach(() => {

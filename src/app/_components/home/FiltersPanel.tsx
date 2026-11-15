@@ -16,7 +16,7 @@ import {
 import type { TypeChoice } from "@/domain/candidate";
 import { FEELING_LABELS, FEELINGS } from "@/domain/feelings";
 import { GENRE_LABELS, KINNE_GENRES } from "@/domain/genre";
-import { isLimited, LIMITED_MESSAGE, type Limited } from "@/domain/rate-limit";
+import { isLimited, LIMITED_MESSAGE, type Limited } from "@/shared/lib/rate-limit";
 import { filtersHint } from "./filtersHint";
 import { STREAMING_SERVICES } from "@/domain/streaming";
 import { EMPTY_TASTE, SURPRISE_MAX_EXCLUDED } from "@/domain/taste-signals";
@@ -29,22 +29,22 @@ import {
 } from "@/infrastructure/browser-storage";
 import { drawFiltered, filterCandidates } from "../../_actions/filters";
 import { personTitles } from "../../_actions/people";
-import { loadError } from "../StateScreen";
-import { showToast } from "../toast";
+import { loadError } from "@/shared/ui/StateScreen";
+import { showToast } from "@/shared/ui/toast";
 import { saveStreamings } from "../../_actions/account";
 import { rememberReturn } from "../account/returnTo";
 import { SHOW_SIGN_IN } from "../account/signIn";
 import { setAccountStatus, useAccountStatus } from "../account/store";
 import { PersonField } from "./PersonField";
 import { goToTitle } from "../title/origin";
-import { Button } from "../ui/Button";
-import { Chip, RadioChip } from "../ui/Chip";
-import { GlassPanel } from "../ui/GlassPanel";
-import { cx } from "../ui/cx";
-import { CloseIcon } from "../ui/icons";
-import { Skeleton } from "../ui/Skeleton";
-import { TextLink } from "../ui/TextLink";
-import { Digits, Slider } from "../ui/Slider";
+import { Button } from "@/shared/ui/Button";
+import { Chip, RadioChip } from "@/shared/ui/Chip";
+import { GlassPanel } from "@/shared/ui/GlassPanel";
+import { cx } from "@/shared/ui/cx";
+import { CloseIcon } from "@/shared/ui/icons";
+import { Skeleton } from "@/shared/ui/Skeleton";
+import { TextLink } from "@/shared/ui/TextLink";
+import { Digits, Slider } from "@/shared/ui/Slider";
 
 const TYPES: { value: TypeChoice; label: string }[] = [
     { value: "movie", label: "Filmes" },

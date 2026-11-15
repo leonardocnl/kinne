@@ -11,14 +11,14 @@ import {
     type ReactNode,
 } from "react";
 import type { HomePick } from "../../_data/home";
-import { Button, ButtonLink } from "../ui/Button";
-import { cx } from "../ui/cx";
-import { Frame, FrameImage } from "../ui/Frame";
-import { GroupIcon, PauseIcon, PlayIcon } from "../ui/icons";
-import { TextLink } from "../ui/TextLink";
-import { TmdbImage } from "../ui/TmdbImage";
-import { largePosterSources, TITLE_POSTER_SIZES } from "../ui/tmdb-sources";
-import { screenMain } from "../layout";
+import { Button, ButtonLink } from "@/shared/ui/Button";
+import { cx } from "@/shared/ui/cx";
+import { Frame, FrameImage } from "@/shared/ui/Frame";
+import { GroupIcon, PauseIcon, PlayIcon } from "@/shared/ui/icons";
+import { TextLink } from "@/shared/ui/TextLink";
+import { TmdbImage } from "@/shared/ui/TmdbImage";
+import { largePosterSources, TITLE_POSTER_SIZES } from "@/shared/ui/tmdb-sources";
+import { screenMain } from "@/shared/ui/layout";
 import { titleOrigin } from "@/infrastructure/browser-storage";
 import { StreamingSummary } from "../StreamingProfile";
 import { titleHref } from "../title/origin";

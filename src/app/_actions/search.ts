@@ -7,9 +7,9 @@ import { after } from "next/server";
 import { z } from "zod";
 import { searchTitles as search } from "@/application/title-search";
 import { MAX_RAW_TERM_LENGTH, parseSearchTerm, type SearchOutcome } from "@/domain/search";
-import { clientKey, getClientIp, ipBucket } from "@/infrastructure/client-ip";
-import { MemoryLimiter } from "@/infrastructure/memory-limiter";
-import { searchConfig } from "@/infrastructure/search-config";
+import { clientKey, getClientIp, ipBucket } from "@/shared/lib/client-ip";
+import { MemoryLimiter } from "@/shared/lib/memory-limiter";
+import { searchConfig } from "@/shared/config/search-config";
 import { TmdbHttpError } from "@/infrastructure/tmdb/client";
 import { countSearch, flushSearchCounters, searchPorts } from "../_data/search";
 

@@ -1,5 +1,5 @@
 import { useRouter } from "next/navigation";
-import { isLimited, LIMITED_MESSAGE } from "@/domain/rate-limit";
+import { isLimited, LIMITED_MESSAGE } from "@/shared/lib/rate-limit";
 import { useTransition } from "react";
 import { SURPRISE_MAX_EXCLUDED } from "@/domain/taste-signals";
 import {
@@ -9,9 +9,9 @@ import {
     watchedTitles,
 } from "@/infrastructure/browser-storage";
 import { surprise } from "../../_actions/surprise";
-import { loadError } from "../StateScreen";
-import { showToast } from "../toast";
-import { wipeRouter } from "../ui/wipe";
+import { loadError } from "@/shared/ui/StateScreen";
+import { showToast } from "@/shared/ui/toast";
+import { wipeRouter } from "@/shared/ui/wipe";
 import { goToTitle } from "./origin";
 
 /**

@@ -1,6 +1,6 @@
-import { StateScreen } from "./StateScreen";
-import { AsciiArt } from "./ui/LiveHorizon";
-import { ButtonLink } from "./ui/Button";
+import { StateScreen } from "@/shared/ui/StateScreen";
+import { AsciiArt } from "@/shared/ui/LiveHorizon";
+import { ButtonLink } from "./Button";
 
 export function NotFoundScreen({ heading, text }: { heading: string; text: string }) {
     return (

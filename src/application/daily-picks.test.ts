@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { DailyPick, PickCandidate } from "@/domain/daily-picks";
 import { DAILY_PICK_GENRES } from "@/domain/daily-picks";
-import { parseDay, type Day } from "@/domain/day";
+import { parseDay, type Day } from "@/shared/lib/day";
 import {
     dailyPicksFor,
     generateDailyPicks,

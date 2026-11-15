@@ -5,7 +5,7 @@ import { after } from "next/server";
 import { recordUsageEvent } from "@/application/usage-events";
 import { createDb } from "@/infrastructure/db/client";
 import { DrizzleUsageEventsRepository } from "@/infrastructure/db/usage-events-repository";
-import { admitEvent } from "../_data/draw-limit";
+import { admitEvent } from "@/shared/lib/draw-limit";
 
 /**
  * Grava um evento da medição (03). Responde antes de gravar: as server actions do navegador saem

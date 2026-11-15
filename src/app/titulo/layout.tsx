@@ -1,7 +1,7 @@
 import type { Viewport } from "next";
 import { AppOpened } from "../_components/AppOpened";
-import { Shell } from "../_components/Shell";
-import { TopBar } from "../_components/TopBar";
+import { Shell } from "@/app/_shell/Shell";
+import { TopBar } from "@/app/_shell/TopBar";
 
 // A barra de botões presa à base usa a área segura do iPhone (env(safe-area-inset-bottom)).
 export const viewport: Viewport = { viewportFit: "cover" };

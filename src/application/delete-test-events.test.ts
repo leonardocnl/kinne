@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Day } from "@/domain/day";
+import type { Day } from "@/shared/lib/day";
 import { brasiliaMidnight, eventRange, parseDeleteEventsArgs } from "./delete-test-events";
 
 const day = (value: string) => value as Day;

@@ -2,10 +2,10 @@
 
 import { useId, useRef } from "react";
 import { Button } from "./Button";
-import { GlassPanel } from "./GlassPanel";
-import { CloseIcon } from "./icons";
-import { TmdbImage } from "./TmdbImage";
-import { posterSources } from "./tmdb-sources";
+import { GlassPanel } from "@/shared/ui/GlassPanel";
+import { CloseIcon } from "@/shared/ui/icons";
+import { TmdbImage } from "@/shared/ui/TmdbImage";
+import { posterSources } from "@/shared/ui/tmdb-sources";
 
 type CastDialogProps = {
     /** o título, no cabeçalho */

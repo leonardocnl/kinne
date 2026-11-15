@@ -1,6 +1,6 @@
 import { streamingList } from "@/domain/streaming";
 import type { HomePick } from "../../_data/home";
-import { TitleSpec } from "../ui/TitleSpec";
+import { TitleSpec } from "@/shared/ui/TitleSpec";
 
 /**
  * Ficha do destaque da home, a mesma da tela do título sem direção nem elenco (US001 C1): onde

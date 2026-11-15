@@ -9,12 +9,12 @@ import { GENRE_LABELS, KINNE_GENRES, type KinneGenre } from "@/domain/genre";
 import { formatCode } from "@/domain/group-room";
 import { STREAMING_SERVICES, type Streaming } from "@/domain/streaming";
 import { startRoom, updatePreferences } from "../../_actions/room";
-import { showToast } from "../toast";
-import { Button } from "../ui/Button";
-import { Chip, RadioChip } from "../ui/Chip";
-import { QrCode } from "../ui/QrCode";
-import { Slider } from "../ui/Slider";
-import { TextLink } from "../ui/TextLink";
+import { showToast } from "@/shared/ui/toast";
+import { Button } from "@/shared/ui/Button";
+import { Chip, RadioChip } from "@/shared/ui/Chip";
+import { QrCode } from "@/shared/ui/QrCode";
+import { Slider } from "@/shared/ui/Slider";
+import { TextLink } from "@/shared/ui/TextLink";
 import { ROOM_ERROR } from "./messages";
 import { People } from "./People";
 
