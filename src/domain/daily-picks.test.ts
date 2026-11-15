@@ -7,7 +7,7 @@ import {
     type PickCandidate,
 } from "./daily-picks";
 import { addDays, parseDay } from "@/shared/lib/day";
-import type { KinneGenre } from "./genre";
+import type { KinneGenre } from "@/modules/catalog";
 
 const today = parseDay("2026-10-10");
 

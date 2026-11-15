@@ -1,8 +1,11 @@
-import type { SurpriseCandidate } from "./candidate";
-import { meetsQualityFloor } from "./catalog";
+import {
+    type SurpriseCandidate,
+    meetsQualityFloor,
+    meanRating,
+    streamingTmdbIds,
+    type Streaming,
+} from "@/modules/catalog";
 import { orderByTaste } from "./draw-order";
-import { meanRating } from "./rating";
-import { streamingTmdbIds, type Streaming } from "./streaming";
 
 // US003 RNE001: piso mais alto que o do catálogo (valor de partida, ver 04-mudancas).
 export const SURPRISE_MIN_RATING = 7.5;

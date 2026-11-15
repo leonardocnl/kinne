@@ -14,8 +14,7 @@ import {
     SESSION_COOKIE,
     SESSION_ABSOLUTE_MS,
 } from "@/domain/accounts";
-import { isSlug } from "@/domain/catalog";
-import { isStreaming, STREAMING_SERVICES, type Streaming } from "@/domain/streaming";
+import { isSlug, isStreaming, STREAMING_SERVICES, type Streaming } from "@/modules/catalog";
 import { normalizeTaste, SURPRISE_MAX_EXCLUDED, type TasteLists } from "@/domain/taste-signals";
 import { clientKey, getClientIp } from "@/shared/lib/client-ip";
 import {

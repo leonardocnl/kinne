@@ -48,7 +48,7 @@ const recorded = (db: ReturnType<typeof localDb>) => ({
 vi.mock("@/infrastructure/db/client", () => ({
     createDb: () => (dbDown ? downDb : recorded(localDb())),
 }));
-vi.mock("../_data/candidates", () => ({ candidates: async () => [] }));
+vi.mock("@/modules/catalog/infrastructure/candidates", () => ({ candidates: async () => [] }));
 vi.mock("../_data/taste-graph", () => ({ neighborGraphOrNull: async () => null }));
 vi.mock("../_data/feelings", () => ({ loadFeelingKit: async () => null }));
 

@@ -12,8 +12,7 @@ import {
     runAsAsync,
     runScript,
 } from "@/shared/db/local-pg";
-import { DrizzleCatalogRepository } from "./catalog-repository";
-import { titleReferenced } from "./catalog-repository";
+import { DrizzleCatalogRepository, titleReferenced } from "@/modules/catalog/server";
 import { catalogTitles } from "./schema";
 import { codeHash, emailHash, sessionTokenHash } from "../auth/crypto";
 import * as q from "./accounts-sql";

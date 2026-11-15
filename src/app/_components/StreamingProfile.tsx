@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore, type ReactNode } from "react";
-import { streamingSummary, type Streaming } from "@/domain/streaming";
+import { streamingSummary, type Streaming } from "@/modules/catalog";
 import { savedStreamings, subscribeToStreamings } from "@/infrastructure/browser-storage";
 import { useAccountStatus } from "./account/store";
 import { cx } from "@/shared/ui/cx";

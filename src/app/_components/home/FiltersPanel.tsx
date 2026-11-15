@@ -2,7 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useEffectEvent, useId, useMemo, useRef, useState, useTransition } from "react";
-import { MIN_RATING } from "@/domain/catalog";
+import {
+    MIN_RATING,
+    type TypeChoice,
+    GENRE_LABELS,
+    KINNE_GENRES,
+    STREAMING_SERVICES,
+} from "@/modules/catalog";
 import {
     matchTitles,
     MAX_RATING,
@@ -13,12 +19,9 @@ import {
     type FilterCandidate,
     type Filters,
 } from "@/domain/filters";
-import type { TypeChoice } from "@/domain/candidate";
 import { FEELING_LABELS, FEELINGS } from "@/domain/feelings";
-import { GENRE_LABELS, KINNE_GENRES } from "@/domain/genre";
 import { isLimited, LIMITED_MESSAGE, type Limited } from "@/shared/lib/rate-limit";
 import { filtersHint } from "./filtersHint";
-import { STREAMING_SERVICES } from "@/domain/streaming";
 import { EMPTY_TASTE, SURPRISE_MAX_EXCLUDED } from "@/domain/taste-signals";
 import {
     filteredRun,
@@ -28,15 +31,13 @@ import {
     watchedTitles,
 } from "@/infrastructure/browser-storage";
 import { drawFiltered, filterCandidates } from "../../_actions/filters";
-import { personTitles } from "../../_actions/people";
+import { personTitles, PersonField, goToTitle } from "@/modules/catalog/ui";
 import { loadError } from "@/shared/ui/StateScreen";
 import { showToast } from "@/shared/ui/toast";
 import { saveStreamings } from "../../_actions/account";
 import { rememberReturn } from "../account/returnTo";
 import { SHOW_SIGN_IN } from "../account/signIn";
 import { setAccountStatus, useAccountStatus } from "../account/store";
-import { PersonField } from "./PersonField";
-import { goToTitle } from "../title/origin";
 import { Button } from "@/shared/ui/Button";
 import { Chip, RadioChip } from "@/shared/ui/Chip";
 import { GlassPanel } from "@/shared/ui/GlassPanel";

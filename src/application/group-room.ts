@@ -1,5 +1,14 @@
-import type { CatalogCandidate, TypeChoice } from "@/domain/candidate";
-import { isKinneGenre, type KinneGenre } from "@/domain/genre";
+import {
+    type CatalogCandidate,
+    type TypeChoice,
+    isKinneGenre,
+    type KinneGenre,
+    meanRating,
+    weightedRating,
+    isStreaming,
+    STREAMING_SERVICES,
+    type Streaming,
+} from "@/modules/catalog";
 import {
     everyoneVoted,
     pickFinalists,
@@ -9,8 +18,6 @@ import {
     type MemberInput,
     type Tally,
 } from "@/domain/group-room";
-import { meanRating, weightedRating } from "@/domain/rating";
-import { isStreaming, STREAMING_SERVICES, type Streaming } from "@/domain/streaming";
 import { spreadTaste, type NeighborGraph } from "@/domain/taste-graph";
 import { hasPositiveSignal, toSignals } from "@/domain/taste-signals";
 

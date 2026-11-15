@@ -2,9 +2,15 @@ import "server-only";
 import { cookies, headers } from "next/headers";
 import { z } from "zod";
 import type { MemberDetails } from "@/application/group-room";
-import { isKinneGenre, KINNE_GENRES, type KinneGenre } from "@/domain/genre";
+import {
+    isKinneGenre,
+    KINNE_GENRES,
+    type KinneGenre,
+    isStreaming,
+    STREAMING_SERVICES,
+    type Streaming,
+} from "@/modules/catalog";
 import { RUNTIME_LIMITS, TYPES } from "@/domain/filters";
-import { isStreaming, STREAMING_SERVICES, type Streaming } from "@/domain/streaming";
 import { SURPRISE_MAX_EXCLUDED } from "@/domain/taste-signals";
 import { isBrowserId } from "@/shared/lib/browser-id";
 import { clientKey, getClientIp } from "@/shared/lib/client-ip";

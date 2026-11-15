@@ -4,10 +4,13 @@
 import { appendFileSync } from "node:fs";
 
 import { buildNeighborEdges } from "@/domain/taste-graph";
-import { connectSyncDb, DrizzleCatalogRepository } from "@/infrastructure/db/catalog-repository";
-import { requestGraphRevalidation } from "@/infrastructure/revalidation";
+import {
+    connectSyncDb,
+    DrizzleCatalogRepository,
+    requestGraphRevalidation,
+    publicErrorMessage,
+} from "@/modules/catalog/server";
 import { DrizzleTasteGraphRepository } from "@/infrastructure/db/taste-graph-repository";
-import { publicErrorMessage } from "@/infrastructure/tmdb/client";
 
 function summary(lines: string[]) {
     for (const l of lines) console.log(l);

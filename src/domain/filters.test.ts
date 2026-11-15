@@ -1,4 +1,4 @@
-import type { KinneGenre } from "./genre";
+import type { KinneGenre } from "@/modules/catalog";
 import { describe, expect, it } from "vitest";
 import { FEELINGS, type Feeling } from "./feelings";
 import {

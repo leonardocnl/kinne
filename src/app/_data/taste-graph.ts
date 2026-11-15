@@ -2,8 +2,7 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { toNeighborGraph, type NeighborGraph } from "@/domain/taste-graph";
 import { createDb } from "@/infrastructure/db/client";
-import { DrizzleTitlesRepository } from "@/infrastructure/db/titles-repository";
-import { CATALOG_TAG, LISTS_TAG } from "@/infrastructure/revalidation";
+import { DrizzleTitlesRepository, CATALOG_TAG, LISTS_TAG } from "@/modules/catalog/server";
 
 /**
  * O grafo de vizinhos (docs/design/taste-graph.md), lido uma vez e guardado em cache remoto com as

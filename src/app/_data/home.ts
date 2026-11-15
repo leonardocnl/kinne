@@ -1,14 +1,17 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { dailyPicksFor, type DailyPickTitle } from "@/application/daily-picks";
-import { formatRuntime } from "@/domain/catalog";
+import {
+    formatRuntime,
+    GENRE_LABELS,
+    availableStreamings,
+    type StreamingService,
+} from "@/modules/catalog";
 import { pickPhrase, rotationSeconds } from "@/domain/daily-picks";
 import type { Day } from "@/shared/lib/day";
-import { GENRE_LABELS } from "@/domain/genre";
-import { availableStreamings, type StreamingService } from "@/domain/streaming";
 import { createDb } from "@/infrastructure/db/client";
 import { DrizzleDailyPicksRepository } from "@/infrastructure/db/daily-picks-repository";
-import { CATALOG_TAG, LISTS_TAG } from "@/infrastructure/revalidation";
+import { CATALOG_TAG, LISTS_TAG } from "@/modules/catalog/server";
 
 // Uma indicação já pronta para a tela inicial.
 export type HomePick = {

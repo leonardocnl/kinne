@@ -54,3 +54,5 @@ A module with client components has two entry files: `index.ts` (server and isom
 ## Status
 
 Accepted, 2026-11-15. Amends the dependency table of [ADR 0001](0001-modular-monolith.md). The ownership of `user_watched` and `user_taste_signals` is transitional and is revisited when `library` is created.
+
+2026-11-15, when `catalog` was moved: a module has three entry files, not two. `index.ts` holds only code that is safe to import anywhere (domain and application, nothing that imports `server-only`); `server.ts` starts with `import "server-only"` and exports the infrastructure; `ui/index.ts` exports the client components, their hooks and the server actions. With a single `index.ts`, a client component importing a domain constant would pull the repositories into the browser bundle and the build would fail. Rule 1 accepts the three files, and none of them may re-export tables.

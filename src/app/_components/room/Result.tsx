@@ -5,7 +5,7 @@ import type { RoomView } from "@/application/group-room";
 import { nextRound } from "../../_actions/room";
 import { Button, ButtonLink } from "@/shared/ui/Button";
 import { TextLink } from "@/shared/ui/TextLink";
-import { titleHref } from "../title/origin";
+import { titleHref } from "@/modules/catalog/ui";
 import { ROOM_ERROR } from "./messages";
 
 type Room = Extract<RoomView, { kind: "room" }>;

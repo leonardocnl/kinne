@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useId, useState, type ReactNode } from "react";
 import type { AccountTitle, AccountView } from "@/application/accounts";
 import { hasSkippedStep } from "@/domain/accounts";
-import { STREAMING_SERVICES, type Streaming } from "@/domain/streaming";
+import { STREAMING_SERVICES, type Streaming } from "@/modules/catalog";
 import {
     deleteAccount,
     exportMyData,

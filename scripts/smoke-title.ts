@@ -4,7 +4,7 @@
 // Não confere status 404: com cacheComponents a rota tem estado "postponed", e o Next envia o status
 // da pré-renderização (200) antes de rodar a página (node_modules/next/dist/build/templates/
 // app-page-runtime.js:1390-1391 e 1553). O garantido é a tela de não encontrado com noindex.
-import { publicErrorMessage } from "@/infrastructure/tmdb/client";
+import { publicErrorMessage } from "@/modules/catalog/server";
 
 const base = process.argv[2] ?? "http://localhost:3000";
 

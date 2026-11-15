@@ -21,7 +21,7 @@ vi.mock("next/headers", () => ({
 const takeTokens = vi.fn();
 vi.mock("@/infrastructure/db/rate-limiter", () => ({ takeTokens }));
 vi.mock("@/infrastructure/db/client", () => ({ createDb: () => ({}) }));
-vi.mock("../_data/candidates", () => ({ candidates: async () => [] }));
+vi.mock("@/modules/catalog/infrastructure/candidates", () => ({ candidates: async () => [] }));
 vi.mock("../_data/taste-graph", () => ({ neighborGraphOrNull: async () => null }));
 
 const repository = {

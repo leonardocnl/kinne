@@ -1,4 +1,4 @@
-import type { TitleType } from "@/domain/catalog";
+import type { TitleType, KinneGenre } from "@/modules/catalog";
 import {
     chooseDailyPicks,
     DAILY_PICK_GENRES,
@@ -8,7 +8,6 @@ import {
     type PickCandidate,
 } from "@/domain/daily-picks";
 import { addDays, type Day } from "@/shared/lib/day";
-import type { KinneGenre } from "@/domain/genre";
 
 // Uma indicação do dia, com o que a tela inicial mostra.
 export type DailyPickTitle = {

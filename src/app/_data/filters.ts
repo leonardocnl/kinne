@@ -1,10 +1,14 @@
 import { z } from "zod";
 import { FEELINGS } from "@/domain/feelings";
-import { KINNE_GENRES, isKinneGenre } from "@/domain/genre";
-import { MIN_RATING } from "@/domain/catalog";
-import { MAX_PERSON_ID } from "@/domain/person-search";
+import {
+    KINNE_GENRES,
+    isKinneGenre,
+    MIN_RATING,
+    MAX_PERSON_ID,
+    isStreaming,
+    STREAMING_SERVICES,
+} from "@/modules/catalog";
 import { MAX_ROUND } from "@/domain/rounds";
-import { isStreaming, STREAMING_SERVICES } from "@/domain/streaming";
 import {
     AGE_LIMIT_VALUES,
     MAX_RATING,

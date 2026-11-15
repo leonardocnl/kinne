@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -11,8 +11,12 @@ const forbidden = [
 ];
 
 const appDir = import.meta.dirname;
-// as telas (src/app) e o design system (src/shared/ui); os caminhos são relativos a src/app
-const files = [".", "../shared/ui"].flatMap((dir) =>
+// as telas (src/app), o design system (src/shared/ui) e a pasta ui de cada módulo; os caminhos
+// são relativos a src/app
+const moduleUiDirs = readdirSync(join(appDir, "../modules"))
+    .map((name) => `../modules/${name}/ui`)
+    .filter((dir) => existsSync(join(appDir, dir)));
+const files = [".", "../shared/ui", ...moduleUiDirs].flatMap((dir) =>
     readdirSync(join(appDir, dir), { recursive: true, encoding: "utf8" })
         .filter((file) => /\.tsx?$/.test(file) && !file.endsWith(".test.ts"))
         .map((file) => join(dir, file)),

@@ -10,9 +10,9 @@ import {
     shownTitles,
     tasteSignals,
     teamBrowser,
-    titleOrigin,
     watchedTitles,
 } from "./browser-storage";
+import { titleOrigin } from "@/modules/catalog/ui";
 
 function memoryStorage(): Storage {
     const data = new Map<string, string>();

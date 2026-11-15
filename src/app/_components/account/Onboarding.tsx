@@ -10,11 +10,14 @@ import {
     onboardingPrefill,
     ONBOARDING_STEPS,
 } from "@/domain/accounts";
-import { parseSearchTerm, type SearchResult } from "@/domain/search";
-import { STREAMING_SERVICES, type Streaming } from "@/domain/streaming";
+import {
+    parseSearchTerm,
+    type SearchResult,
+    STREAMING_SERVICES,
+    type Streaming,
+} from "@/modules/catalog";
 import { saveOnboardingStep } from "../../_actions/account";
-import { onboardingTitles } from "../../_actions/onboarding";
-import { searchTitles } from "../../_actions/search";
+import { onboardingTitles, searchTitles } from "@/modules/catalog/ui";
 import { Button } from "@/shared/ui/Button";
 import { Chip } from "@/shared/ui/Chip";
 import { cx } from "@/shared/ui/cx";

@@ -2,11 +2,11 @@ import { orderByFeeling, orderByTaste, orderByTasteAndFeeling } from "@/domain/d
 import type { FeelingKit } from "@/domain/feelings";
 import { rankByPurity } from "@/domain/genre-conflicts";
 import { matchTitles, type FilterCriteria } from "@/domain/filters";
-import { meanRating, rankTitles } from "@/domain/rating";
+import { meanRating, rankTitles } from "@/modules/catalog";
+import type { Candidate } from "@/modules/catalog/server";
 import { buildRounds, type CustomOrder } from "@/domain/rounds";
 import { spreadTaste, type NeighborGraph } from "@/domain/taste-graph";
 import { hasPositiveSignal, toSignals, type TasteLists } from "@/domain/taste-signals";
-import type { Candidate } from "./titles";
 
 // O planejamento das rodadas do "Sortear um título" (US002 C6, US008), sobre os candidatos do
 // catálogo que o servidor já tem. Sem banco nem rede: quem chama carrega o que precisa.

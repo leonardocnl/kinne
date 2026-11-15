@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { KinneGenre } from "./genre";
+import { type KinneGenre, meanRating, rankTitles, weightedRating } from "@/modules/catalog";
 import {
     buildRounds,
     genreQuotas,
@@ -8,7 +8,6 @@ import {
     roundEndHeading,
     roundEndArt,
 } from "./rounds";
-import { meanRating, rankTitles, weightedRating } from "./rating";
 
 type T = {
     id: number;

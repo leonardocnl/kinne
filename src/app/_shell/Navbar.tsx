@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { type CSSProperties, ViewTransition } from "react";
-import { SearchLauncher } from "@/app/_components/search/SearchLauncher";
+import { SearchLauncher } from "@/modules/catalog/ui";
 import { cx } from "@/shared/ui/cx";
 import { glass, navIdle, navItem, navPart, smoke } from "@/shared/ui/navItem";
 

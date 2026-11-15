@@ -9,7 +9,7 @@ import {
 import { createDb } from "@/infrastructure/db/client";
 import { DrizzleUsageEventsRepository } from "@/infrastructure/db/usage-events-repository";
 import { dbEnvErrors } from "@/shared/config/sync-env";
-import { publicErrorMessage } from "@/infrastructure/tmdb/client";
+import { publicErrorMessage } from "@/modules/catalog/server";
 
 async function main() {
     let args: DeleteEventsArgs;

@@ -2,8 +2,7 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { feelingKit, type Feeling, type FeelingData, type FeelingKit } from "@/domain/feelings";
 import { createDb } from "@/infrastructure/db/client";
-import { DrizzleTitlesRepository } from "@/infrastructure/db/titles-repository";
-import { CATALOG_TAG, LISTS_TAG } from "@/infrastructure/revalidation";
+import { DrizzleTitlesRepository, CATALOG_TAG, LISTS_TAG } from "@/modules/catalog/server";
 
 /**
  * Gêneros e temas dos títulos recomendáveis, para ordenar por sentimento (US008 RNE002). Só dados

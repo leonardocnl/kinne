@@ -6,7 +6,7 @@ import { brasiliaDay } from "@/shared/lib/day";
 import { TitleSkeleton } from "../../_components/title/TitleSkeleton";
 import { TitleView } from "../../_components/title/TitleView";
 import { homePicks } from "../../_data/home";
-import { titleScreen } from "../../_data/title";
+import { titleScreen } from "@/modules/catalog/server";
 
 export async function generateMetadata({ params }: PageProps<"/titulo/[slug]">): Promise<Metadata> {
     const title = await titleScreen((await params).slug);

@@ -21,7 +21,7 @@ describe("o gosto não é guardado nem cacheado (B1, B2)", () => {
         for (const file of [
             "src/app/_data/taste-graph.ts",
             "src/app/_data/feelings.ts",
-            "src/app/_data/candidates.ts",
+            "src/modules/catalog/infrastructure/candidates.ts",
         ]) {
             const text = read(file);
             const cached = [...text.matchAll(/function\s+(\w+)\(([^)]*)\)[^{]*\{\s*"use cache/g)];

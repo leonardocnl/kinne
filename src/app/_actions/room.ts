@@ -4,7 +4,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { loadRoom, proposeFinalists, type RoomView } from "@/application/group-room";
 import { generateCode, normalizeCode, ROOM_TTL_MS } from "@/domain/group-room";
-import { meanRating } from "@/domain/rating";
+import { meanRating } from "@/modules/catalog";
 import {
     cookieOptions,
     creatorKey,
@@ -14,7 +14,7 @@ import {
 } from "@/infrastructure/group-room-session";
 import { randomBytes } from "node:crypto";
 import { searchConfig } from "@/shared/config/search-config";
-import { candidates } from "../_data/candidates";
+import { candidates } from "@/modules/catalog/server";
 import {
     accountStreamings,
     admitIp,

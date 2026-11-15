@@ -1,8 +1,7 @@
 // G14: confere que kinne_normalize (banco) e normalizeSearchText (TypeScript) dão o mesmo
 // resultado nos casos de src/domain/search-cases.ts. Uso: npm run search:check-normalization
 import { neon } from "@neondatabase/serverless";
-import { normalizeSearchText } from "@/domain/search";
-import { NORMALIZATION_CASES } from "@/domain/search-cases";
+import { normalizeSearchText, NORMALIZATION_CASES } from "@/modules/catalog";
 import { dbEnvErrors } from "@/shared/config/sync-env";
 
 async function main() {

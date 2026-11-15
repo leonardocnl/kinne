@@ -1,4 +1,4 @@
-import { streamingList } from "@/domain/streaming";
+import { streamingList } from "@/modules/catalog";
 import type { HomePick } from "../../_data/home";
 import { TitleSpec } from "@/shared/ui/TitleSpec";
 

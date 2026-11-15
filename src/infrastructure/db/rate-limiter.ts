@@ -1,6 +1,6 @@
 import "server-only";
 import { sql } from "drizzle-orm";
-import type { Admission } from "@/application/title-search";
+import type { Admission } from "@/modules/catalog";
 import type { Db } from "./client";
 
 /** Token bucket no Postgres (kinne_take_tokens, migration 0006): [chave, capacidade, fichas/s]. */
