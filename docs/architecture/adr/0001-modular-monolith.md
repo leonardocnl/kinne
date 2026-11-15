@@ -38,3 +38,5 @@ Modules that are deliberately not created, and what would create them:
 ## Status
 
 Accepted, 2026-11-01. Migration not started (F2).
+
+2026-11-15: the allowed dependencies of `accounts`, `room` and `discovery` were amended by [ADR 0012](0012-module-dependencies-after-f2-mapping.md).
