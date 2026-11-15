@@ -12,8 +12,7 @@ import {
     TYPES,
     type Filters,
 } from "@/domain/filters";
-import { idListSchema } from "./surprise";
-import { tasteSchema } from "./taste";
+import { idListSchema, tasteSchema } from "./taste";
 
 const unique = (list: readonly string[]) => new Set(list).size === list.length;
 

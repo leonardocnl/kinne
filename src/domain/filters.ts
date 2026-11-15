@@ -1,15 +1,13 @@
 import { BR_CERTIFICATIONS, type BrCertification } from "./catalog-sync";
-import { meetsQualityFloor, meetsTasteFloor, MIN_RATING, type TitleType } from "./catalog";
+import type { CatalogCandidate, TypeChoice } from "./candidate";
+import { meetsQualityFloor, meetsTasteFloor, MIN_RATING } from "./catalog";
 import { isFeeling, maskAllows, type Feeling } from "./feelings";
 import { withoutConflicts } from "./genre-conflicts";
 import { isKinneGenre, KINNE_GENRES, type KinneGenre } from "./genre";
 import { parsePersonPick, type PersonPick } from "./person-search";
 import { isStreaming, STREAMING_SERVICES, streamingTmdbIds, type Streaming } from "./streaming";
-import type { SurpriseCandidate } from "./surprise";
 
 // Escolher agora (US002).
-
-export type TypeChoice = TitleType | "both";
 
 // As posições do seletor; a classificação 10 entra a partir de 12.
 export const AGE_LIMIT_VALUES = ["L", "12", "14", "16", "18"] as const;
@@ -75,16 +73,9 @@ export const DEFAULT_FILTERS: Filters = {
     feeling: null,
 };
 
-// Sem o slug: a lista vai inteira ao navegador para o contador, e o slug dobraria o tamanho.
-export type FilterCandidate = Omit<SurpriseCandidate, "slug"> & {
-    type: TitleType;
+export type FilterCandidate = CatalogCandidate & {
     // quais sentimentos aceitam o título, um bit por sentimento (US008 RNE004)
     feelings: number;
-    runtimeMinutes: number | null;
-    certification: BrCertification | null;
-    kinneGenres: readonly KinneGenre[];
-    // todos os gêneros do TMDB, para os conflitos e a pureza (US017)
-    genreTmdbIds: readonly number[];
 };
 
 /** Troca o tipo; com Séries, Romance é desmarcado, porque o TMDB não o tem para séries (C8). */

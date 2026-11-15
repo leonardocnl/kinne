@@ -1,6 +1,7 @@
+import type { SurpriseCandidate } from "./candidate";
 import { meetsQualityFloor } from "./catalog";
 import { orderByTaste } from "./draw-order";
-import { meanRating } from "./rounds";
+import { meanRating } from "./rating";
 import { streamingTmdbIds, type Streaming } from "./streaming";
 
 // US003 RNE001: piso mais alto que o do catálogo (valor de partida, ver 04-mudancas).
@@ -8,19 +9,6 @@ export const SURPRISE_MIN_RATING = 7.5;
 
 // Com gosto, o sorteio é entre os 30 primeiros na ordem do gosto (US009 C3).
 export const SURPRISE_TASTE_POOL = 30;
-
-// Teto de cada lista de ids do pedido (marcados, já mostrados); o navegador manda os mais recentes.
-export const SURPRISE_MAX_EXCLUDED = 1000;
-
-export type SurpriseCandidate = {
-    id: number;
-    slug: string;
-    rating: number;
-    votes: number;
-    streamingTmdbIds: readonly number[];
-    // classificação 18: a surpresa nunca os sorteia (recommendation-rounds A2)
-    adult: boolean;
-};
 
 export type SurpriseRequest = {
     // streamings salvos no navegador; nenhum vale como todos (RNG003)

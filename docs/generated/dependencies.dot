@@ -62,7 +62,7 @@ strict digraph "dependency-cruiser output"{
     "src/app/titulo" -> "src/domain"
     subgraph "cluster_src" {label="src" "src/application" [label=<application> tooltip="application" URL="src/application" shape="box3d"] }
     "src/application" -> "src/domain"
-    subgraph "cluster_src" {label="src" "src/domain" [label=<domain> tooltip="domain" URL="src/domain" shape="box3d"] }
+    subgraph "cluster_src" {label="src" "src/domain" [label=<domain> tooltip="domain" URL="src/domain" fillcolor="#ccffcc" shape="box3d"] }
     subgraph "cluster_src" {label="src" "src/infrastructure" [label=<infrastructure> tooltip="infrastructure" URL="src/infrastructure" shape="box3d"] }
     "src/infrastructure" -> "src/domain"
     "src/infrastructure" -> "src/application" [arrowhead="onormal" penwidth="1.0"]

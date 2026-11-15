@@ -1,4 +1,4 @@
-import { weightedRating } from "./rounds";
+import { weightedRating } from "./rating";
 
 // Conflitos de gênero (US017; docs/plano-fundacao.md, seção 1.10).
 

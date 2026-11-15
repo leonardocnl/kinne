@@ -23,7 +23,7 @@ description: How to change recommendation, ranking or scoring logic and prove th
 
 ## Kinne specifics
 
-- Golden tests: `src/domain/taste-golden.ts` and `src/domain/taste-golden.test.ts`.
+- Golden tests: `src/domain/feelings-golden.ts` and `src/domain/feelings-golden.test.ts`.
 - Calibration scripts (`feelings:calibrate`, `graph:build`, `daily:pick`) touch shared data:
   run them only with Leonardo's ok for that run.
 

@@ -4,7 +4,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { loadRoom, proposeFinalists, type RoomView } from "@/application/group-room";
 import { generateCode, normalizeCode, ROOM_TTL_MS } from "@/domain/group-room";
-import { meanRating } from "@/domain/rounds";
+import { meanRating } from "@/domain/rating";
 import {
     cookieOptions,
     creatorKey,

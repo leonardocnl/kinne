@@ -1,5 +1,5 @@
 import { affinities, rankByFeeling, type FeelingKit } from "./feelings";
-import { weightedRating } from "./rounds";
+import { weightedRating } from "./rating";
 import { rankByTaste } from "./taste-graph";
 
 // A ordem dos títulos que passaram nos filtros (US008 RNE002, US009 RNE002 e RNE004). Só

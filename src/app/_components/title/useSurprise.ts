@@ -1,7 +1,7 @@
 import { useRouter } from "next/navigation";
 import { isLimited, LIMITED_MESSAGE } from "@/domain/rate-limit";
 import { useTransition } from "react";
-import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
+import { SURPRISE_MAX_EXCLUDED } from "@/domain/taste-signals";
 import {
     savedStreamings,
     shownTitles,

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { drawSurprise, type SurpriseCandidate, type SurpriseRequest } from "./surprise";
+import type { SurpriseCandidate } from "./candidate";
+import { drawSurprise, type SurpriseRequest } from "./surprise";
 
 const title = (id: number, extra: Partial<SurpriseCandidate> = {}): SurpriseCandidate => ({
     id,

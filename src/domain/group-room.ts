@@ -1,7 +1,7 @@
 import { meetsQualityFloor } from "./catalog";
-import type { FilterCandidate, TypeChoice } from "./filters";
+import type { CatalogCandidate, TypeChoice } from "./candidate";
 import type { KinneGenre } from "./genre";
-import { rankTitles, weightedRating } from "./rounds";
+import { rankTitles, weightedRating } from "./rating";
 import { STREAMING_SERVICES, type Streaming } from "./streaming";
 import { groupScores } from "./taste-graph";
 
@@ -124,7 +124,7 @@ export type FinalistResult<T> =
  * todos, RNG003), com um gênero aceito por cada pessoa que marcou gêneros, no tipo e na duração
  * de quem criou e fora do "Já vi" de cada pessoa. Os de rodadas anteriores não voltam (C9).
  */
-export function roomCandidates<T extends FilterCandidate>(
+export function roomCandidates<T extends CatalogCandidate>(
     titles: readonly T[],
     members: readonly Pick<MemberInput, "streamings" | "genres" | "watched">[],
     criteria: RoomCriteria,
@@ -159,7 +159,7 @@ export function roomCandidates<T extends FilterCandidate>(
  * tem sinais não restringe, e sem sinal em ninguém vale a nota ponderada. Empate vai para a nota
  * ponderada e depois para o menor id, para a mesma entrada dar sempre os mesmos finalistas.
  */
-export function pickFinalists<T extends FilterCandidate>(
+export function pickFinalists<T extends CatalogCandidate>(
     titles: readonly T[],
     members: readonly MemberInput[],
     criteria: RoomCriteria,

@@ -16,8 +16,7 @@ import {
 } from "@/domain/accounts";
 import { isSlug } from "@/domain/catalog";
 import { isStreaming, STREAMING_SERVICES, type Streaming } from "@/domain/streaming";
-import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
-import { normalizeTaste, type TasteLists } from "@/domain/taste-signals";
+import { normalizeTaste, SURPRISE_MAX_EXCLUDED, type TasteLists } from "@/domain/taste-signals";
 import { clientKey, getClientIp } from "@/infrastructure/client-ip";
 import {
     codeHash,
@@ -33,8 +32,7 @@ import { createDb } from "@/infrastructure/db/client";
 import { DrizzleAccountsRepository } from "@/infrastructure/db/accounts-repository";
 import { takeTokens } from "@/infrastructure/db/rate-limiter";
 import { MemoryLimiter } from "@/infrastructure/memory-limiter";
-import { idListSchema } from "./surprise";
-import { tasteSchema } from "./taste";
+import { idListSchema, tasteSchema } from "./taste";
 
 export const accountRepository = () => new DrizzleAccountsRepository(createDb());
 

@@ -4,7 +4,7 @@
 //      npm run feelings:calibrate -- --list  (também os 12 primeiros de cada lista)
 import { meetsQualityFloor, meetsTasteFloor } from "@/domain/catalog";
 import { FEELING_LABELS, FEELINGS, rankByFeeling, resolveRecipe } from "@/domain/feelings";
-import { weightedRating } from "@/domain/rounds";
+import { weightedRating } from "@/domain/rating";
 import {
     evaluateGolden,
     FEELING_GOLDEN,
@@ -12,7 +12,7 @@ import {
     TASTE_GOLDEN,
     type GoldenResult,
     type TitleRef,
-} from "@/domain/taste-golden";
+} from "@/domain/feelings-golden";
 import {
     buildNeighborEdges,
     rankByTaste,

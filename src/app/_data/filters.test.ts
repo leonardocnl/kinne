@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_FILTERS, wireFilters } from "@/domain/filters";
-import { SURPRISE_MAX_EXCLUDED } from "@/domain/surprise";
+import { SURPRISE_MAX_EXCLUDED } from "@/domain/taste-signals";
 import { parseFilterRequest } from "./filters";
 
 // os filtros como saem do navegador: da pessoa, só o id (person-search A7)

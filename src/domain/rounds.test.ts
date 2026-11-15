@@ -3,14 +3,12 @@ import type { KinneGenre } from "./genre";
 import {
     buildRounds,
     genreQuotas,
-    meanRating,
     nextRoundLabel,
-    rankTitles,
     roundEnd,
     roundEndHeading,
     roundEndArt,
-    weightedRating,
 } from "./rounds";
+import { meanRating, rankTitles, weightedRating } from "./rating";
 
 type T = {
     id: number;

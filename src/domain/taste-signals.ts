@@ -8,6 +8,9 @@ export const TASTE_LIST_MAX = 200;
 // Maior id que cabe no inteiro do banco: acima disso não é id de título.
 export const MAX_TITLE_ID = 2_147_483_647;
 
+// Teto de cada lista de ids do pedido (marcados, já mostrados); o navegador manda os mais recentes.
+export const SURPRISE_MAX_EXCLUDED = 1000;
+
 export type TasteLists = {
     liked: number[];
     willWatch: number[];

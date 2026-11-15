@@ -53,9 +53,7 @@ The git hooks live in `.githooks/` and are activated by `npm install`. They are 
 
 ## Known violations
 
-`arch:check` runs with `--ignore-known`. The file `.dependency-cruiser-known-violations.json` lists violations that existed when the rules were introduced: three `no-circular` entries in `src/domain` (`draw-order.ts`, `rounds.ts`, `filters.ts`). They are resolved when `discovery` is moved in F2.
-
-The list only shrinks. A new violation is fixed, never added to this file.
+There is no known-violations file anymore. The three cycles in `src/domain` were removed in F2 (PR "untangle domain"), and a new violation is fixed, never baselined.
 
 ## Changing a rule
 
