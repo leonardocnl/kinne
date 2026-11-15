@@ -9,7 +9,7 @@ import { drawFiltered } from "../../_actions/filters";
 import { loadError } from "@/shared/ui/StateScreen";
 import { showToast } from "@/shared/ui/toast";
 import { wipeRouter } from "@/shared/ui/wipe";
-import { goToTitle } from "./origin";
+import { goToTitle } from "@/modules/catalog/ui";
 
 /**
  * Outra opção vindo dos filtros (US004 C2): sorteia outro da mesma rodada de 10, sem repetir.

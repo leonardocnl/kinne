@@ -9,9 +9,9 @@ const admitDraw = vi.fn();
 const admitFilterList = vi.fn();
 vi.mock("@/shared/lib/draw-limit", () => ({ admitDraw, admitFilterList }));
 vi.mock("../_data/account", () => ({ drawAccount }));
-vi.mock("../_data/candidates", () => ({ candidates }));
-vi.mock("../_data/people", () => ({ personTitleIds }));
-vi.mock("../_data/person-limit", () => ({ admitPersonQuery: admit }));
+vi.mock("@/modules/catalog/infrastructure/candidates", () => ({ candidates }));
+vi.mock("@/modules/catalog/infrastructure/people", () => ({ personTitleIds }));
+vi.mock("@/modules/catalog/infrastructure/person-limit", () => ({ admitPersonQuery: admit }));
 
 const title = (id: number, adult = false) => ({
     id,

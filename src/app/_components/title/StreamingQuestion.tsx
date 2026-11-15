@@ -7,7 +7,7 @@ import {
     withoutStreaming,
     type Streaming,
     type StreamingService,
-} from "@/domain/streaming";
+} from "@/modules/catalog";
 import {
     savedStreamings,
     saveStreamingsInBrowser,

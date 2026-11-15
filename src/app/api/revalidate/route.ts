@@ -3,7 +3,7 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { revalidateTag } from "next/cache";
 import { createDb } from "@/infrastructure/db/client";
 import { takeTokens } from "@/infrastructure/db/rate-limiter";
-import { REVALIDATE_SECRET_HEADER, revalidateBodySchema } from "@/infrastructure/revalidation";
+import { REVALIDATE_SECRET_HEADER, revalidateBodySchema } from "@/modules/catalog/server";
 
 // Invalidação do cache do catálogo, chamada pela carga no fim de cada execução (C4). Superfície
 // pública (C8): só POST, segredo no cabeçalho comparado em tempo constante, corpo estrito, limite

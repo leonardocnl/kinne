@@ -1,8 +1,13 @@
-import { meetsQualityFloor } from "./catalog";
-import type { CatalogCandidate, TypeChoice } from "./candidate";
-import type { KinneGenre } from "./genre";
-import { rankTitles, weightedRating } from "./rating";
-import { STREAMING_SERVICES, type Streaming } from "./streaming";
+import {
+    meetsQualityFloor,
+    type CatalogCandidate,
+    type TypeChoice,
+    type KinneGenre,
+    rankTitles,
+    weightedRating,
+    STREAMING_SERVICES,
+    type Streaming,
+} from "@/modules/catalog";
 import { groupScores } from "./taste-graph";
 
 // Sala de grupo (US011, docs/design/taste-graph.md §7). Regras puras: o código, as fases, quem

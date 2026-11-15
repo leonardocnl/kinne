@@ -364,3 +364,23 @@ For every PR Fable also: reads the whole diff with `--color-moved=dimmed-zebra` 
 - `app/_actions/limits.test.ts`: assumed to test account limits; its destination is confirmed in PR 6.
 - The exact export list of each `index.ts`: derived in each PR from what other code imports at that moment.
 - Whether `Onboarding.tsx` needs anything from `discovery` (it would be a forbidden `accounts → discovery` import). The import list shows only `catalog` and `accounts` code today.
+
+## 8. Changes to this plan during execution
+
+The owner's rule for the execution is stricter than section 5: if a move needs a change inside a function, it is not done and goes to the post-F2 list.
+
+| Where       | Planned                                                                                   | Done instead                                                                                                                                            |
+| ----------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2.1, 4.5    | `db/client.ts` and `rate-limiter.ts` move to `shared/db`; `createDb()` drops `{ schema }` | Both stay in `src/infrastructure/db`. The old `schema.ts` re-exports every moved table, so `createDb()` and `drizzle.config.ts` are unchanged.          |
+| 2.1         | `navItem.ts` in `src/app/_shell`                                                          | In `shared/ui`: it holds only class strings and `Button` imports it.                                                                                    |
+| 1, ADR 0012 | Two entry files per module                                                                | Three: `index.ts` (safe anywhere), `server.ts` (server-only), `ui/index.ts` (client).                                                                   |
+| 4.3 E2      | `titleReferenced` rewritten as raw SQL with a new test                                    | Untouched. It imports the other modules' tables through the old `schema.ts`.                                                                            |
+| 4.4         | `candidates()` stops calling `feelingMask`                                                | Untouched. `catalog` imports `feelings` from `src/domain` until `discovery` moves; the owner decides then between the one-line change and a read model. |
+| 2.2, 2.3    | `neighborEdges()` and the graph repository's `load()` split in the catalog PR             | Left for the `taste` PR.                                                                                                                                |
+
+### Post-F2 list
+
+1. `createDb()` without `{ schema }`, then `client.ts` and `rate-limiter.ts` move to `shared/db`, and the old `schema.ts` is deleted.
+2. E2: `titleReferenced` as raw SQL in `catalog`, with the test that lists every foreign key to `catalog_titles`.
+3. E3: the sync script calls a purge exported by each owner.
+4. The feeling mask leaves `candidates()` (or the query becomes a read model).

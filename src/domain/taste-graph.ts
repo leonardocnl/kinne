@@ -5,7 +5,7 @@
 //
 // Funções puras: recebem os dados já carregados e devolvem números. Nada de banco nem rede.
 
-import type { TitleType } from "./catalog";
+import type { TitleType } from "@/modules/catalog";
 
 /** O vértice: o que importa de um título para "quem gostou deste gosta daquele?" (§3). */
 export type TitleProfile = {

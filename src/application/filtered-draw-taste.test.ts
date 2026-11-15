@@ -1,7 +1,7 @@
-import type { KinneGenre } from "@/domain/genre";
+import { type KinneGenre, KINNE_GENRES } from "@/modules/catalog";
+import type { Candidate } from "@/modules/catalog/server";
 import { describe, expect, it } from "vitest";
 import { DEFAULT_FILTERS, wireFilters } from "@/domain/filters";
-import { KINNE_GENRES } from "@/domain/genre";
 import {
     STEP_DAMPING,
     spreadTaste,
@@ -10,7 +10,6 @@ import {
 } from "@/domain/taste-graph";
 import { EMPTY_TASTE, toSignals, type TasteLists } from "@/domain/taste-signals";
 import { planFilteredRounds } from "./filtered-draw";
-import type { Candidate } from "./titles";
 
 const GENRE_IDS: Record<KinneGenre, number> = {
     action: 28,

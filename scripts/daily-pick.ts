@@ -4,7 +4,7 @@ import { generateDailyPicks } from "@/application/daily-picks";
 import { addDays, brasiliaDay } from "@/shared/lib/day";
 import { createDb } from "@/infrastructure/db/client";
 import { DrizzleDailyPicksRepository } from "@/infrastructure/db/daily-picks-repository";
-import { publicErrorMessage } from "@/infrastructure/tmdb/client";
+import { publicErrorMessage } from "@/modules/catalog/server";
 
 async function main() {
     const repository = new DrizzleDailyPicksRepository(createDb());

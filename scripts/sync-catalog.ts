@@ -2,12 +2,16 @@
 // Uso: SYNC_TARGET=develop npm run catalog:sync
 // Logs só com contagens e ids (D1, D2); o resumo do GitHub também (D7).
 import { appendFileSync } from "node:fs";
-import { changesWindow, syncCatalog, type SyncResult } from "@/application/sync-catalog";
-import { connectSyncDb, DrizzleCatalogRepository } from "@/infrastructure/db/catalog-repository";
-import { requestRevalidation } from "@/infrastructure/revalidation";
+import { changesWindow, syncCatalog, type SyncResult } from "@/modules/catalog";
+import {
+    connectSyncDb,
+    DrizzleCatalogRepository,
+    requestRevalidation,
+    TmdbCatalogSource,
+    publicErrorMessage,
+    TmdbClient,
+} from "@/modules/catalog/server";
 import { syncEnvErrors } from "@/shared/config/sync-env";
-import { TmdbCatalogSource } from "@/infrastructure/tmdb/catalog-source";
-import { publicErrorMessage, TmdbClient } from "@/infrastructure/tmdb/client";
 
 const NEON_FREE_BYTES = 512 * 1024 * 1024;
 const SIZE_WARNING_RATIO = 0.7; // C2

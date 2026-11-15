@@ -15,7 +15,7 @@ src/
             application/    # use cases, zod input schemas
             infrastructure/ # database, TMDB, browser storage
             ui/             # components of this subject
-            index.ts        # public API: the only way in
+            index.ts        # public API safe anywhere; server.ts and ui/index.ts are the other two entries
             README.md
     shared/
         ui/                 # design system: tokens and components with no business rule
@@ -49,10 +49,10 @@ The dependency column is the table of [ADR 0001](adr/0001-modular-monolith.md) a
 
 ## Where the code is today
 
-The migration to modules is phase F2 of the plan. `src/shared` exists since F2 PR 3; the modules do not exist yet. Until they do:
+The migration to modules is phase F2 of the plan. `src/shared` exists since F2 PR 3 and `catalog` is the first module moved (PR 4). For the code not moved yet:
 
 - Code lives in the layers `src/domain`, `src/application`, `src/infrastructure` and `src/app`. Dependencies point inward: app → application → domain.
-- All tables are in `src/infrastructure/db/schema.ts`, except `rate_limit_buckets` and `meta`, which are defined in `src/shared/db/schema.ts` and re-exported there.
+- The tables of the modules not moved yet are in `src/infrastructure/db/schema.ts`. That file also re-exports the tables already moved (`src/shared/db/schema.ts`, `src/modules/catalog/infrastructure/db/schema.ts`), so `drizzle.config.ts` and `createDb()` still see one schema.
 - Design tokens are in `src/app/globals.css` and the design system components in `src/shared/ui`. The page frame (`Shell`, `TopBar`, `Navbar`, `PageFrame`) is in `src/app/_shell`.
 - The boundary rules for `src/modules` and `src/shared` are already configured, next to the rules for the current layers, so the first file moved is checked from day one.
 

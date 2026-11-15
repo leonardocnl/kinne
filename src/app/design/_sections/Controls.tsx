@@ -3,7 +3,7 @@ import { Dock } from "@/shared/ui/Dock";
 import { TitleSpec } from "@/shared/ui/TitleSpec";
 import { CastDialog } from "@/shared/ui/CastDialog";
 import { Fact, Facts } from "@/shared/ui/Facts";
-import { availableStreamings, streamingList } from "@/domain/streaming";
+import { availableStreamings, streamingList } from "@/modules/catalog";
 import { Frame } from "@/shared/ui/Frame";
 import { BackIcon, CheckIcon, CloseIcon, DiceIcon, PauseIcon, SearchIcon } from "@/shared/ui/icons";
 import { Chip } from "@/shared/ui/Chip";

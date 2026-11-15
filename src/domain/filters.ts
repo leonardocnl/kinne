@@ -1,11 +1,23 @@
-import { BR_CERTIFICATIONS, type BrCertification } from "./catalog-sync";
-import type { CatalogCandidate, TypeChoice } from "./candidate";
-import { meetsQualityFloor, meetsTasteFloor, MIN_RATING } from "./catalog";
+import {
+    BR_CERTIFICATIONS,
+    type BrCertification,
+    type CatalogCandidate,
+    type TypeChoice,
+    meetsQualityFloor,
+    meetsTasteFloor,
+    MIN_RATING,
+    isKinneGenre,
+    KINNE_GENRES,
+    type KinneGenre,
+    parsePersonPick,
+    type PersonPick,
+    isStreaming,
+    STREAMING_SERVICES,
+    streamingTmdbIds,
+    type Streaming,
+} from "@/modules/catalog";
 import { isFeeling, maskAllows, type Feeling } from "./feelings";
 import { withoutConflicts } from "./genre-conflicts";
-import { isKinneGenre, KINNE_GENRES, type KinneGenre } from "./genre";
-import { parsePersonPick, type PersonPick } from "./person-search";
-import { isStreaming, STREAMING_SERVICES, streamingTmdbIds, type Streaming } from "./streaming";
 
 // Escolher agora (US002).
 

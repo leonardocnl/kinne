@@ -1,4 +1,4 @@
-import { isStreaming, type Streaming } from "./streaming";
+import { isStreaming, type Streaming } from "@/modules/catalog";
 import { normalizeTaste, TASTE_LIST_MAX, type TasteLists } from "./taste-signals";
 
 // Contas do Kinne (US012 a US015, docs/threats/accounts.md): as regras puras. O banco repete as

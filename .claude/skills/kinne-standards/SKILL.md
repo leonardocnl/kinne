@@ -27,7 +27,9 @@ src/modules/<module>/
     application/               use cases and their zod input schemas
     infrastructure/            database, TMDB, browser storage
     ui/                        components of this subject
-    index.ts                   public API, the only way in
+    index.ts                   public API safe anywhere (domain, application)
+    server.ts                  public API that is server-only (infrastructure)
+    ui/index.ts                public API for client components
     README.md
 src/shared/                    ui, config, logger, events, lib; no business
 ```
@@ -50,7 +52,7 @@ Moving comes before changing: a structural move does not change behavior, and ex
 
 Seven rules, all checked by `npm run arch:check` and `npm run lint` (ADR 0002, rule names in `docs/architecture/boundaries.md`):
 
-1. Between modules, import only through the other module's `index.ts` (`ui/index.ts` for its client components, ADR 0012).
+1. Between modules, import only through the other module's entry files: `index.ts`, `server.ts` or `ui/index.ts` (ADR 0012).
 2. Module dependencies follow the table above.
 3. No cycles.
 4. `domain` imports no `application`, `infrastructure`, `ui`, `next` or `react`. `application` imports no `infrastructure` or `ui`.

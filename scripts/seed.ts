@@ -1,10 +1,9 @@
 // Dados fixos: streamings e gêneros do TMDB. Idempotente (upsert por tmdb_id).
 import { sql } from "drizzle-orm";
-import { kinneGenreFor } from "@/domain/genre";
-import { STREAMING_SERVICES } from "@/domain/streaming";
+import { kinneGenreFor, STREAMING_SERVICES } from "@/modules/catalog";
 import { createDb } from "@/infrastructure/db/client";
 import { genres, streamingServices } from "@/infrastructure/db/schema";
-import { publicErrorMessage, TmdbClient } from "@/infrastructure/tmdb/client";
+import { publicErrorMessage, TmdbClient } from "@/modules/catalog/server";
 
 type GenreList = { genres: { id: number; name: string }[] };
 

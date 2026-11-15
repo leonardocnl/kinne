@@ -1,20 +1,18 @@
 import "server-only";
 import type { DailyPickTitle, DailyPicksRepository } from "@/application/daily-picks";
-import type { TitleType } from "@/domain/catalog";
-import { ADULT_CERTIFICATION } from "@/domain/catalog-sync";
+import { type TitleType, ADULT_CERTIFICATION, type KinneGenre } from "@/modules/catalog";
 import type { DailyPick } from "@/domain/daily-picks";
 import type { Day } from "@/shared/lib/day";
-import type { KinneGenre } from "@/domain/genre";
 import { and, eq, gte, isNotNull, ne, sql } from "drizzle-orm";
 import type { Db } from "./client";
+import { dailyPicks } from "./schema";
 import {
     catalogTitleGenres,
     catalogTitles,
-    dailyPicks,
     genres,
     streamingAvailability,
     streamingServices,
-} from "./schema";
+} from "@/modules/catalog/infrastructure/db/schema";
 
 const COUNTRY = "BR";
 

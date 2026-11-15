@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_FILTERS, wireFilters } from "@/domain/filters";
 import { feelingKit, FEELINGS, type FeelingData } from "@/domain/feelings";
 import { EMPTY_TASTE } from "@/domain/taste-signals";
-import { KINNE_GENRES, type KinneGenre } from "@/domain/genre";
+import { KINNE_GENRES, type KinneGenre } from "@/modules/catalog";
+import type { Candidate } from "@/modules/catalog/server";
 import { planFilteredRounds } from "./filtered-draw";
-import type { Candidate } from "./titles";
 
 const bit = (f: (typeof FEELINGS)[number]) => 1 << FEELINGS.indexOf(f);
 

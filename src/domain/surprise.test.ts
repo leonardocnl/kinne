@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { SurpriseCandidate } from "./candidate";
+import type { SurpriseCandidate } from "@/modules/catalog";
 import { drawSurprise, type SurpriseRequest } from "./surprise";
 
 const title = (id: number, extra: Partial<SurpriseCandidate> = {}): SurpriseCandidate => ({

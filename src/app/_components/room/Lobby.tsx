@@ -3,11 +3,16 @@
 import { useAccountStatus } from "../account/store";
 import { useId, useRef, useState, useSyncExternalStore } from "react";
 import type { RoomView } from "@/application/group-room";
-import type { TypeChoice } from "@/domain/candidate";
+import {
+    type TypeChoice,
+    GENRE_LABELS,
+    KINNE_GENRES,
+    type KinneGenre,
+    STREAMING_SERVICES,
+    type Streaming,
+} from "@/modules/catalog";
 import { RUNTIME_LIMITS } from "@/domain/filters";
-import { GENRE_LABELS, KINNE_GENRES, type KinneGenre } from "@/domain/genre";
 import { formatCode } from "@/domain/group-room";
-import { STREAMING_SERVICES, type Streaming } from "@/domain/streaming";
 import { startRoom, updatePreferences } from "../../_actions/room";
 import { showToast } from "@/shared/ui/toast";
 import { Button } from "@/shared/ui/Button";

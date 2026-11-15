@@ -1,6 +1,5 @@
-import type { TitleType } from "./catalog";
+import type { TitleType, KinneGenre } from "@/modules/catalog";
 import { addDays, type Day } from "@/shared/lib/day";
-import type { KinneGenre } from "./genre";
 
 // Ordem das indicações na tela inicial (US001).
 export const DAILY_PICK_GENRES = [

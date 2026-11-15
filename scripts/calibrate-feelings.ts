@@ -2,9 +2,8 @@
 // monta o grafo em memória, sem gravar nada.
 // Uso: npm run feelings:calibrate            (resumo: notas do gabarito)
 //      npm run feelings:calibrate -- --list  (também os 12 primeiros de cada lista)
-import { meetsQualityFloor, meetsTasteFloor } from "@/domain/catalog";
+import { meetsQualityFloor, meetsTasteFloor, weightedRating } from "@/modules/catalog";
 import { FEELING_LABELS, FEELINGS, rankByFeeling, resolveRecipe } from "@/domain/feelings";
-import { weightedRating } from "@/domain/rating";
 import {
     evaluateGolden,
     FEELING_GOLDEN,
@@ -20,9 +19,8 @@ import {
     strongestPath,
     toNeighborGraph,
 } from "@/domain/taste-graph";
-import { connectSyncDb } from "@/infrastructure/db/catalog-repository";
+import { connectSyncDb, publicErrorMessage } from "@/modules/catalog/server";
 import { DrizzleTasteGraphRepository } from "@/infrastructure/db/taste-graph-repository";
-import { publicErrorMessage } from "@/infrastructure/tmdb/client";
 
 const SHOW = 12;
 const showLists = process.argv.includes("--list");

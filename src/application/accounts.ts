@@ -7,7 +7,7 @@ import {
     signInEmail,
     type OnboardingProgress,
 } from "@/domain/accounts";
-import type { Streaming } from "@/domain/streaming";
+import type { Streaming } from "@/modules/catalog";
 import type { TasteLists } from "@/domain/taste-signals";
 
 // Contas (US012 a US015): os casos de uso, sobre um repositório que a infrastructure implementa.

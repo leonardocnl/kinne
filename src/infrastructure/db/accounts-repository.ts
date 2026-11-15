@@ -6,7 +6,7 @@ import type {
     StoredAccount,
     StoredTaste,
 } from "@/application/accounts";
-import type { Streaming } from "@/domain/streaming";
+import type { Streaming } from "@/modules/catalog";
 import type { Db } from "./client";
 import * as q from "./accounts-sql";
 

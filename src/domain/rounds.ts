@@ -1,6 +1,10 @@
-import type { TypeChoice } from "./candidate";
-import { KINNE_GENRES, type KinneGenre } from "./genre";
-import { rankTitles, type Ranked } from "./rating";
+import {
+    type TypeChoice,
+    KINNE_GENRES,
+    type KinneGenre,
+    rankTitles,
+    type Ranked,
+} from "@/modules/catalog";
 
 // Rodadas da recomendação pelos filtros (fase 4; threat model docs/threats/recommendation-rounds.md).
 

@@ -32,9 +32,12 @@ describe("rotas (H3)", () => {
     });
 
     it("a busca é uma server action só (G8), sem nada da busca em rota ou URL", () => {
-        const action = readFileSync(join(appDir, "_actions/search.ts"), "utf8");
+        const action = readFileSync(
+            join(appDir, "../modules/catalog/ui/actions/search.ts"),
+            "utf8",
+        );
         expect(action.match(/^export /gm)).toHaveLength(1);
-        const panel = readFileSync(join(appDir, "_components/search/SearchPanel.tsx"), "utf8");
+        const panel = readFileSync(join(appDir, "../modules/catalog/ui/SearchPanel.tsx"), "utf8");
         expect(panel).toContain('goToTitle(router, "push", result.slug, "busca")');
         expect(panel).not.toMatch(/searchParams|URLSearchParams|\?(q|termo|busca)=/);
         expect(panel).not.toMatch(/localStorage|sessionStorage/); // G10

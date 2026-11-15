@@ -30,16 +30,17 @@ const FRAMEWORK = "(^|/)node_modules/(next|react|react-dom)/";
 /** @type {import('dependency-cruiser').IConfiguration} */
 module.exports = {
     forbidden: [
-        // 1. Between modules: only through the other module's index.ts, or ui/index.ts, its
-        // entry for client components (ADR 0012).
+        // 1. Between modules: only through the other module's entry files (ADR 0012): index.ts
+        // (code safe anywhere), server.ts (server-only code) and ui/index.ts (client components).
         {
             name: "module-public-api",
-            comment: "Import another module only through its index.ts or ui/index.ts (rule 1)",
+            comment:
+                "Import another module only through its index.ts, server.ts or ui/index.ts (rule 1)",
             severity: "error",
             from: { path: "^src/modules/([^/]+)/" },
             to: {
                 path: "^src/modules/[^/]+/",
-                pathNot: ["^src/modules/$1/", "^src/modules/[^/]+/(ui/)?index\\.ts$"],
+                pathNot: ["^src/modules/$1/", "^src/modules/[^/]+/((ui/)?index|server)\\.ts$"],
             },
         },
         // 2. Direction of dependencies (table 1.2).
@@ -87,9 +88,9 @@ module.exports = {
         },
         {
             name: "module-index-hides-tables",
-            comment: "index.ts never re-exports the tables, so rule 6 cannot be bypassed",
+            comment: "an entry file never re-exports the tables, so rule 6 cannot be bypassed",
             severity: "error",
-            from: { path: "^src/modules/[^/]+/index\\.ts$" },
+            from: { path: "^src/modules/[^/]+/((ui/)?index|server)\\.ts$" },
             to: { path: "^src/modules/[^/]+/infrastructure/db/schema\\.ts$" },
         },
         // 7. shared imports no module; neither shared nor a module imports the routes.

@@ -1,10 +1,11 @@
 import "server-only";
 import { and, eq, inArray, sql } from "drizzle-orm";
 
-import type { TitleType } from "@/domain/catalog";
+import type { TitleType } from "@/modules/catalog";
 import type { Edge, TitleProfile } from "@/domain/taste-graph";
 
-import type { connectSyncDb } from "./catalog-repository";
+import type { connectSyncDb } from "@/modules/catalog/server";
+import { titleNeighbors } from "./schema";
 import {
     catalogTitleGenres,
     catalogTitleProductionCompanies,
@@ -14,9 +15,8 @@ import {
     productionCompanies,
     themeKeywords,
     titleCredits,
-    titleNeighbors,
     tmdbRecommendations,
-} from "./schema";
+} from "@/modules/catalog/infrastructure/db/schema";
 
 type SyncDb = Awaited<ReturnType<typeof connectSyncDb>>["db"];
 

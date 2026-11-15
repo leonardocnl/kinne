@@ -12,7 +12,7 @@ import { surprise } from "../../_actions/surprise";
 import { loadError } from "@/shared/ui/StateScreen";
 import { showToast } from "@/shared/ui/toast";
 import { wipeRouter } from "@/shared/ui/wipe";
-import { goToTitle } from "./origin";
+import { goToTitle } from "@/modules/catalog/ui";
 
 /**
  * Me surpreenda (US003): sorteia no servidor com o que o navegador guarda e abre o título com

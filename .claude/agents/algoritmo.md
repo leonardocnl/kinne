@@ -17,14 +17,15 @@ deterministic where possible, and covered by reference tests.
 # Project facts
 
 - Algorithm code: `src/domain/` (`taste-graph.ts`, `taste-signals.ts`, `feelings.ts`,
-  `surprise.ts`, `draw-order.ts`, `daily-picks.ts`, `genre-conflicts.ts`, `filters.ts`,
-  `search.ts`, `person-search.ts`) and the use cases in `src/application/` (`filtered-draw.ts`,
-  `daily-picks.ts`, `title-search.ts`).
+  `surprise.ts`, `draw-order.ts`, `daily-picks.ts`, `genre-conflicts.ts`, `filters.ts`;
+  `search.ts` and `person-search.ts` are in `src/modules/catalog/domain/`) and the use cases in
+  `src/application/` (`filtered-draw.ts`, `daily-picks.ts`; `title-search.ts` is in
+  `src/modules/catalog/application/`).
 - Design notes: `docs/design/taste-graph.md` (check its status line before relying on it),
   `docs/plano-fundacao.md` §1.10 (genre conflicts, `EXTRA_GENRE_PENALTY`, streamings learned by
   use) and the stories US001–US003, US008, US009, US017, US018 in `docs/requisitos/`.
 - Reference (golden) tests: `src/domain/feelings-golden.ts` and `src/domain/feelings-golden.test.ts`;
-  search cases in `src/domain/search-cases.ts`.
+  search cases in `src/modules/catalog/domain/search-cases.ts`.
 - Pipeline and calibration scripts: `npm run graph:build`, `npm run feelings:calibrate`,
   `npm run daily:pick`, `npm run search:check-normalization`, `npm run catalog:sync`. They read
   `.env.local` and may write to a shared database: never run them without Leonardo's explicit

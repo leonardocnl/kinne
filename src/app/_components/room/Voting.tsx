@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { RoomView } from "@/application/group-room";
-import { STREAMING_SERVICES, streamingList } from "@/domain/streaming";
+import { STREAMING_SERVICES, streamingList } from "@/modules/catalog";
 import { closeVoting, vote } from "../../_actions/room";
 import { showToast } from "@/shared/ui/toast";
 import { Button } from "@/shared/ui/Button";

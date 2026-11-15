@@ -7,13 +7,11 @@ import { LIMITED, type Limited } from "@/shared/lib/rate-limit";
 import { roundEnd, type RoundEnd } from "@/domain/rounds";
 import { hasPositiveSignal } from "@/domain/taste-signals";
 import { drawAccount } from "../_data/account";
-import { candidates } from "../_data/candidates";
+import { candidates, personTitleIds, admitPersonQuery } from "@/modules/catalog/server";
 import { admitDraw, admitFilterList } from "@/shared/lib/draw-limit";
 import { loadFeelingKit } from "../_data/feelings";
 import { neighborGraphOrNull } from "../_data/taste-graph";
 import { parseFilterRequest } from "../_data/filters";
-import { personTitleIds } from "../_data/people";
-import { admitPersonQuery } from "../_data/person-limit";
 
 /**
  * Os títulos para o contador dos filtros (US002 C3), que conta no navegador, sem o slug. Passado o

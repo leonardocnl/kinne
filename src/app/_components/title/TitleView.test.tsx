@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { availableStreamings } from "@/domain/streaming";
-import type { TitleScreen } from "../../_data/title";
+import { availableStreamings } from "@/modules/catalog";
+import type { TitleScreen } from "@/modules/catalog";
 import { TitleView } from "./TitleView";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push() {}, replace() {} }) }));

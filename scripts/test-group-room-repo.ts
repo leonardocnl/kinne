@@ -8,7 +8,7 @@ import { PgDialect } from "drizzle-orm/pg-core";
 import type { SQL } from "drizzle-orm";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { titleReferenced } from "@/infrastructure/db/catalog-repository";
+import { titleReferenced } from "@/modules/catalog/server";
 import { catalogTitles } from "@/infrastructure/db/schema";
 import * as q from "@/infrastructure/db/group-room-sql";
 

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isStreaming, STREAMING_SERVICES } from "@/domain/streaming";
+import { isStreaming, STREAMING_SERVICES } from "@/modules/catalog";
 import { idListSchema, tasteSchema } from "./taste";
 
 export const surpriseRequestSchema = z.strictObject({
