@@ -34,7 +34,7 @@
         "arch:dot": "depcruise src --config .dependency-cruiser.cjs --include-only '^src/' --exclude '\\.test\\.ts$|^src/shared/db/local-' --output-type dot --output-to docs/generated/dependencies.dot"
     },
     "dependencies": {
-        "@neondatabase/serverless": "^1.2.0",
+        "@neondatabase/serverless": "^1.2.1",
         "drizzle-orm": "^0.45.4",
         "motion": "14.10.1",
         "next": "16.4.5",
